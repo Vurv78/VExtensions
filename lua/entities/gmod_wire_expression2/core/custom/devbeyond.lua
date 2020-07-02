@@ -1,33 +1,28 @@
-local DEFAULT_TABLE = {n={},ntypes={},s={},stypes={},size=0}
+local E2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 
-local ids = { -- Helper table for toTable() used here for rangerOffsetFilter as it is standalone from regular rangers.
-	["FractionLeftSolid"] = "n",
-	["HitNonWorld"] = "n",
-	["Fraction"] = "n",
-	["Entity"] = "e",
-	["HitNoDraw"] = "n",
-	["HitSky"] = "n",
-	["HitPos"] = "v",
-	["StartSolid"] = "n",
-	["HitWorld"] = "n",
-	["HitGroup"] = "n",
-	["HitNormal"] = "v",
-	["HitBox"] = "n",
-	["Normal"] = "v",
-	["Hit"] = "n",
-	["MatType"] = "n",
-	["StartPos"] = "v",
-	["PhysicsBone"] = "n",
-	["WorldToLocal"] = "v",
-	["RealStartPos"] = "v",
-	["HitTexture"] = "s",
-	["HitBoxBone"] = "n"
-}
+local function luaTablToE2(T)
+    local Strt = E2Table()
+    local Sz = 0
+    for Key,Value in pairs(T) do
+        local TypeV = type(Value)
+        local WriteV = Strt.n
+        local WriteType = Strt.ntypes
+        if type(Key)=="string" then WriteV = Strt.s WriteType=Strt.stypes end
+        local Clean = Value
+        if TypeV=="bool" then Clean = Value and 1 or 0 elseif
+        TypeV=="table" then Clean = luaTablToE2(Value) end
+        Sz = Sz + 1
+        WriteV[Key] = Clean
+        WriteType[Key] = TypeV[1]
+    end
+    Strt.size = Sz
+    return Strt
+end
 
 __e2setcost(10)
-e2function table rangerOffsetFilter(range,vector pos,vector dir, array filt)
+e2function table rangerOffsetManual(vector pos,vector endpos, array filt)
     local Start = Vector(pos[1],pos[2],pos[3])
-    local End = Start + Vector(dir[1],dir[2],dir[3]) * range
+    local End = Vector(endpos[1],endpos[2],endpos[3])
 	local tr = util.TraceLine( {
 		start = Start,
 		endpos = End,
@@ -38,17 +33,17 @@ e2function table rangerOffsetFilter(range,vector pos,vector dir, array filt)
 			return false
 		end
     } )
-	if not tr then return {} end
-	local ret = table.Copy(DEFAULT_TABLE)
-	local size = 0
-	for k,v in pairs( tr ) do
-		if (ids[k]) then
-			if isbool(v) then v = v and 1 or 0 end
-			ret.s[k] = v
-			ret.stypes[k] = ids[k]
-			size = size + 1
-		end
+	if not tr then return E2Table() end
+	return luaTablToE2(tr)
+end
+
+__e2setcost(5)
+e2function void rangerSetFilter(array filter)
+	local fixed = {}
+	for _,V in pairs(filter) do
+		if type(V)~="Entity" and type(V)~="Player" then goto cont end
+		table.insert(fixed,V)
+		::cont::
 	end
-	ret.size = size
-	return ret
+	self.data.rangerfilter = filter
 end
