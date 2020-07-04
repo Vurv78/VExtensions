@@ -131,7 +131,13 @@ local function printGlobal(T,Sender,Plys)
         return
     end
     local printStringTable = {}
-    for K,V in pairs(T) do if type(V)=="string" then table.insert(printStringTable,V) end end
+    for K,V in pairs(T) do
+        if type(V)=="string" then
+            table.insert(printStringTable,V)
+        elseif type(V)~="table" then
+            table.remove(T,K)
+        end
+    end
     local printString = table.concat(printStringTable,"")
     local charLimit = PrintGCharLimit:GetInt()
     if #printString > charLimit then
