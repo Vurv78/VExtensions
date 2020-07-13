@@ -4,7 +4,7 @@ local registerPrivilege = SF.Permissions.registerPrivilege or SF.Permissions.reg
 
 -- Register clientside permissions.
 -- 1 = Only you, 2 = Friends Only, 3 = Anyone, 4 = No one 
-registerPrivilege("entities.setEyeAngles", "Set your EyeAngles", "Allows the user to set your eye angles", { client = { default = 1 } })
+--registerPrivilege("entities.setEyeAngles", "Set your EyeAngles", "Allows the user to set your eye angles", { client = { default = 1 } })
 
 return function(instance)
     -- Local to each chip call
@@ -16,7 +16,7 @@ return function(instance)
     local player_methods, player_meta, wrap, unwrap = instance.Types.Player.Methods, instance.Types.Player, instance.Types.Player.Wrap, instance.Types.Player.Unwrap
     local vec_meta, vwrap, vunwrap = instance.Types.Vector, instance.Types.Vector.Wrap, instance.Types.Vector.Unwrap
     -- Starfall types to Lua types
-
+    
     local SFUser = instance.player
 
     local function getply(self)

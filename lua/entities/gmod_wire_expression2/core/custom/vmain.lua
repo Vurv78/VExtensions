@@ -67,14 +67,18 @@ e2function table rangerOffsetManual(vector pos,vector endpos, array filt)
 end
 
 __e2setcost(5)
-e2function void rangerSetFilter(array filter)
+e2function number rangerSetFilter(array filter)
+    if #filter == 0 then self.data.rangerfilter = {} return 1 end
+    if #filter > 3000 then return 0 end
 	local fixed = {}
-	for _,V in pairs(filter) do
+    for _,V in pairs(filter) do
+        
 		if type(V)~="Entity" or type(V)~="Player" then
             table.insert(fixed,V)
         end
 	end
-	self.data.rangerfilter = filter
+    self.data.rangerfilter = filter
+    return 1
 end
 
 -- Hide Chat 7/3/2020 by Vurv
@@ -188,13 +192,22 @@ end
 
 __e2setcost(150)
 e2function void printGlobal(...) -- Print to everyone
-    printGlobal({...},self.player)
+    printGlobal({...},self.player,player.GetHumans())
+end
+
+__e2setcost(150)
+e2function void printGlobal(array a) -- Print to everyone
+    if #a<1 then return end
+    printGlobal(a,self.player,player.GetHumans())
 end
 
 __e2setcost(100)
 e2function void printGlobal(array a,...) -- Give an array of which players to broadcast to.
     if #a<1 then return end
-    for K,Ply in pairs(a) do if not IsValid(Ply) or not Ply:IsPlayer() then a[K] = nil end end
+    for K,Ply in pairs(a) do -- Sanitizing non-players
+        if type(Ply) ~= "Player" then a[K] = nil end
+        if not IsValid(Ply) or not Ply:IsPlayer() then a[K] = nil end
+    end
     printGlobal({...},self.player,a)
 end
 
@@ -237,3 +250,19 @@ e2function string lastGPrintText(entity e) -- Pls give better name
 end
 
 -- Global Print Chat Clk by Vurv
+
+-- Texture Stuff by Vurv
+
+e2function vector getPixelPNG(x,y,string pngPath)
+    if not string.match(pngPath,".png$") then return {0,0,0} end
+    local C = Material(pngPath):GetColor(x,y)
+    return {C.r,C.g,C.b}
+end
+
+-- EGP Testing by Vurv
+
+
+e2function void wirelink:egpDrawRect(x,y,sx,sy)
+    --if !EGP:ValidEGP(this) then return end
+    if !EGP:IsAllowed(self,this) then return end
+end
