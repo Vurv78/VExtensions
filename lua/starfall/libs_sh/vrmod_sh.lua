@@ -4,7 +4,7 @@ local registerPrivilege = SF.Permissions.registerPrivilege or SF.Permissions.reg
 
 -- Register clientside permissions.
 -- 1 = Only you, 2 = Friends Only, 3 = Anyone, 4 = No one 
-registerPrivilege("entities.setEyeAngles", "Set your EyeAngles", "Allows the user to set your eye angles", { client = { default = 1 } })
+--registerPrivilege("entities.setEyeAngles", "Set your EyeAngles", "Allows the user to set your eye angles", { client = { default = 1 } })
 
 --- Functions for the VRMod addon.
 -- @name vrmod
@@ -19,14 +19,12 @@ return function(instance)
     -- SF Library functions
     local checkpermission = instance.player ~= NULL and SF.Permissions.check or function() end
     -- Starfall types to Lua types
-    local aunwrap = instance.Types.Angle.Unwrap
     local player_methods, pwrap, punwrap = instance.Types.Player.Methods, instance.Types.Player.Wrap, instance.Types.Player.Unwrap
     local vwrap, vunwrap = instance.Types.Vector.Wrap, instance.Types.Vector.Unwrap
     local awrap, aunwrap = instance.Types.Angle.Wrap, instance.Types.Angle.Unwrap
     -- Starfall types to Lua types
 
     local vrmod_lib = instance.Libraries.vrmod
-    print(vrmod_lib)
 
     local SFUser = instance.player
 
