@@ -1,3 +1,8 @@
+-- VRMod Documentation and functions ported to StarfallEx by Vurv
+-- Vurv#6428 (363590853140152321)
+
+if not vrmod then print("VRMod was not detected! Aborting loading sf vrmod lib!") return function() end
+
 -- Starfall library functions
 local checkluatype = SF.CheckLuaType
 local registerPrivilege = SF.Permissions.registerPrivilege or SF.Permissions.registerprivilege -- wtf Starfall
@@ -12,6 +17,17 @@ local registerPrivilege = SF.Permissions.registerPrivilege or SF.Permissions.reg
 -- @class library
 -- @libtbl vrmod_lib
 SF.RegisterLibrary("vrmod")
+local AddHook = SF.hookAdd
+
+local function returnOnlyOnYourself(instance, args, ply)
+	if instance.player ~= ply then return end
+	return args[2]
+end
+
+AddHook("VRMod_Start")
+AddHook("VRMod_Exit")
+AddHook("VRMod_Pickup", nil, nil, returnOnlyOnYourself, true) -- Only allows you to return if you are the target.
+AddHook("VRMod_Drop")
 
 return function(instance)
     -- Local to each chip call
@@ -121,4 +137,29 @@ return function(instance)
         local v,a = vrmod.GetRightHandPose(getply(ply))
         return vwrap(v),awrap(a)
     end
+
+    --- Called when a player enters VR
+	-- @name VRMod_Start
+    -- @class hook
+    -- @shared
+    -- @param Player player
+
+    --- Called when a player exits VR
+	-- @name VRMod_Exit
+	-- @class hook
+    -- @shared
+    -- @param Player player
+
+    --- Called when a vr player picks up an entity.
+    -- Return false on the server to block the action. Only works on yourself.
+	-- @name VRMod_Pickup
+	-- @class hook
+    -- @shared
+    -- @param Player player, Entity pickedup
+
+    --- Called when the vr player drops an entity.
+	-- @name VRMod_Drop
+	-- @class hook
+    -- @shared
+    -- @param Player player, Entity dropped
 end
