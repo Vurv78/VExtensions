@@ -5,4 +5,4 @@ E2Helper.Descriptions["getHMDAngVR(e)"] = "Gives angle of HMD/head of ply. [VRCo
 E2Helper.Descriptions["getLeftHandPosVR(e)"] = "Returns vector position of left hand of ply in VR. [VRCore]"
 E2Helper.Descriptions["getLeftHandAngVR(e)"] = "Returns angle of left hand of ply in VR. [VRCore]"
 E2Helper.Descriptions["getRightHandPosVR(e)"] = "Returns vector position of right hand of ply in VR. [VRCore]"
-E2Helper.Descriptions["getRightHandAngVR(n)"] = "Returns angle of right hand of ply in VR. [VRCore]"
+E2Helper.Descriptions["getRightHandAngVR(e)"] = "Returns angle of right hand of ply in VR. [VRCore]"
