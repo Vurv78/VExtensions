@@ -1,7 +1,7 @@
 -- VRMod Documentation and functions ported to StarfallEx by Vurv
 -- Vurv#6428 (363590853140152321)
 
-if not vrmod then print("VRMod was not detected! Aborting loading sf vrmod lib!") return function() end
+if not vrmod then print("VRMod was not detected! Aborting loading sf vrmod lib!") return function() end end
 
 -- Starfall library functions
 local checkluatype = SF.CheckLuaType
