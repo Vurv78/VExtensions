@@ -120,7 +120,7 @@ return function(instance)
     -- @shared
     -- @return Vector right hand pos
     function vrmod_lib.getRightHandPos(ply)
-        return vwrap(vrmod.GetHMDPose(getply(ply)))
+        return vwrap(vrmod.GetRightHandPos(getply(ply)))
     end
     --- Returns ply's right hand angle.
     -- @param Player player
