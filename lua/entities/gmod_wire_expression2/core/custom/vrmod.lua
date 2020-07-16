@@ -11,36 +11,36 @@ if not vrmod then print("VRMod was not detected! Please install VRMod to use the
 __e2setcost(5)
 -- Bools
 
-e2function number isPlayerInVR(entity ply)
-    return vrmod.IsPlayerInVR(ply) and 1 or 0
+e2function number entity:isPlayerInVR()
+    return vrmod.IsPlayerInVR(this) and 1 or 0
 end
 
-e2function number usingEmptyHandsVR(entity ply)
-    return vrmod.UsingEmptyHands(ply) and 1 or 0
+e2function number entity:usingEmptyHandsVR()
+    return vrmod.UsingEmptyHands(this) and 1 or 0
 end
 
 __e2setcost(10)
 -- Positions and stuff
-e2function vector getHMDPosVR(entity ply)
-    return vrmod.GetHMDPos(ply)
+e2function vector entity:getHMDPosVR()
+    return vrmod.GetHMDPos(this)
 end
 
-e2function angle getHMDAngVR(entity ply)
-    return vrmod.GetHMDAng(ply)
+e2function angle entity:getHMDAngVR()
+    return vrmod.GetHMDAng(this)
 end
 
-e2function vector getLeftHandPosVR(entity ply)
-    return vrmod.GetLeftHandPos(ply)
+e2function vector entity:getLeftHandPosVR()
+    return vrmod.GetLeftHandPos(this)
 end
 
-e2function angle getLeftHandAngVR(entity ply)
-    return vrmod.GetLeftHandAng(ply)
+e2function angle entity:getLeftHandAngVR()
+    return vrmod.GetLeftHandAng(this)
 end
 
-e2function vector getRightHandPosVR(entity ply)
-    return vrmod.GetRightHandPos(ply)
+e2function vector entity:getRightHandPosVR()
+    return vrmod.GetRightHandPos(this)
 end
 
-e2function angle getRightHandAngVR(entity ply)
-    return vrmod.GetRightHandAng(ply)
+e2function angle entity:getRightHandAngVR()
+    return vrmod.GetRightHandAng(this)
 end
