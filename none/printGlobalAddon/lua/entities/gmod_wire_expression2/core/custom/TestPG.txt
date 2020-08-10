@@ -1,8 +1,0 @@
-@name PrintGlobal Debug
-
-printGlobal(vec(255,0,0),"Red Text")
-printGlobal(vec(255,0,0),vec(0,0,255),"Blue Text")
-printGlobal(array(owner()),array(vec(0,255,0),"Green Text that only you can see"))
-printGlobal(array(vec(255,0,255),"Purple that everyone can see!"))
-print(canPrintGlobal())
-printGlobal("Text that has no color defined!")
