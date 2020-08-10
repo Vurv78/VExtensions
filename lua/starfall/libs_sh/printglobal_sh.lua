@@ -149,4 +149,17 @@ return function(instance)
         end
         printGlobal(args,user,player.GetHumans())
     end
+
+    --- On SERVER, Print to the ply table
+    --- Behaves similarly to chat.addText so you may add colors as you wish. (Entities and other types are currently not supported)
+    --- On CLIENT, Prints to the current client and also behaves similarly to chat.addText.
+    -- @name builtins_library.printGlobal
+    -- @class function
+    -- @param table args Color and string arguments
+    -- @param table plys Table of players to send to on SERVER, on client does nothing and should be left empty.
+    -- @return Returns true or false for whether it successfully printed.
+    -- @shared
+    function builtins.printGlobal(args,plys)
+        printGlobal(args,user,plys)
+    end
 end
