@@ -1,10 +1,12 @@
 -- PrintGlobal functions added to StarfallEx by Vurv
 -- Vurv#6428 (363590853140152321)
+-- Source https://github.com/Vurv78/printGlobal
 
 local CharMax = GetConVar("printglobal_charmax_sv")
 local ArgMax = GetConVar("printglobal_argmax_sv")
 local BurstMax = GetConVar("printglobal_burst_sv")
 local PrintGBurstCount = {}
+
 local format = string.format
 
 timer.Create("VurvSF_PrintGlobal",1,0,function()
@@ -74,6 +76,7 @@ local function printGlobal(T,Sender,Plys)
     if ArgCount <= 100 then
         -- Make sure there aren't more args than max convar setting (somehow)
         if CLIENT then
+            warnClient(Sender)
             chat.AddText(unpack(NewT))
             return
         end
@@ -82,7 +85,6 @@ local function printGlobal(T,Sender,Plys)
             net.WriteUInt(ArgCount,9)
             for I = 1,ArgCount do
                 local Col = T[I*2-1] -- Do not worry, all text is stitched together and is only separated by colors
-                print("Col: ",tostring(Col))
                 net.WriteColor(Col) -- Since we now cleaned the color in the formatting function, we can use this correctly.
                 local Text = T[I*2] -- this means that it will 100% always be text,color,text
                 net.WriteString(Text)
@@ -123,8 +125,10 @@ end
 return function(instance)
     local builtins = instance.env
     local user = instance.player
-    local checkpermission = user ~= NULL and SF.Permissions.check or function() end
-    local hasaccess = SF.Permissions.hasAccess
+    local color_meta = instance.Types.Color
+    local iscolor = function(obj) -- Returns whether a table is an SF color by checking its metatable
+        return getmetatable(obj) ~= color_meta
+    end
 
     --- On SERVER, Print to everyone on the server or if the first argument is a table, to certain players.
     --- Behaves similarly to chat.addText so you may add colors as you wish. (Entities and other types are currently not supported)
@@ -137,22 +141,12 @@ return function(instance)
     function builtins.printGlobal(...)
         local args = {...}
         if #args<1 then return end
-        if type(args[1])=="table" then -- In place of printGlobal(array arr, ...) (wouldn't work because printGlobal(...) exists.)
+        if type(args[1])=="table" and not iscolor(args[1]) then -- In place of printGlobal(array arr, ...) (wouldn't work because printGlobal(...) exists.)
             local plys = table.remove(args,1)
+            print(plys)
             printGlobalArrayFunc(args,user,plys)
             return
         end
         printGlobal(args,user,player.GetHumans())
-    end
-
-    --- colortest
-    -- @name builtins_library.colortest
-    -- @class function
-    -- @param color col to test
-    -- @return Returns nothing bro.
-    -- @shared
-    function builtins.colortest(color)
-        return color
-        --PrintTable(getmetatable(color))
     end
 end

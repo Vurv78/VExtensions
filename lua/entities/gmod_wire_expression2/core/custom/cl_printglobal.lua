@@ -1,12 +1,24 @@
 local E2D = E2Helper.Descriptions
-E2D["canPrintGlobal()"] = "Gives 0 or 1 for whether you can call printGlobal(). [VEx]"
-E2D["printGlobal(...)"] = "Print to certain people on the server, with color and other nice things in any order. First argument should be an array of players to send to, else color/text [VEx]"
-E2D["printGlobal(r)"] = "Print to everyone on the server with an array of color and string arguments. [VEx]"
-E2D["printGlobal(r,r)"] = "Print to an array of players with an array of color and string arugments. [VEx]"
-E2D["printGlobalClk()"] = "Returns 1 or 0 for if the e2 was triggered by a printGlobal event. [VEx]"
-E2D["runOnPrintGlobal(n)"] = "Set your e2 to run when others use printGlboal. [VEx]"
-E2D["lastGPrintRaw()"] = "Returns vector colors and text from the last global print. [VEx]"
-E2D["lastGPrintRaw(e)"] = "Returns vector colors and text from the last global print from player e. [VEx]"
-E2D["lastGPrintSender()"] = "Returns the last player to send a globalprint. [VEx]"
-E2D["lastGPrintText()"] = "Returns the last printGlobal with the sifted out text. [VEx]"
-E2D["lastGPrintText(e)"] = "Returns the last printGlobal from player E with the sifted out text. [VEx]"
+local format = string.format
+local function desc(Name,Descript)
+    E2D[Name] = format("%s. [VExtensions]",Descript)
+end
+
+-- Main
+desc("canPrintGlobal()","Returns 1 or 0 for whether you can call printGlobal()")
+desc("canPrintTo(e)","Returns 1 or 0 for whether you can printGlobal to player e")
+
+desc("printGlobal(...)","Prints to everyone's chat, similarly to how chat.addText does, with colors and text that can be organized in any way")
+desc("printGlobal(r,...)","Prints to an array of people's chats, similarly to how chat.addText does, with colors and text that can be organized in any way")
+-- ^^^Does not actually exist as a function, but printGlobal(...) does implement it.^^^
+desc("printGlobal(r)","Prints to everyone's chat using an array of arguments instead of ..., behaves similarly to chat.addText")
+desc("printGlobal(r,r)","Prints to an array of people's chats using an array of arguments instead of ..., behaves similarly to chat.addText")
+
+-- PrintGlobalClks
+desc("runOnPrintGlobal(n)","Sets the e2 to run on people using the printGlobal function with e2, n being 1 to run and 0 to not run")
+desc("printGlobalClk()","Returns 1 or 0 for whether the e2 chip was triggered by someone using printGlobal on e2")
+desc("lastGPrintRaw()","Returns an array of the last printGlobalClk information retrieved")
+desc("lastGPrintRaw(e)","Returns an array of the last printGlobalClk information retrieved on player e")
+desc("lastGPrintSender()","Returns the last player to use printGlobal with e2")
+desc("lastGPrintText()","Returns the last text to be sent with printGlobal with e2")
+desc("lastGPrintText(e)","Returns the last text to be sent by player e with printGlobal with e2")
