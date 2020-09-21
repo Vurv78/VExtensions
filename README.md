@@ -7,7 +7,7 @@ Includes functions for Expression2 and StarfallEx.
 An overview:
 
 ## PrintGlobal
-Allows you to print to other players chats, behaves like chat.AddText
+Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
 https://github.com/Vurv78/printGlobal
 ## VRMod Functions
 No Github.
