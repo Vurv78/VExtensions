@@ -33,7 +33,12 @@ return function(instance)
     -- @shared
     function player_methods:setEyeAngles(ang)
         local ply = getply(self)
-        if CLIENT then checkpermission(instance,nil,"entities.setEyeAngles") elseif ply~=SFUser then return end
+        if CLIENT then
+            checkpermission(instance,nil,"entities.setEyeAngles")
+        elseif ply~=SFUser then
+            SF.Throw("You cannot set another player's eye angles on server!",3)
+            return
+        end
         ply:SetEyeAngles(aunwrap(ang))
     end
 end
