@@ -1,3 +1,13 @@
+--[[
+   ______                            __   _                   
+  / ____/____   _____ ____   __  __ / /_ (_)____   ___   _____
+ / /    / __ \ / ___// __ \ / / / // __// // __ \ / _ \ / ___/
+/ /___ / /_/ // /   / /_/ // /_/ // /_ / // / / //  __/(__  ) 
+\____/ \____//_/    \____/ \__,_/ \__//_//_/ /_/ \___//____/  
+ Gives Access to lua's coroutines to e2, can do everything lua coroutines can do,
+    Can't halt lua's coroutines so it is safe.
+]]
+
 local running = coroutine.running
 
 local table_remove = table.remove

@@ -1,4 +1,11 @@
--- Lib functions
+--[[
+    __  ___        _      
+   /  |/  /____ _ (_)____ 
+  / /|_/ // __ `// // __ \
+ / /  / // /_/ // // / / /
+/_/  /_/ \__,_//_//_/ /_/ 
+ Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
+]]
 
 local E2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 

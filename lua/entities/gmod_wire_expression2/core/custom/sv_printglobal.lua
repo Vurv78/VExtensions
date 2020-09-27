@@ -1,4 +1,7 @@
 
+local CharMax = GetConVar("printglobal_charmax_sv")
+local ArgMax = GetConVar("printglobal_argmax_sv")
+local BurstMax = GetConVar("printglobal_burst_sv")
 local PrintGBurstCount = {}
 local PrintGCache = { recent = {NULL,{},""} }
 local PrintGAlert = {}
@@ -10,7 +13,7 @@ timer.Create("VurvE2_PrintGlobal",1,0,function()
 end)
 
 local function canPrintToPly(ply)
-    return ply:GetInfoNum("printglobalenabled_cl",0)==1
+    return ply:GetInfoNum("printglobal_enable_cl",0)==1
 end
 
 local function printGlobalFormatting(T)
@@ -39,9 +42,8 @@ end
 
 local function printGlobal(T,Sender,Plys)
     local currentBurst = PrintGBurstCount[Sender] or 0
-    if currentBurst >= PrintGBurstLimit:GetInt() then return end
-    local argLimit = PrintGArgLimit:GetInt()
-    if #T > PrintGArgLimit:GetInt() then
+    if currentBurst >= BurstMax:GetInt() then return end
+    if #T > ArgMax:GetInt() then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max args [%d]",#T,argLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
@@ -55,8 +57,7 @@ local function printGlobal(T,Sender,Plys)
         end
     end
     local printString = table.concat(printStringTable,"")
-    local charLimit = PrintGCharLimit:GetInt()
-    if #printString > charLimit then
+    if #printString > CharMax:GetInt() then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max chars [%d]",#printString,charLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
@@ -65,7 +66,8 @@ local function printGlobal(T,Sender,Plys)
     local ArgCount = (#NewT)/2
     if ArgCount <= 100 then
         -- Make sure there aren't more args than max convar setting (somehow)
-        net.Start("PrintGlobal_Net") 
+        net.Start("PrintGlobal_Net")
+            net.WriteEntity(Sender)
             net.WriteInt(ArgCount,9)
             for I = 1,ArgCount do
                 local Col = T[I*2-1] -- Do not worry, all text is stitched together and is only separated by colors
@@ -118,7 +120,7 @@ e2function number canPrintGlobal()
     return ((PrintGBurstCount[self.player] or 0) >= PrintGBurstLimit:GetInt()) and 0 or 1
 end
 
-__e2function number canPrintTo(entity ply)
+e2function number canPrintTo(entity ply)
     return canPrintToPly(ply) and 1 or 0
 end
 
