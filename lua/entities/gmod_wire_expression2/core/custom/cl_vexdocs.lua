@@ -19,15 +19,15 @@ end
  Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
 ]]
 
-desc("rangerOffsetManual(v,v,r)","Returns direct table result from a util.traceLine call with startpos, endpos and filter")
+desc("rangerOffsetManual(vvr)","Returns direct table result from a util.traceLine call with startpos, endpos and filter")
 desc("rangerSetFilter(r)","Sets the current filter to be used for rangers. Returns 1 or 0 for success")
 desc("canHideChatPly(e)","Returns whether you can hide a chats player, checking their convar")
-desc("hideChatPly(e,n)","Hides the chat of the player given [e] with n as 1 or 0 for whether it should")
+desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 for whether it should")
 
 --- These two actually come from sv_coroutine.lua but don't really fit with the addon.
 desc("try(s)","Tries to run the first function, and returns an array with the first element being a number 1 or 0 for whether it successfully ran, and the next either being the error message or the return value of the 'try' function.")
 -- With catching
-desc("try(s,s)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results.")    
+desc("try(ss)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results.")    
 
 --[[
     ____         _         __   ______ __        __            __
@@ -41,11 +41,10 @@ desc("try(s,s)","Tries to run the first function, returns the same as try(s) but
 desc("canPrintGlobal()","Returns 1 or 0 for whether you can call printGlobal()")
 desc("canPrintTo(e)","Returns 1 or 0 for whether you can printGlobal to player e")
 
-desc("printGlobal(...)","Prints to everyone's chat, similarly to how chat.addText does, with colors and text that can be organized in any way")
-desc("printGlobal(r,...)","Prints to an array of people's chats, similarly to how chat.addText does, with colors and text that can be organized in any way")
+desc("printGlobal(...)","Prints to everyone's chat, similarly to how chat.addText does, with colors and text that can be organized in any way. First argument can be an array of players")
 -- ^^^Does not actually exist as a function, but printGlobal(...) does implement it.^^^
 desc("printGlobal(r)","Prints to everyone's chat using an array of arguments instead of ..., behaves similarly to chat.addText")
-desc("printGlobal(r,r)","Prints to an array of people's chats using an array of arguments instead of ..., behaves similarly to chat.addText")
+desc("printGlobal(rr)","Prints to an array of people's chats using an array of arguments instead of ..., behaves similarly to chat.addText")
 
 -- PrintGlobalClks
 desc("runOnPrintGlobal(n)","Sets the e2 to run on people using the printGlobal function with e2, n being 1 to run and 0 to not run")
