@@ -1,10 +1,10 @@
 # VExtensions
 
-A compilation of mini-addons mainly for E2 Beyond Infinity.
+A compilation of mini-addons mainly for E2 Beyond Infinity
 
-Includes functions for Expression2 and StarfallEx.
+Includes functions for Expression2 and StarfallEx
 
-An overview of what's added for e2.
+An overview of what's added for e2:
 
 ## PrintGlobal
 Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
