@@ -1,8 +1,0 @@
-E2Helper.Descriptions["e:isPlayerInVR()"] = "Returns 1 or 0 for if ply is in VR. [VRCore]"
-E2Helper.Descriptions["e:usingEmptyHandsVR()"] = "Returns 1 or 0 for if ply is using empty hands in VR. [VRCore]"
-E2Helper.Descriptions["e:getHMDPosVR()"] = "Gives vector position of HMD/head of ply. [VRCore]"
-E2Helper.Descriptions["e:getHMDAngVR()"] = "Gives angle of HMD/head of ply. [VRCore]"
-E2Helper.Descriptions["e:getLeftHandPosVR()"] = "Returns vector position of left hand of ply in VR. [VRCore]"
-E2Helper.Descriptions["e:getLeftHandAngVR()"] = "Returns angle of left hand of ply in VR. [VRCore]"
-E2Helper.Descriptions["e:getRightHandPosVR()"] = "Returns vector position of right hand of ply in VR. [VRCore]"
-E2Helper.Descriptions["e:getRightHandAngVR()"] = "Returns angle of right hand of ply in VR. [VRCore]"

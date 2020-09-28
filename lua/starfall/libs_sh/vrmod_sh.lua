@@ -1,4 +1,11 @@
--- VRMod Documentation and functions ported to StarfallEx by Vurv
+--[[
+ _    __ ____   __  ___            __   ______                                 __   _  __     _  __ _  __        
+| |  / // __ \ /  |/  /____   ____/ /  / ____/____   ____ ___   ____   ____ _ / /_ (_)/ /_   (_)/ /(_)/ /_ __  __
+| | / // /_/ // /|_/ // __ \ / __  /  / /    / __ \ / __ `__ \ / __ \ / __ `// __// // __ \ / // // // __// / / /
+| |/ // _, _// /  / // /_/ // /_/ /  / /___ / /_/ // / / / / // /_/ // /_/ // /_ / // /_/ // // // // /_ / /_/ / 
+|___//_/ |_|/_/  /_/ \____/ \__,_/   \____/ \____//_/ /_/ /_// .___/ \__,_/ \__//_//_.___//_//_//_/ \__/ \__, /  
+                                                            /_/                                         /____/
+]]
 -- Vurv#6428 (363590853140152321)
 
 if not vrmod then print("VRMod was not detected! Aborting loading sf vrmod lib!") return function() end end
@@ -120,7 +127,7 @@ return function(instance)
     -- @shared
     -- @return Vector right hand pos
     function vrmod_lib.getRightHandPos(ply)
-        return vwrap(vrmod.GetHMDPose(getply(ply)))
+        return vwrap(vrmod.GetRightHandPos(getply(ply)))
     end
     --- Returns ply's right hand angle.
     -- @param Player player
