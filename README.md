@@ -8,7 +8,7 @@ An overview of what's added for e2:
 
 ## PrintGlobal
 Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
-https://github.com/Vurv78/printGlobal
+(Repo deleted, so there wouldn't be complications with parity)
 
 ## CoroutineCore
 Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
