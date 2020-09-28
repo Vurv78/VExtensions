@@ -1,14 +1,14 @@
 # VExtensions
 
-A compilation of mini-addons mainly for a server I play on, E2 Beyond Infinity.
+A compilation of mini-addons mainly for E2 Beyond Infinity
 
-Includes functions for Expression2 and StarfallEx.
+Includes functions for Expression2 and StarfallEx
 
-An overview of what's added.
+An overview of what's added for e2:
 
 ## PrintGlobal
 Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
-https://github.com/Vurv78/printGlobal
+(Repo deleted, so there wouldn't be complications with parity)
 
 ## CoroutineCore
 Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
@@ -26,3 +26,6 @@ Two currently added are getFunctionPath(s) to get the file path of an e2function
 rangerSetFilter(r), sets the filter of your e2 rangers.
 hideChatPly(e,n), hides the chat of a player selected (by default enabled, but warns you when it is hidden and you can disable it with canhidechatply_cl
 
+No docs for starfallex (on here) atm, check the sf helper
+
+Adds vrmod functions, setEyeAngles
