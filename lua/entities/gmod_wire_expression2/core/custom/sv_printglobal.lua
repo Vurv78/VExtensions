@@ -1,3 +1,12 @@
+--[[
+    ____         _         __   ______ __        __            __
+   / __ \ _____ (_)____   / /_ / ____// /____   / /_   ____ _ / /
+  / /_/ // ___// // __ \ / __// / __ / // __ \ / __ \ / __ `// / 
+ / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /  
+/_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/   
+ Allows for people to print to other's consoles, with warnings and options to disable.
+
+]]
 
 local CharMax = GetConVar("printglobal_charmax_sv")
 local ArgMax = GetConVar("printglobal_argmax_sv")
@@ -101,7 +110,6 @@ end
 
 -- General PrintGlobal (Only args, sends to all)
 local function printGlobalArrayFunc(args,sender,plys)
-    print("PGlobal Array func")
     if #plys<1 or #args<1 then return end
     local sanitized = {}
     for K,Ply in pairs(plys) do
