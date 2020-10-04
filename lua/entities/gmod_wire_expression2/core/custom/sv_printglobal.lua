@@ -125,7 +125,7 @@ end
 
 __e2setcost(3)
 e2function number canPrintGlobal()
-    return ((PrintGBurstCount[self.player] or 0) >= PrintGBurstLimit:GetInt()) and 0 or 1
+    return ((PrintGBurstCount[self.player] or 0) >= BurstMax:GetInt()) and 0 or 1
 end
 
 e2function number canPrintTo(entity ply)
