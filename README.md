@@ -11,7 +11,6 @@ Note that this will be unstable outside of releases (I KNOW THERE ARENT ANY RIGH
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
-(Repo deleted, so there wouldn't be complications with parity)
 
 ## CoroutineCore
 ![](https://img.shields.io/badge/StarfallEx-no-red)
