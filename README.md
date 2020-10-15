@@ -1,6 +1,7 @@
 # VExtensions
 
 A compilation of mini-addons mainly for E2 Beyond Infinity
+Note that this will be unstable outside of releases
 
 Includes functions for Expression2 and StarfallEx
 
