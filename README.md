@@ -4,7 +4,7 @@
 A compilation of mini-addons for Expression2 and StarfallEx development
 Note that this will be unstable outside of releases (I KNOW THERE ARENT ANY RIGHT NOW) >:v
 
-An overview of what's added for e2:
+### An overview of what's added:
 
 ## PrintGlobal
 ![](https://img.shields.io/badge/StarfallEx-no-red)
@@ -35,9 +35,7 @@ Adds more functions that are more 'selfaware' just like e2's general selfaware.l
 Two currently added are getFunctionPath(s) to get the file path of an e2function, and ifdef(s) to basically be able to use #ifdef, just in runtime.
 
 ## Other Misc. Functions:
-rangerSetFilter(r), sets the filter of your e2 rangers.
-hideChatPly(e,n), hides the chat of a player selected (by default enabled, but warns you when it is hidden and you can disable it with canhidechatply_cl
+E2: rangerSetFilter(array filter), sets the filter of your e2 rangers.
+E2: hideChatPly(entity ply,number yes), hides the chat of a player selected (by default enabled, but warns you when it is hidden and you can disable it with canhidechatply_cl
 
-No docs for starfallex (on here) atm, check the sf helper
-
-Adds vrmod functions, setEyeAngles
+SF: player:setEyeAngles(angle ang)
