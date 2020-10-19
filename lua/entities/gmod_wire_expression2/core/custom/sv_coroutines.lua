@@ -17,6 +17,17 @@ local table_add = table.Add
 
 E2Lib.RegisterExtension("coroutines", false, "Allows E2s to use coroutines.")
 
+
+local function UpdateOverlay(self)
+		self.entity:SetOverlayData( {
+            txt = self.entity.name, -- name/error
+            error = self.entity.error, -- error bool
+            prfbench = self.prfbench,
+            prfcount = self.prfcount,
+            timebench = self.timebench
+		})
+end
+
 -- Coroutine Object handling
 
 registerType("coroutine", "xco", nil,
@@ -110,7 +121,7 @@ local function buildBody(args) -- WHY WIRETEAM WHY??? ( We need this to pass arg
     return body
 end -- We need to build a body in order to pass args to an e2 function.
 
-local function runE2Instance(compiler,func,body) -- Varargs to pass to the e2 function
+local function runE2Instance(compiler,func,body) -- Varargs to pass to the e2 function // called when initiate a coroutine
     -- Will always return pcallerror,errstr first even if it didn't error.
     local args = {pcall(func,compiler,body)}
     local success = table_remove(args,1)
@@ -120,8 +131,31 @@ local function runE2Instance(compiler,func,body) -- Varargs to pass to the e2 fu
         -- Don't return args, that would be a waste
         local errmsg = table_remove(args,1)
         if errmsg == "perf" then errmsg = "tick quota exceeded" end
-        return false,errmsg
+        return true,errmsg
     end
+end
+
+// keep OPS and CPU accurate
+// ugh
+// look in \lua\entities\gmod_wire_expression2\init.lua to see where this garbage comes from
+local function e2yield( self )
+    local time = SysTime() 
+    self.time = (time - self.entity.cpustart)
+    print("yielding coroutine: "..time)
+    print(self.time.." elapsed.")
+    self.prfbench = self.prfbench*0.05 + self.prf * 0.95 -- what gets displayed on the e2's UI
+    self.prfcount = self.prfcount + self.prf - e2_softquota
+	self.timebench = self.timebench*0.95 + self.time*0.05
+    self.entity.context.timebench = self.timebench
+    
+    UpdateOverlay( self )
+
+    if self.prfcount < 0 then self.prfcount = 0 end
+
+    self.prf = 0
+    self.time = 0
+
+    coroutine.yield()
 end
 
 --[[__e2setcost(19) -- This is a function I used for debug, feel free to use it idk
@@ -145,9 +179,11 @@ end
 __e2setcost(5)
 
 e2function void coroutine:yield()
+
     if not this then return end
     if not runningCo(self) then error("Attempted to yield a coroutine without an e2 coroutine running.",0) return end
-    coroutine.yield()
+    e2yield( self )
+
 end
 
 e2function void coroutine:wait(n)
@@ -156,7 +192,7 @@ e2function void coroutine:wait(n)
         local endtime = CurTime() + n
         while true do
             if endtime < CurTime() then return end
-            coroutine.yield()
+            e2yield( self )
         end
     else
         error("Attempted to wait outside of the coroutine given.",0)
@@ -165,14 +201,18 @@ end
 
 e2function array coroutine:resume()
     if not this then return {} end
-    local co_success,xp_success,xp_error,args = coroutine.resume(this)
-    if co_success and xp_success==nil then
+    self.entity.cpustart = SysTime()
+    print("resuming coroutine: "..self.entity.cpustart)
+    local co_success,xp_error,args = coroutine.resume(this)
+    if co_success and xp_error==nil then
         -- If the coroutine was yielded.
     else
-        if not xp_success then
-            if xp_error == "exit" then
-            else
+        if not co_success then
+            if xp_error then
+                print(xp_error)
                 error("COROUTINE ERROR: "..xp_error,0)
+            else
+                error("Unknown Coroutine Error?!??1: "..table.ToString({co_success,xp_success,xp_error,args}),0)
             end
         else
             return args
@@ -218,7 +258,7 @@ e2function array try(string try,string catch) -- If you *really* want to pass ar
     if not tryfnc then error("Try called without an existing try function ["..try.."]",0) end
     if not catchfnc then error("Try called without an existing catch function ["..catch.."]",0) end
     
-    local success,errstr,args = runE2Instance(table_copy(self),tryfnc)
+    local success,errstr,args = runE2Instance(self,tryfnc)
     if success then
         table_insert(args,1,1)
         return args
@@ -237,6 +277,7 @@ e2function coroutine coroutine:reboot() -- Returns the coroutine as if it was ju
     local e2func = self.coroutines[this]
     if not e2func then return end
     local runtime = function()
+        self.cpustart = SysTime() // after observing this always
         return runE2Instance(table_copy(self),e2func)
     end
     return createCoroutine(self,runtime,e2func)
