@@ -41,7 +41,7 @@ desc("catch(ss)","Tries to run the first function, returns the same as try(s) bu
 desc("canPrintGlobal()","Returns 1 or 0 for whether you can call printGlobal()")
 desc("canPrintTo(e)","Returns 1 or 0 for whether you can printGlobal to player e")
 
-desc("printGlobal(...)","Prints to everyone's chat, similarly to how chat.addText does, with colors and text that can be organized in any way. First argument can be an array of players")
+desc("printGlobal(...)","Prints to everyone's chat, similarly to how chat.addText does, with colors and text that can be organized in any way. First argument can be an array of players, or a single player to send to this player.")
 -- ^^^Does not actually exist as a function, but printGlobal(...) does implement it.^^^
 desc("printGlobal(r)","Prints to everyone's chat using an array of arguments instead of ..., behaves similarly to chat.addText")
 desc("printGlobal(rr)","Prints to an array of people's chats using an array of arguments instead of ..., behaves similarly to chat.addText")

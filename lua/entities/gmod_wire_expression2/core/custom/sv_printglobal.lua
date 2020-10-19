@@ -18,6 +18,7 @@ local PrintGBurstCount = {}
 local PrintGCache = { recent = {NULL,{},""} }
 local PrintGAlert = {}
 local format = string.format
+local e2type = vex.getE2Type
 
 timer.Create("VurvE2_PrintGlobal",1,0,function()
     -- Not sure if this would be cheaper than checking manually with curtime.
@@ -28,27 +29,32 @@ local function canPrintToPly(ply)
     return ply:GetInfoNum("printglobal_enable_cl",0)==1
 end
 
+-- TODO: Make this more efficient
+-- Doing Ind = Ind + 1 doesn't feel right but then again we don't have 'continue'
 local function printGlobalFormatting(T)
     local Ind = 1
-    while true do -- oooh scary
+    while true do
         local Current = T[Ind]
+        local Next = T[Ind+1]
         if not Current then break end
-        if type(Current)=="table" then
-            if type(T[Ind+1])=="table" then table.remove(T,Ind) else Ind = Ind + 1 end
-        elseif type(Current)=="string" then
-            local Next = T[Ind+1]
-            if type(Next) ~= "string" then
-                Ind = Ind + 1
-            else
+        local _type = e2type(Current)
+        if _type=="VECTOR" then
+            if e2type(Next)=="VECTOR" then
+                table.remove(T,Ind) -- Make sure we don't have trailing vectors
+                goto cont
+            end
+        elseif _type=="STRING" then
+            if e2type(Next) == "STRING" then
                 T[Ind] = Current..Next
                 table.remove(T,Ind+1)
+                goto cont
             end
-        else
-            Ind = Ind + 1
         end
+        Ind = Ind + 1
+        ::cont::
     end
-    if type(T[#T]) == "table" then table.remove(T,#T) end
-    if type(T[1]) ~= "table" then table.insert(T,1,{100,100,255}) end
+    if type(T[#T]) ~= "string" then T[#T] = nil end
+    if e2type(T[1]) ~= "VECTOR" then table.insert(T,1,{100,100,255}) end
     return T
 end
 
@@ -60,20 +66,23 @@ local function printGlobal(T,Sender,Plys)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
     end
+    
+    -- Compile all of the string inputs.
     local printStringTable = {}
     for K,V in pairs(T) do
         if type(V)=="string" then
             table.insert(printStringTable,V)
-        elseif type(V)~="table" then
-            table.remove(T,K)
+        elseif e2type(V) ~= "VECTOR" then
+            T[K] = tostring(V)
         end
     end
-    local printString = table.concat(printStringTable,"")
+    local printString = table.concat(printStringTable)
     if #printString > CharMax:GetInt() then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max chars [%d]",#printString,charLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
     end
+
     local NewT = printGlobalFormatting(T)
     local ArgCount = (#NewT)/2
     if ArgCount <= 100 then
@@ -140,12 +149,15 @@ e2function void printGlobal(...)
     local args = {...}
     if #args<1 then return end
     local sender = self.player
-    if type(args[1])=="table" then -- In place of printGlobal(array arr, ...) (wouldn't work because printGlobal(...) exists.)
+    if type(args[1]) == "Player" then
+        local ply = table.remove(args,1)
+        printGlobalArrayFunc(args,sender,{ply})
+    elseif e2type(args[1]) == "ARRAY" then -- printGlobal(array plys, varargs)
         local plys = table.remove(args,1)
         printGlobalArrayFunc(args,sender,plys)
-        return
+    else
+        printGlobal(args,sender,player.GetHumans())
     end
-    printGlobal(args,sender,player.GetHumans())
 end
 
 __e2setcost(150)

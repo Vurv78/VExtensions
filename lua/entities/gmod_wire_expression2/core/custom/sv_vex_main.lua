@@ -37,12 +37,7 @@ e2function table rangerOffsetManual(vector pos,vector endpos, array filt)
 	local tr = util.TraceLine( {
 		start = Start,
 		endpos = End,
-		filter = function( ent )
-			for I in pairs(filt) do
-				if(I == ent) then return true end
-			end
-			return false
-		end
+		filter = filt
     } )
 	if not tr then return E2Table() end
 	return luaTablToE2(tr)
@@ -52,9 +47,9 @@ __e2setcost(5)
 e2function number rangerSetFilter(array filter)
     if #filter == 0 then self.data.rangerfilter = {} return 1 end
     if #filter > 3000 then return 0 end
+    self.prf = self.prf + #filter*1.5
 	local fixed = {}
     for _,V in pairs(filter) do
-        
 		if type(V)~="Entity" or type(V)~="Player" then
             table.insert(fixed,V)
         end
@@ -85,7 +80,7 @@ e2function void hideChatPly(entity ply, hide)
 end
 
 hook.Add("PlayerSay","vurve2_canhidechat_hide",function(sender)
-    if sender:GetInfoNum("vurve2_canhidechat_cl",0)~=0 and chatsHidden[sender] then
+    if chatsHidden[sender] then
         chatsHidden[sender] = false
         -- Only hide chat once
         return ""
