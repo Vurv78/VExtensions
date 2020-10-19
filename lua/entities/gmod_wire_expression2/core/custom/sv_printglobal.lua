@@ -1,3 +1,15 @@
+--[[
+    ____         _         __   ______ __        __            __
+   / __ \ _____ (_)____   / /_ / ____// /____   / /_   ____ _ / /
+  / /_/ // ___// // __ \ / __// / __ / // __ \ / __ \ / __ `// / 
+ / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /  
+/_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/   
+ Allows for people to print to other's consoles, with warnings and options to disable.
+
+]]
+
+-- Disabled by default
+E2Lib.RegisterExtension("printGlobal", false, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
 
 local CharMax = GetConVar("printglobal_charmax_sv")
 local ArgMax = GetConVar("printglobal_argmax_sv")
@@ -6,6 +18,7 @@ local PrintGBurstCount = {}
 local PrintGCache = { recent = {NULL,{},""} }
 local PrintGAlert = {}
 local format = string.format
+local e2type = vex.getE2Type
 
 timer.Create("VurvE2_PrintGlobal",1,0,function()
     -- Not sure if this would be cheaper than checking manually with curtime.
@@ -16,52 +29,64 @@ local function canPrintToPly(ply)
     return ply:GetInfoNum("printglobal_enable_cl",0)==1
 end
 
+-- TODO: Make this more efficient
+-- Doing Ind = Ind + 1 doesn't feel right but then again we don't have 'continue'
 local function printGlobalFormatting(T)
     local Ind = 1
-    while true do -- oooh scary
+    while true do
         local Current = T[Ind]
+        local Next = T[Ind+1]
         if not Current then break end
-        if type(Current)=="table" then
-            if type(T[Ind+1])=="table" then table.remove(T,Ind) else Ind = Ind + 1 end
-        elseif type(Current)=="string" then
-            local Next = T[Ind+1]
-            if type(Next) ~= "string" then
-                Ind = Ind + 1
-            else
+        local _type = e2type(Current)
+        if _type=="VECTOR" then
+            if e2type(Next)=="VECTOR" then
+                table.remove(T,Ind) -- Make sure we don't have trailing vectors
+                goto cont
+            end
+        elseif _type=="STRING" then
+            if e2type(Next) == "STRING" then
                 T[Ind] = Current..Next
                 table.remove(T,Ind+1)
+                goto cont
             end
-        else
-            Ind = Ind + 1
         end
+        Ind = Ind + 1
+        ::cont::
     end
-    if type(T[#T]) == "table" then table.remove(T,#T) end
-    if type(T[1]) ~= "table" then table.insert(T,1,{100,100,255}) end
+    if type(T[#T]) ~= "string" then T[#T] = nil end
+    if e2type(T[1]) ~= "VECTOR" then table.insert(T,1,{100,100,255}) end
     return T
 end
 
 local function printGlobal(T,Sender,Plys)
     local currentBurst = PrintGBurstCount[Sender] or 0
     if currentBurst >= BurstMax:GetInt() then return end
-    if #T > ArgMax:GetInt() then
+
+    local argLimit = ArgMax:GetInt()
+    if #T > argLimit then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max args [%d]",#T,argLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
     end
+    
+    -- Compile all of the string inputs.
     local printStringTable = {}
     for K,V in pairs(T) do
         if type(V)=="string" then
             table.insert(printStringTable,V)
-        elseif type(V)~="table" then
-            table.remove(T,K)
+        elseif e2type(V) ~= "VECTOR" then
+            T[K] = tostring(V)
         end
     end
-    local printString = table.concat(printStringTable,"")
-    if #printString > CharMax:GetInt() then
+    
+    local charLimit = CharMax:GetInt()
+    local printString = table.concat(printStringTable)
+    if #printString > charLimit then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max chars [%d]",#printString,charLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
     end
+
     local NewT = printGlobalFormatting(T)
     local ArgCount = (#NewT)/2
     if ArgCount <= 100 then
@@ -101,7 +126,6 @@ end
 
 -- General PrintGlobal (Only args, sends to all)
 local function printGlobalArrayFunc(args,sender,plys)
-    print("PGlobal Array func")
     if #plys<1 or #args<1 then return end
     local sanitized = {}
     for K,Ply in pairs(plys) do
@@ -117,7 +141,7 @@ end
 
 __e2setcost(3)
 e2function number canPrintGlobal()
-    return ((PrintGBurstCount[self.player] or 0) >= PrintGBurstLimit:GetInt()) and 0 or 1
+    return ((PrintGBurstCount[self.player] or 0) >= BurstMax:GetInt()) and 0 or 1
 end
 
 e2function number canPrintTo(entity ply)
@@ -129,12 +153,15 @@ e2function void printGlobal(...)
     local args = {...}
     if #args<1 then return end
     local sender = self.player
-    if type(args[1])=="table" then -- In place of printGlobal(array arr, ...) (wouldn't work because printGlobal(...) exists.)
+    if type(args[1]) == "Player" then
+        local ply = table.remove(args,1)
+        printGlobalArrayFunc(args,sender,{ply})
+    elseif e2type(args[1]) == "ARRAY" then -- printGlobal(array plys, varargs)
         local plys = table.remove(args,1)
         printGlobalArrayFunc(args,sender,plys)
-        return
+    else
+        printGlobal(args,sender,player.GetHumans())
     end
-    printGlobal(args,sender,player.GetHumans())
 end
 
 __e2setcost(150)

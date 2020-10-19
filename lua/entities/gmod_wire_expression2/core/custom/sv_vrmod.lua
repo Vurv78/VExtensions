@@ -15,6 +15,9 @@
 
 if not vrmod then print("VRMod was not detected! Please install VRMod to use the vrmod e2 extension.") end
 
+-- Enabled by default, since this is super tame
+E2Lib.RegisterExtension("vrmod", true, "Allows E2s to use vrmod functions that let you see where people's hands and vr headsets are for interactive chips!")
+
 -- Rules:
 -- All functions must have a VR suffix if they do not already contain one in the name.
 
