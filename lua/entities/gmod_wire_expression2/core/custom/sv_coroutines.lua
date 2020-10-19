@@ -15,8 +15,6 @@ local table_copy = table.Copy
 local table_insert = table.insert
 local table_add = table.Add
 
-local coroutine_yield = coroutine.yield
-
 E2Lib.RegisterExtension("coroutines", false, "Allows E2s to use coroutines.")
 
 -- Coroutine Object handling
@@ -70,17 +68,13 @@ end)
 
 -- Locals
 
-local function e2err(msg) -- Just an alias so that we only error the lowest scope (e2's scope) so that we don't actually break lua
-    error(msg,0)
-end
-
 local function createCoroutine(compiler,runtime,e2func)
     local thread = coroutine.create(runtime)
     compiler.coroutines[thread] = e2func -- Just so we know if a coroutine was created by e2.
     return thread
 end
 
-local function runningCo(compiler) -- Don't return if a glua coroutine is running
+local runningCo = function(compiler) -- Don't return if a glua coroutine is running
     local thread = coroutine.running()
     if not thread then return end
     if compiler.coroutines[thread] then return thread end
@@ -116,13 +110,25 @@ local function buildBody(args) -- WHY WIRETEAM WHY??? ( We need this to pass arg
     return body
 end -- We need to build a body in order to pass args to an e2 function.
 
--- Will return Success,ErrorMsg,VarargsTbl Always. Coroutines don't need this because they handle their own errors
-local function runE2InstanceSafe(compiler,run,body)
-    local args = {pcall(run,compiler,body)}
+local function runE2Instance(compiler,func,body) -- Varargs to pass to the e2 function
+    -- Will always return pcallerror,errstr first even if it didn't error.
+    local args = {pcall(func,compiler,body)}
     local success = table_remove(args,1)
-    if not success then return false,args[1] end
-    return true,"",args
+    if success then
+        return true,"none",args
+    else
+        -- Don't return args, that would be a waste
+        local errmsg = table_remove(args,1)
+        if errmsg == "perf" then errmsg = "tick quota exceeded" end
+        return false,errmsg
+    end
 end
+
+--[[__e2setcost(19) -- This is a function I used for debug, feel free to use it idk
+e2function void executeFunction(string FuncName)
+    local e2fnc = getE2FuncFromStr(self,FuncName)
+    if not e2fnc then error("This function does not exist ["..FuncName.."]",0) end
+end]]
 
 __e2setcost(20)
 
@@ -131,44 +137,48 @@ e2function coroutine coroutine(string FuncName)
     local e2func = getE2FuncFromStr(self,FuncName)
     if not e2func then return end
     local runtime = function()
-        return e2func(self)
+        return runE2Instance(table_copy(self),e2func)
     end
     return createCoroutine(self,runtime,e2func)
 end
 
 __e2setcost(5)
 
-e2function void coroutineYield()
-    if not runningCo(self) then e2err("Attempted to yield an e2 coroutine without one running.") return end
-    coroutine_yield()
-end
-
 e2function void coroutine:yield()
     if not this then return end
-    if not runningCo(self) then e2err("Attempted to yield an e2 coroutine without one running.") return end
-    coroutine_yield()
-end
-
-e2function void coroutineWait(n)
-    if not runningCo(self) then e2err("Attempted to yield an e2 coroutine without one running.") return end
-    coroutine.wait(n)
+    if not runningCo(self) then error("Attempted to yield a coroutine without an e2 coroutine running.",0) return end
+    coroutine.yield()
 end
 
 e2function void coroutine:wait(n)
     if not this then return end
-    if not runningCo(self) then e2err("Attempted to make an e2 coroutine 'wait' without one running.") return end
-    coroutine.wait(n)
+    if runningCo(self)==this then
+        local endtime = CurTime() + n
+        while true do
+            if endtime < CurTime() then return end
+            coroutine.yield()
+        end
+    else
+        error("Attempted to wait outside of the coroutine given.",0)
+    end
 end
 
--- No longer returns anything
-e2function void coroutine:resume()
-    if not this then return end
-    local co_success,vararg = coroutine.resume(this)
-    if not co_success then
-        if vararg == "exit" then return end -- Literally running exit(). Idk why you'd do this but I mean i guess you wanna kill the coroutine bro..
-        if vararg == "perf" then vararg = "tick quota exceeded" end
-        e2err("COROUTINE ERROR: "..vararg)
+e2function array coroutine:resume()
+    if not this then return {} end
+    local co_success,xp_success,xp_error,args = coroutine.resume(this)
+    if co_success and xp_success==nil then
+        -- If the coroutine was yielded.
+    else
+        if not xp_success then
+            if xp_error == "exit" then
+            else
+                error("COROUTINE ERROR: "..xp_error,0)
+            end
+        else
+            return args
+        end
     end
+    return {}
 end
 
 __e2setcost(3)
@@ -187,12 +197,10 @@ end
 -- Literally like pcall()
 -- Returns array, first argument is a number stating whether the function executed successfully, rest are varargs.
 
-__e2setcost(10)
-
-e2function array try(string try)
+e2function array try(string try) -- If you *really* want to pass arguments to the function then just make another function that calls that function.
     local tryfnc = getE2FuncFromStr(self,try)
-    if not tryfnc then e2err("Try called without an existing try function ["..try.."]") end
-    local success,errstr,args = runE2InstanceSafe(self,tryfnc)
+    if not tryfnc then error("Try called without an existing try function ["..try.."]",0) end
+    local success,errstr,args = runE2Instance(table_copy(self),tryfnc)
     if success then
         table_insert(args,1,1)
         return args
@@ -205,17 +213,17 @@ end
 -- Literally like xpcall()
 -- Behaves exactly like try(string try) except it also calls a catch function given.
 
-e2function array catch(string try,string catch)
+e2function array try(string try,string catch) -- If you *really* want to pass arguments to the function then just make another function that calls that function.
     local tryfnc,catchfnc = getE2FuncFromStr(self,try),getE2FuncFromStr(self,catch)
-    if not tryfnc then e2err("Catch(ss) called without an existing try function ["..try.."]") end
-    if not catchfnc then e2err("Catch(ss) called without an existing catch function ["..catch.."]") end
+    if not tryfnc then error("Try called without an existing try function ["..try.."]",0) end
+    if not catchfnc then error("Try called without an existing catch function ["..catch.."]",0) end
     
-    local success,errstr,args = runE2InstanceSafe(self,tryfnc)
+    local success,errstr,args = runE2Instance(table_copy(self),tryfnc)
     if success then
         table_insert(args,1,1)
         return args
     else
-        runE2InstanceSafe(self,catchfnc,buildBody{
+        runE2Instance(self,catchfnc,buildBody{
             ["r"] = {0,errstr}
         })
         return {0,errstr}
@@ -229,7 +237,7 @@ e2function coroutine coroutine:reboot() -- Returns the coroutine as if it was ju
     local e2func = self.coroutines[this]
     if not e2func then return end
     local runtime = function()
-        return e2func(self)
+        return runE2Instance(table_copy(self),e2func)
     end
     return createCoroutine(self,runtime,e2func)
 end
