@@ -20,7 +20,9 @@ local function init()
             if success and not isnottype then return TypeName end
         end
         return "unknown"
-    end    
+    end
+    print("VEx loaded, thanks for installing!")
+    print("All of the e2 modules are disabled by default, enable them with wire_expression2_extension_enable <printGlobal/coroutinecore>")
 end
 
 concommand.Add("vex_reload",init)
