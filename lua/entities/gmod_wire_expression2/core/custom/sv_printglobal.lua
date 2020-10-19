@@ -61,7 +61,9 @@ end
 local function printGlobal(T,Sender,Plys)
     local currentBurst = PrintGBurstCount[Sender] or 0
     if currentBurst >= BurstMax:GetInt() then return end
-    if #T > ArgMax:GetInt() then
+
+    local argLimit = ArgMax:GetInt()
+    if #T > argLimit then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max args [%d]",#T,argLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
@@ -76,8 +78,10 @@ local function printGlobal(T,Sender,Plys)
             T[K] = tostring(V)
         end
     end
+    
+    local charLimit = CharMax:GetInt()
     local printString = table.concat(printStringTable)
-    if #printString > CharMax:GetInt() then
+    if #printString > charLimit then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max chars [%d]",#printString,charLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
         return
