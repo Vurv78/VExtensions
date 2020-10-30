@@ -57,3 +57,62 @@ end
 e2function angle entity:getRightHandAngVR()
     return vrmod.GetRightHandAng(this)
 end
+
+-- TODO: Make runOnVREnter and runOnVRExit one single runOn that returns 1 if entered, 0 if exit.
+
+__e2setcost(5)
+
+registerCallback("construct", function(self) -- On e2 placed, initalize our vrmod data.
+	self.data.vrdata = {}
+end)
+
+-- Enter
+vex.createE2Hook("VRMod_Start","vrmodenter",function(chip,before,ent)
+    if not before then return end
+    chip.context.data.vrdata["entity"] = ent
+end)
+
+e2function void runOnVREnter(bool)
+    vex.listenE2Hook(self,"VRMod_Start",bool == 1)
+end
+
+e2function number vrEnterClk()
+    return vex.didE2RunOn(self,"vrmodenter")
+end
+
+e2function entity vrEnterEntity()
+    return self.data.vrdata["entity"]
+end
+
+-- Exit
+vex.createE2Hook("VRMod_Exit","vrmod_exit")
+
+e2function void runOnVRExit(bool)
+    vex.listenE2Hook(self,"VRMod_Start",bool == 1)
+end
+
+e2function number vrExitClk()
+    return vex.didE2RunOn(self,"vrmod_exit")
+end
+
+-- Pickup
+vex.createE2Hook("VRMod_Pickup","vrmod_pickup")
+
+e2function void runOnVRPickup(bool)
+    vex.listenE2Hook(self,"VRMod_Pickup",bool == 1)
+end
+
+e2function number vrPickupClk()
+    return vex.didE2RunOn(self,"vrmod_pickup")
+end
+
+--Drop
+vex.createE2Hook("VRMod_Drop","vrmod_drop")
+
+e2function void runOnVRDrop(bool)
+    vex.listenE2Hook(self,"VRMod_Drop",bool == 1)
+end
+
+e2function number vrDropClk()
+    return vex.didE2RunOn(self,"vrmod_drop")
+end
