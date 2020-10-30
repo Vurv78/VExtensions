@@ -34,6 +34,7 @@ local function init()
         end
         return "unknown"
     end
+<<<<<<< HEAD
 
     vex.listenE2Hook = function(context,id,dorun)
         if not vex.runs_on[id] then vex.runs_on[id] = {} end
@@ -67,6 +68,10 @@ local function init()
         return context.data["vex_ran_by_" .. id] and 1 or 0
     end
 
+=======
+    print("VEx loaded, thanks for installing!")
+    print("All of the e2 modules are disabled by default, enable them with wire_expression2_extension_enable <printGlobal/coroutinecore>")
+>>>>>>> 28f64218a743edbd366fba480456dfe77e28a990
 end
 
 concommand.Add("vex_reload",function()
