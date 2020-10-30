@@ -12,13 +12,6 @@ Note that this will be unstable outside of releases (I KNOW THERE ARENT ANY RIGH
 
 Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
 
-## CoroutineCore
-![](https://img.shields.io/badge/StarfallEx-no-red)
-![](https://img.shields.io/badge/Expression-yes-green)
-
-Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
-https://github.com/Vurv78/E2-CoroutineCore
-
 ## VRMod Functions
 ![](https://img.shields.io/badge/StarfallEx-yes-green)
 ![](https://img.shields.io/badge/Expression-yes-green)
@@ -26,8 +19,13 @@ https://github.com/Vurv78/E2-CoroutineCore
 Allows you to use VRMod's SHARED functions if VRMod is installed on your server.
 This gives you access to anyone in VR's head placement, angle and hand placement, etc.
 
-## Selfaware 2
-![](https://img.shields.io/badge/StarfallEx-no-red)
+## E2 CoroutineCore
+![](https://img.shields.io/badge/Expression-yes-green)
+
+Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
+https://github.com/Vurv78/E2-CoroutineCore
+
+## E2 Selfaware Extended
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Adds more functions that are more 'selfaware' just like e2's general selfaware.lua core
