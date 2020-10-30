@@ -64,16 +64,16 @@ local chatsHidden = {}
 __e2setcost(3)
 e2function number canHideChatPly(entity ply)
     if not ply:IsValid() then return end
-    return ply:GetInfoNum("vurve2_canhidechat_cl",0)==0 and 0 or 1
+    return ply:GetInfoNum("canhidechatply_cl",0)==0 and 0 or 1
 end
 
 __e2setcost(20)
 e2function void hideChatPly(entity ply, hide)
     if not ply:IsValid() then return end
-    if hide==0 then chatsHidden[ply] = false return end
+    if hide==0 then chatsHidden[ply] = false return end -- TODO: This may be abusable and would make it so people
     if self.player ~= ply then
-        if ply:GetInfoNum("vurve2_canhidechat_cl",0)==0 then return end
-        ply:PrintMessage(HUD_PRINTCONSOLE, string.format("Your chat was hidden by %s's expression 2 chip.",self.player:GetName())) -- Notify the user that their chat was hidden by X
+        if ply:GetInfoNum("canhidechatply_cl",0)==0 then return end
+        ply:PrintMessage(HUD_PRINTCONSOLE, string.format("Your chat was hidden by %s's expression 2 chip. See canhidechatply_cl to disable this.",self.player:GetName())) -- Notify the user that their chat was hidden by X
         print(string.format("%s's chat was hidden by %s's expression 2 chip.",ply:GetName(),self.player:GetName())) -- Log to server console
     end
     chatsHidden[ply] = true -- Disregard the convar if you're the owner of the chip.
@@ -86,5 +86,3 @@ hook.Add("PlayerSay","vurve2_canhidechat_hide",function(sender)
         return ""
     end
 end)
-
--- Hide Chat 7/3/2020 by Vurv
