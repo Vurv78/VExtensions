@@ -9,7 +9,7 @@
 ]]
 
 -- Disabled by default
-E2Lib.RegisterExtension("printGlobal", false, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
+E2Lib.RegisterExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
 
 local CharMax = GetConVar("printglobal_charmax_sv")
 local ArgMax = GetConVar("printglobal_argmax_sv")
