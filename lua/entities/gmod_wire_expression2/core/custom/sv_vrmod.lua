@@ -14,6 +14,7 @@
 -- Vurv#6428 (363590853140152321)
 
 if not vrmod then print("VRMod was not detected! Please install VRMod to use the vrmod e2 extension.") end
+if not vex then print("vexlib was not detected in vrmod??!!??! Please report this to here: https://github.com/Vurv78/VExtensions") end
 
 -- Enabled by default, since this is super tame
 E2Lib.RegisterExtension("vrmod", true, "Allows E2s to use vrmod functions that let you see where people's hands and vr headsets are for interactive chips!")
@@ -67,9 +68,9 @@ registerCallback("construct", function(self) -- On e2 placed, initalize our vrmo
 end)
 
 -- Enter
-vex.createE2Hook("VRMod_Start","vrmodenter",function(chip,before,ent)
+vex.createE2Hook("VRMod_Start","vrmod_enter",function(chip,before,ent)
     if not before then return end
-    chip.context.data.vrdata["entity"] = ent
+    chip.context.data.vrdata["enter_entity"] = ent
 end)
 
 e2function void runOnVREnter(bool)
@@ -77,15 +78,18 @@ e2function void runOnVREnter(bool)
 end
 
 e2function number vrEnterClk()
-    return vex.didE2RunOn(self,"vrmodenter")
+    return vex.didE2RunOn(self,"vrmod_enter")
 end
 
-e2function entity vrEnterEntity()
-    return self.data.vrdata["entity"]
+e2function entity vrEnterPly()
+    return self.data.vrdata["enter_entity"]
 end
 
 -- Exit
-vex.createE2Hook("VRMod_Exit","vrmod_exit")
+vex.createE2Hook("VRMod_Exit","vrmod_exit",function(chip,before,ent)
+    if not before then return end
+    chip.context.data.vrdata["exit_entity"] = ent
+end)
 
 e2function void runOnVRExit(bool)
     vex.listenE2Hook(self,"VRMod_Start",bool == 1)
@@ -95,8 +99,16 @@ e2function number vrExitClk()
     return vex.didE2RunOn(self,"vrmod_exit")
 end
 
+e2function entity vrExitPly()
+    return self.data.vrdata["exit_entity"]
+end
+
 -- Pickup
-vex.createE2Hook("VRMod_Pickup","vrmod_pickup")
+vex.createE2Hook("VRMod_Pickup","vrmod_pickup",function(chip,before,ply,ent)
+    if not before then return end
+    chip.context.data.vrdata["pickup_ply"] = ply
+    chip.context.data.vrdata["pickup_ent"] = ent
+end)
 
 e2function void runOnVRPickup(bool)
     vex.listenE2Hook(self,"VRMod_Pickup",bool == 1)
@@ -106,8 +118,20 @@ e2function number vrPickupClk()
     return vex.didE2RunOn(self,"vrmod_pickup")
 end
 
---Drop
-vex.createE2Hook("VRMod_Drop","vrmod_drop")
+e2function entity vrPickupPly()
+    return self.data.vrdata["pickup_ply"]
+end
+
+e2function entity vrPickupEnt()
+    return self.data.vrdata["pickup_ent"]
+end
+
+-- Drop
+vex.createE2Hook("VRMod_Drop","vrmod_drop",function(chip,before,ply,ent)
+    if not before then return end
+    chip.context.data.vrdata["drop_ply"] = ply
+    chip.context.data.vrdata["drop_ent"] = ent
+end)
 
 e2function void runOnVRDrop(bool)
     vex.listenE2Hook(self,"VRMod_Drop",bool == 1)
@@ -115,4 +139,12 @@ end
 
 e2function number vrDropClk()
     return vex.didE2RunOn(self,"vrmod_drop")
+end
+
+e2function entity vrDropPly()
+    return self.data.vrdata["drop_ply"]
+end
+
+e2function entity vrDropEnt()
+    return self.data.vrdata["drop_ent"]
 end

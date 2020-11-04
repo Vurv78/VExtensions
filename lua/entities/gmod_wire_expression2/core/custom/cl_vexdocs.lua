@@ -66,7 +66,7 @@ desc("lastGPrintText(e)","Returns the last text to be sent by player e with prin
 ]]
 
 desc("ifdef(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an e2 function, 2 if the function is a user-defined function and exists")
-desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon.")
+desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon")
 
 --[[
  _    __ ____   __  ___            __   ______                                 __   _  __     _  __ _  __        
@@ -91,6 +91,30 @@ desc("getLeftHandAngVR(e:)","Returns angle of player in VR's left hand")
 
 desc("getRightHandPosVR(e:)","Returns vector position of player in VR's right hand")
 desc("getRightHandAngVR(e:)","Returns angle of player in VR's right hand")
+
+-- RunOn*
+
+-- Enter
+desc("runOnVREnter(n)","Sets the chip to run on players entering VR")
+desc("vrPickupClk()","Returns whether the chip was ran by someone entering VR")
+desc("vrEnterPly()","Returns the last player to enter VR")
+
+-- Exit
+desc("runOnVRExit(n)","Sets the chip to run on players exiting VR")
+desc("vrExitClk()","Returns whether the chip was ran by someone leaving VR")
+desc("vrExitPly()","Returns the last player to leave VR")
+
+-- Pickup
+desc("runOnVRPickup(n)","Sets the chip to run on players picking up a prop in VR")
+desc("vrPickupClk()","Returns whether the chip was ran by someone picking up a prop in VR")
+desc("vrPickupPly()","Returns the last player to pick up a prop in VR")
+desc("vrPickupEnt()","Returns the last prop to be picked up by a player in VR")
+
+-- Drop
+desc("runOnVRDrop(n)","Sets the chip to run on players letting go of a prop in VR")
+desc("vrDropClk()","Returns whether the chip was ran by someone dropping a prop in VR")
+desc("vrDropPly()","Returns the last player to drop a prop VR")
+desc("vrDropEnt()","Returns the last prop to be dropped by a player in VR")
 
 --[[
    ______                            __   _                   

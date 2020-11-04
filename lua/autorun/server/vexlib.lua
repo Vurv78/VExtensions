@@ -47,6 +47,25 @@ local function init()
         vex.runs_on[id][context.entity] = dorun and true or nil
     end
 
+    vex.e2DoesRunOn = function(context,id)
+        return vex.runs_on[id][context.entity]
+    end
+
+    vex.callE2Hook = function(id,callback,...)
+        -- Executes all of the chips in the e2 hook.
+        local runs = vex.runs_on[id]
+        for chip,_ in pairs(runs) do
+            if not chip or not IsValid(chip) then
+                runs[chip] = nil
+            else
+                if not callback or not isfunction(callback) then return end
+                callback(chip,true,...)
+                chip:Execute()
+                callback(chip,false,...)
+            end
+        end
+    end
+
     -- Callback is called before and after the e2 chip is executed.
     -- function callback(chip,ranBefore)
     vex.createE2Hook = function(hookname,id,callback)
@@ -55,17 +74,11 @@ local function init()
         hook.Add(hookname,id,function(...)
             local runs = vex.runs_on[id]
             if not runs then return end
-            for chip,_ in pairs(runs) do
-                if not chip or not IsValid(chip) then
-                    runs[chip] = nil
-                else
-                    if callback then callback(chip,true,...) end
-                    chip.context.data["vex_ran_by_" .. id] = true
-                    chip:Execute()
-                    chip.context.data["vex_ran_by_" .. id] = nil
-                    if callback then callback(chip,false,...) end
-                end
-            end
+            local arg = {...}
+            vex.callE2Hook(id,function(chip,before)
+                callback(chip,before,unpack(arg))
+                chip.context.data["vex_ran_by_"..id] = before or nil
+            end)
         end)
     end
 
