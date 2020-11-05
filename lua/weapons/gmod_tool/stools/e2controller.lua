@@ -37,22 +37,26 @@ local function toolEvent(context,ply,info)
 end
 
 if SERVER then
-    function vex.getE2ControllerChip(ply)
-        return selectedChips[ply]
-    end
-    function vex.setE2ControllerChip(ply,chip,yes)
-        -- Only when
-        if selectedChips[ply] ~= chip then
-            local context = chip.context
-            if vex.e2DoesRunOn(context,"e2CSelectedClk") then
-                context.data.E2CConnectedPly = ply
-                toolEvent(context,ply)
-                chip:Execute()
-                context.data.E2CConnectedPly = nil
-            end
+    -- Add custom e2controller funcs to vex.
+    vex.constructor(function()
+        function vex.getE2ControllerChip(ply)
+            return selectedChips[ply]
         end
-        selectedChips[ply] = chip
-    end
+        function vex.setE2ControllerChip(ply,chip)
+            -- Only when
+            if chip ~= selectedChips[ply] and IsValid(chip) and chip.context then
+                selectedChips[ply] = chip
+                local context = chip.context
+                if vex.e2DoesRunOn(context,"e2CSelectedClk") then
+                    context.data.E2CConnectedPly = ply
+                    toolEvent(context,ply)
+                    chip:Execute()
+                    context.data.E2CConnectedPly = nil
+                end
+            end
+            selectedChips[ply] = chip
+        end
+    end)
 end
 
 function TOOL:LeftClick(trace)
@@ -102,7 +106,8 @@ function TOOL:RightClick(trace)
             notification.AddLegacy( "Selected E2 Chip", NOTIFY_HINT, 2 )
             selectedChip = chip
         else
-            vex.setE2ControllerChip(ply,chip,true)
+            print("rcset")
+            vex.setE2ControllerChip(ply,chip)
         end
     else
         local plychip = CLIENT and selectedChip or selectedChips[ply]

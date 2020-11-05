@@ -9,8 +9,12 @@
 -- We will store our global functions here to help us with extension creation
 -- Some examples of things that could be made are functions to return the e2 type of a variable, etc.
 
+local function printf(...)
+    print(string.format(...))
+end
 
 local function init()
+    local toconstruct
     if vex then
         -- Garbage collecting / Hook removal
         print("Deleting VEX hooks!")
@@ -18,11 +22,13 @@ local function init()
             --print("Deleted hook .. " .. identifier)
             hook.Remove(eventName,identifier)
         end
+        toconstruct = vex.to_construct
     end
 
     vex = {
         collecthooks = {},
-        runs_on = {}
+        runs_on = {},
+        to_construct = toconstruct or {}
     }
 
     -- Note: This is terrible
@@ -86,12 +92,26 @@ local function init()
     vex.didE2RunOn = function(context,id)
         return context.data["vex_ran_by_" .. id] and 1 or 0
     end
+
+    -- So we can have external VEX functions reload properly with vex_reload.
+    vex.constructor = function(construct)
+        vex.to_construct[#vex.to_construct+1] = construct
+        construct()
+    end
+
+    print("Loading constructors")
+    local C = #toconstruct
+    for K,Func in pairs(toconstruct) do
+        printf("Loading VEx Constructor (%d/%d)",K,C)
+        Func()
+    end
 end
 
 concommand.Add("vex_reload",function()
     init()
-    print("Reloaded the VExtensions library, you may need to wire_expression2_reload for hooks to reload properly.")
-end)
+    print("Reloaded the VExtensions library and the e2 library!")
+    wire_expression2_reload()
+end,nil,"Reloads the vextensions library and runs wire_expression2_reload.")
 
 init()
 
