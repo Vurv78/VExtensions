@@ -106,7 +106,6 @@ function TOOL:RightClick(trace)
             notification.AddLegacy( "Selected E2 Chip", NOTIFY_HINT, 2 )
             selectedChip = chip
         else
-            print("rcset")
             vex.setE2ControllerChip(ply,chip)
         end
     else
