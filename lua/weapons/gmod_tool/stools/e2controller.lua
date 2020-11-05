@@ -23,25 +23,99 @@ if CLIENT then
 	TOOL.Information = { "left", "right", "reload" }
 end
 
-local selectedChips = {}
+local selectedChip = nil -- CLIENT
+local selectedChips = {} -- SERVER
+
+
+local function hint(s,n)
+    notification.AddLegacy(s,NOTIFY_HINT,n)
+end
+
+local function toolEvent(context,ply,info)
+    context.data.E2CUser = ply
+    if info then context.data.E2CRangerInfo = info end
+end
+
+if SERVER then
+    function vex.getE2ControllerChip(ply)
+        return selectedChips[ply]
+    end
+    function vex.setE2ControllerChip(ply,chip,yes)
+        -- Only when
+        if selectedChips[ply] ~= chip then
+            local context = chip.context
+            if vex.e2DoesRunOn(context,"e2CSelectedClk") then
+                context.data.E2CConnectedPly = ply
+                toolEvent(context,ply)
+                chip:Execute()
+                context.data.E2CConnectedPly = nil
+            end
+        end
+        selectedChips[ply] = chip
+    end
+end
 
 function TOOL:LeftClick(trace)
-    if CLIENT then return end
     local ply = self:GetOwner()
-    return true
+    local plychip = CLIENT and selectedChip or selectedChips[ply]
+    if CLIENT then
+        if selectedChip then return true end
+        if not IsFirstTimePredicted() then return end
+        hint("You don't have an e2 chip selected!",1.5)
+    elseif IsValid(plychip) then
+        local context = plychip.context
+        if vex.e2DoesRunOn(context,"E2CLeftMouseClk") then
+            context.data.E2CLeftMouseClk = true
+            toolEvent(context,ply,trace)
+            plychip:Execute()
+            context.data.E2CLeftMouseClk = nil
+        end
+    end
+end
+
+function TOOL:Reload(trace)
+    local ply = self:GetOwner()
+    local plychip = CLIENT and selectedChip or selectedChips[ply]
+    if CLIENT then
+        if selectedChip then return true end
+        if not IsFirstTimePredicted() then return end
+        hint("You don't have an e2 chip selected!",1.5)
+    elseif IsValid(plychip) then
+        local context = plychip.context
+        if vex.e2DoesRunOn(context,"E2CReloadClk") then
+            context.data.E2CReloadClk = true
+            toolEvent(context,ply,trace)
+            plychip:Execute()
+            context.data.E2CReloadClk = nil
+        end
+    end
 end
  
 -- If you are looking at an e2 chip, will change e2 chip owner to this.
 function TOOL:RightClick(trace)
     local ply = self:GetOwner()
     local chip = trace.Entity
-    if chip then
-        if chip:GetClass()=="gmod_wire_expression2" then
-            selectedChips[ply] = chip
-            if CLIENT then
-                notification.AddLegacy( "Selected E2 Chip", NOTIFY_HINT, 2 )
+    if IsValid(chip) and chip:GetClass()=="gmod_wire_expression2" then
+        -- Set the selected chip
+        if CLIENT then
+            if not IsFirstTimePredicted() then return true end
+            notification.AddLegacy( "Selected E2 Chip", NOTIFY_HINT, 2 )
+            selectedChip = chip
+        else
+            vex.setE2ControllerChip(ply,chip,true)
+        end
+    else
+        local plychip = CLIENT and selectedChip or selectedChips[ply]
+        if IsValid(plychip) then
+            if CLIENT then return true end
+            local context = plychip.context
+            if vex.e2DoesRunOn(context,"E2CRightMouseClk") then
+                context.data.E2CRightMouseClk = true
+                toolEvent(context,ply,trace)
+                plychip:Execute()
+                context.data.E2CRightMouseClk = nil
             end
+            return true
         end
     end
-    return true
 end

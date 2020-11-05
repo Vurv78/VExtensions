@@ -134,3 +134,36 @@ desc("status(xco:)","Returns a string of the status of the coroutine, 'dead' for
 desc("wait(xco:n)","Makes a coroutine wait for n amount of seconds, in this time, it is yielded and cannot be resumed")
 desc("yield(xco:)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
 desc("reboot(xco:)","Returns a coroutine object that behaves as if the coroutine given was never started or was reset, 'rebooting' it")
+
+--[[
+    _________      ______            __   ______              
+   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________ 
+  / __/  __/ /     / / / __ \/ __ \/ /  / /   / __ \/ ___/ _ \
+ / /___ / __/     / / / /_/ / /_/ / /  / /___/ /_/ / /  /  __/
+/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/   
+    This is an expression2 core that adds functionality with the e2 controller tool.
+        It adds runOn* events for when any player selecting the e2 with the e2 controller clicks or presses reload.
+            You can use functions to forcefully set your own selected chip. (Keyword: Your own. This behaves like starfall's setHUDActive.)
+]]
+
+-- Selecting
+desc("setE2CSelected(n)","Sets your own current e2 controller's selected chip to the chip running the code so you can use runOnE2C events")
+desc("runOnE2CSelected(n)","Makes your e2 chip run when someone selects the chip with the e2 controller")
+desc("e2CSelectedClk()","Returns the person who just triggered the e2c select event, triggering your chip") -- This is confusing to put in words
+
+-- Left Mouse Button
+desc("runOnE2CLeftClick(n)","Makes your e2 chip run when any selected player's e2 controller left clicks")
+desc("e2CLeftMouseClk()","Returns 1 or 0 for whether the e2 chip was ran by someone with your chip selected with the e2 controller left clicking")
+
+-- Right Mouse Button
+desc("runOnE2CRightClick(n)","Makes your e2 chip run when any selected player's e2 controller right clicks")
+desc("e2CRightMouseClk()","Returns 1 or 0 for whether the e2 chip was ran by someone with your chip selected with the e2 controller right clicking")
+
+-- Reload Event
+desc("runOnE2CReload(n)","Makes your e2 chip run when any selected player's e2 controller presses their reload key")
+desc("e2CReloadClk()","Returns 1 or 0 for whether the e2 chip was ran by someone with your chip selected with the e2 controller right clicking")
+
+-- Information, like the trace info for when any reload/click/selected event is triggered.
+
+desc("lastE2CUser()","Returns the last user to trigger an e2c event. By clicking their mouse or by selecting your e2.")
+desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event, so you can get the position of a left click event for example.")
