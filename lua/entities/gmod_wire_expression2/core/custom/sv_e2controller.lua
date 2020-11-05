@@ -21,10 +21,14 @@ chip.context.data:: = {
 
 -- Rules: All functions must have E2C in them.
 
+__e2setcost(10)
+
 e2function void setE2CSelected(number enable)
     vex.setE2ControllerChip(self.player,self.entity or nil)
     --self.player:ChatPrint("Note that this function is currently pretty bad.. for some reason it executes e2's 'first' twice..")
 end
+
+__e2setcost(5)
 
 e2function void runOnE2CSelected(number enable)
     vex.listenE2Hook(self,"e2CSelectedClk",enable~=0)
