@@ -3,6 +3,7 @@
 
 A compilation of mini-addons for Expression2 and StarfallEx development
 Note that this will be unstable outside of releases (I KNOW THERE ARENT ANY RIGHT NOW) >:v
+This is comparable to addons like Antagonise-Core / AntCore or E2Power, except, not filled with bugs and backdoors (E2Power)
 
 ### An overview of what's added:
 
