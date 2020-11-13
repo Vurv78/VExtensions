@@ -28,7 +28,8 @@ local function init()
     vex = {
         collecthooks = {},
         runs_on = {},
-        to_construct = toconstruct or {}
+        to_construct = toconstruct or {},
+        tensions = {} -- vex.tensions
     }
 
     -- Note: This is terrible
@@ -99,6 +100,23 @@ local function init()
         construct()
     end
 
+    vex.addNetString = function(str)
+        util.AddNetworkString("VEx_Net_"..str)
+    end
+
+    vex.registerExtension = function(name,enabled,helpstr,...)
+        vex.tensions[name] = {enabled,helpstr}
+        E2Lib.RegisterExtension(name,enabled,helpstr,...)
+    end
+
+    vex.addConsoleCommand = function(name,callback,...)
+        -- Will prefix every vex concmd with vex_, so you can easily just 'find vex_'
+        -- The suffix should also be _sv
+        local extended_name = "vex_"..name.."_sv"
+        --vex.concmds[extended_name] = callback
+        concommand.Add(extended_name,callback,...)
+    end
+
     print("Loading constructors")
     local C = #toconstruct
     for K,Func in pairs(toconstruct) do
@@ -107,13 +125,13 @@ local function init()
     end
 end
 
-concommand.Add("vex_reload",function()
+init()
+
+vex.addConsoleCommand("reload",function()
     init()
     print("Reloaded the VExtensions library and the e2 library!")
     wire_expression2_reload()
 end,nil,"Reloads the vextensions library and runs wire_expression2_reload.")
-
-init()
 
 print("VExtensions loaded!")
 print("Most of the e2 modules are disabled by default, enable them with wire_expression2_extension_enable <printGlobal/coroutinecore>")
