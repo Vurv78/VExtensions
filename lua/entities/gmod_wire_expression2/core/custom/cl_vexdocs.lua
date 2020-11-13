@@ -25,9 +25,9 @@ desc("canHideChatPly(e)","Returns whether you can hide a chats player, checking 
 desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 for whether it should")
 
 --- These two actually come from sv_coroutine.lua but don't really fit with the addon.
-desc("try(s)","Tries to run the first function, and returns an array with the first element being a number 1 or 0 for whether it successfully ran, and the next either being the error message or the return value of the 'try' function.")
+desc("try(s)","Tries to run the first function, and returns an array with the first element being a number 1 or 0 for whether it successfully ran, and the next either being the error message or the return value of the 'try' function. Like pcall")
 -- With catching
-desc("try(ss)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results.")    
+desc("catch(ss)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results. Like xpcall")
 
 --[[
     ____         _         __   ______ __        __            __
@@ -65,7 +65,7 @@ desc("lastGPrintText(e)","Returns the last text to be sent by player e with prin
  Adds functions similarly to regular-e2's self-aware core.
 ]]
 
-desc("ifdef(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an e2 function, 2 if the function is a user-defined function and exists")
+desc("defined(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an e2 function, 2 if the function is a user-defined function and exists")
 desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon")
 
 --[[
@@ -128,6 +128,8 @@ desc("vrDropEnt()","Returns the last prop to be dropped by a player in VR")
 
 desc("coroutine(s)","Creates a coroutine object to be run with xco:resume()")
 desc("coroutineRunning()","Returns the current e2 coroutine running, else nothing")
+desc("coroutineYield()","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
+desc("coroutineWait(n)","Makes a coroutine wait for n amount of seconds, in this time, it is yielded and cannot be resumed")
 
 -- Metamethods
 desc("status(xco:)","Returns a string of the status of the coroutine, 'dead' for finished, 'suspended' for yielded, and 'running' for obvious reasons")
