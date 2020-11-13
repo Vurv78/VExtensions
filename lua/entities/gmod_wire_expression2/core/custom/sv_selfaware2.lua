@@ -39,9 +39,9 @@ local function getE2Func(compiler,funcname)
     end
 end
 
--- Ex: print(defined("print(...)")) or print(defined("e:health()"))
+-- Ex: print(ifdef(print(...))) or print(ifdef("e:health()"))
 -- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function
-e2function number defined(string funcname)
+e2function number ifdef(string funcname)
 	return getE2Func(self,funcname) and 1 or (getE2UDF(self,funcname) and 2 or 0)
 end
 
