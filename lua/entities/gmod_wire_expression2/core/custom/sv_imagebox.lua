@@ -59,7 +59,7 @@ end
 e2function void wirelink:egpImageBox( number index, vector2 pos, vector2 size , string url )
     if (!EGP:IsAllowed( self, this )) then return end
     if not isGoodURL(url) then
-        self.player:ChatPrint("For the full list of whitelisted domains for urls, check here: [placeholder]")
+        self.player:ChatPrint("For the full list of whitelisted domains for urls, check here: [https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21]")
         error("This is not a whitelisted url! See your chat box for more details",0)
     end
 	local bool, obj = EGP:CreateObject( this, EGP.Objects.Names["ImageBox"], { index = index, w = size[1], h = size[2], x = pos[1], y = pos[2], url = url}, self.player )
