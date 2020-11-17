@@ -20,6 +20,7 @@ Allows you to print to other players chats with Expression 2, behaves like chat.
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on your server
+
 This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
 
 ## E2 CoroutineCore
@@ -32,6 +33,7 @@ https://github.com/Vurv78/E2-CoroutineCore
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Allows you to make EGP boxes with their material set to an image hosted on a url.
+
 Whitelisted by default, see the whitelist @ ...
 vex_url_whitelist_sv
 
@@ -39,6 +41,7 @@ vex_url_whitelist_sv
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Adds more functions that are more 'selfaware' just like e2's general selfaware.lua core
+
 Two currently added are getFunctionPath(s) to get the file path of an e2function, and ifdef(s) to basically be able to use #ifdef, just in runtime.
 
 ## Other Misc. Functions:
