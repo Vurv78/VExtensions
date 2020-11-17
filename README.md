@@ -13,20 +13,27 @@ This is comparable to addons like Antagonise-Core / AntCore or E2Power, except, 
 ![](https://img.shields.io/badge/StarfallEx-no-red)
 ![](https://img.shields.io/badge/Expression-yes-green)
 
-Allows you to print to other players chats with Expression 2 and StarfallEx, behaves like chat.AddText
+Allows you to print to other players chats with Expression 2, behaves like chat.AddText
 
 ## VRMod Functions
 ![](https://img.shields.io/badge/StarfallEx-yes-green)
 ![](https://img.shields.io/badge/Expression-yes-green)
 
-Allows you to use VRMod's SHARED functions if VRMod is installed on your server.
-This gives you access to anyone in VR's head placement, angle and hand placement, etc.
+Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on your server
+This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
 
 ## E2 CoroutineCore
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
 https://github.com/Vurv78/E2-CoroutineCore
+
+## EGP Image Boxes
+![](https://img.shields.io/badge/Expression-yes-green)
+
+Allows you to make EGP boxes with their material set to an image hosted on a url.
+Whitelisted by default, see the whitelist @ ...
+vex_url_whitelist_sv
 
 ## E2 Selfaware Extended
 ![](https://img.shields.io/badge/Expression-yes-green)
