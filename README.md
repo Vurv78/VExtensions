@@ -23,7 +23,7 @@ Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on yo
 
 This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
 
-## E2 CoroutineCore
+## CoroutineCore
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
@@ -37,7 +37,14 @@ Allows you to make EGP boxes with their material set to an image hosted on a url
 Whitelisted by default, see the whitelist @ ...
 vex_url_whitelist_sv
 
-## E2 Selfaware Extended
+## Tool Core
+![](https://img.shields.io/badge/Expression-yes-green)
+
+Allows you to make use of a custom tool in the wiremod tab, the 'E2 Controller'
+
+By right clicking a chip with the tool, you can take control of it and handle things inside of it with runOn* events when the tool clicks, that receive ranger data of the click.. etc
+
+## Selfaware Extended
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Adds more functions that are more 'selfaware' just like e2's general selfaware.lua core

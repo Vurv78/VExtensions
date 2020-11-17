@@ -169,3 +169,14 @@ desc("e2CReloadClk()","Returns 1 or 0 for whether the e2 chip was ran by someone
 
 desc("lastE2CUser()","Returns the last user to trigger an e2c event. By clicking their mouse or by selecting your e2.")
 desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event, so you can get the position of a left click event for example.")
+
+--[[
+    ____                              ____                      
+   /  _/___ ___  ____ _____ ____     / __ )____  _  _____  _____
+   / // __ `__ \/ __ `/ __ `/ _ \   / __  / __ \| |/_/ _ \/ ___/
+ _/ // / / / / / /_/ / /_/ /  __/  / /_/ / /_/ />  </  __(__  ) 
+/___/_/ /_/ /_/\__,_/\__, /\___/  /_____/\____/_/|_|\___/____/  
+                    /____/                                      
+]]
+
+desc("egpImageBox(xwl:nxv2xv2s)","Creates an egp box with its material set to a URL, whitelisted by default")
