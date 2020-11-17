@@ -109,12 +109,12 @@ local function init()
         E2Lib.RegisterExtension(name,enabled,helpstr,...)
     end
 
-    vex.addConsoleCommand = function(name,callback,...)
+    vex.addConsoleCommand = function(name,callback,a,b,c,d,e,f,g)
         -- Will prefix every vex concmd with vex_, so you can easily just 'find vex_'
         -- The suffix should also be _sv
         local extended_name = "vex_"..name.."_sv"
         --vex.concmds[extended_name] = callback
-        concommand.Add(extended_name,callback,...)
+        concommand.Add(extended_name,callback,a,b,c,d,e,f,g)
     end
 
     print("Loading constructors")
