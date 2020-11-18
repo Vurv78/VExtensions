@@ -8,8 +8,10 @@
     Allow players to create boxes with their textures set to a URL.
 ]]
 
+local URLWhitelist = CreateConVar("vex_webmaterials_whitelist_sv","1",FCVAR_REPLICATED,"Whether EGP Image boxes should be restricted by the whitelist or not.")
+local MaxMaterials = CreateConVar("vex_webmaterials_max_sv","3",FCVAR_REPLICATED,"How many webmaterials each player is allowed to have at once before overwriting materials with others.")
 
-local URLWhitelist = CreateConVar("vex_url_whitelist_sv","1",FCVAR_REPLICATED,"Whether EGP Image boxes should be restricted by the whitelist or not.")
+vex.addNetString("imageboxes")
 
 -- This is the whitelist of all urls that will be available. We do this so people can't theoretically just
 -- ip log by sending you to a url that is hosted by grabify or something
@@ -48,20 +50,75 @@ local function isGoodURL(url)
     return false
 end
 
-
-
 -- EGP Helper function
 local function Update(self,this)
 	self.data.EGP.UpdatesNeeded[this] = true
 end
 
+local function printf(...)
+    print(string.format(...))
+end
+
+local material_manager = vex.objectManager(80,"vex_webmaterials_max_sv")
+
+e2function number webMaterialMax()
+    return material_manager.maxply
+end
+
+-- Restrict the amount of times you can call webMaterialClear to 1 second, to avoid net spam / client crashers.
+local webmat_cooldown = vex.cooldownManager(1)
+
+__e2setcost(30)
+e2function number webMaterialClear()
+    -- Web material clear cooldown
+    if not webmat_cooldown:use() then return 0 end
+    -- There are no materials loaded.
+    if not material_manager[ply] then return 0 end
+    if material_manager[ply].counter == 0 then return 0 end
+    vex.netStart("imageboxes")
+        net.WriteBool(true)
+        net.WriteEntity(self.player)
+    net.Broadcast()
+    return 1
+end
+
+__e2setcost(3)
+
+e2function number webMaterialCanClear()
+    return webmat_cooldown:available() and 1 or 0
+end
+
+e2function number webMaterialCount()
+    return material_manager:checkpool(self.player).counter
+end
+
+__e2setcost(5)
+
+e2function number webMaterialCanCreate()
+    if material_manager.counter >= material_manager.maxply then return 0 end
+    local ply = self.player
+    if not material_manager[ply] then return 1 end
+    return material_manager[ply].counter < material_manager.maxply
+end
+
+__e2setcost(150)
 -- If you are wondering, gifs do not work
 e2function void wirelink:egpImageBox( number index, vector2 pos, vector2 size , string url )
     if (!EGP:IsAllowed( self, this )) then return end
+    if #url > 2000 then
+        error("This url is too long!",0)
+    end
     if not isGoodURL(url) then
         self.player:ChatPrint("For the full list of whitelisted domains for urls, check here: [https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21]")
         error("This is not a whitelisted url! See your chat box for more details",0)
     end
-	local bool, obj = EGP:CreateObject( this, EGP.Objects.Names["ImageBox"], { index = index, w = size[1], h = size[2], x = pos[1], y = pos[2], url = url}, self.player )
+    local ply = self.player
+    if not material_manager:set(ply,url,true) then
+        printf("Someone (%s) just hit the max egp image materials!",ply:SteamID())
+        error("You have reached the max amount of egp image materials!",0)
+    end
+    PrintTable(material_manager[ply])
+    printf("Someone (%s) is creating an image url.. %s",ply:SteamID(),url)
+	local bool, obj = EGP:CreateObject( this, EGP.Objects.Names["ImageBox"], { index = index, w = size[1], h = size[2], x = pos[1], y = pos[2], url = url, ply = ply}, self.player )
     if bool then EGP:DoAction( this, self, "SendObject", obj ) Update(self,this) end
 end
