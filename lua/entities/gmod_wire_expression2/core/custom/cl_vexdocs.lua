@@ -167,16 +167,27 @@ desc("e2CReloadClk()","Returns 1 or 0 for whether the e2 chip was ran by someone
 
 -- Information, like the trace info for when any reload/click/selected event is triggered.
 
-desc("lastE2CUser()","Returns the last user to trigger an e2c event. By clicking their mouse or by selecting your e2.")
-desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event, so you can get the position of a left click event for example.")
+desc("lastE2CUser()","Returns the last user to trigger an e2c event. By clicking their mouse or by selecting your e2")
+desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event, so you can get the position of a left click event for example")
 
 --[[
-    ____                              ____                      
-   /  _/___ ___  ____ _____ ____     / __ )____  _  _____  _____
-   / // __ `__ \/ __ `/ __ `/ _ \   / __  / __ \| |/_/ _ \/ ___/
- _/ // / / / / / /_/ / /_/ /  __/  / /_/ / /_/ />  </  __(__  ) 
-/___/_/ /_/ /_/\__,_/\__, /\___/  /_____/\____/_/|_|\___/____/  
-                    /____/                                      
+ _       __     __    __  ___      __            _       __    
+| |     / /__  / /_  /  |/  /___ _/ /____  _____(_)___ _/ /____
+| | /| / / _ \/ __ \/ /|_/ / __ `/ __/ _ \/ ___/ / __ `/ / ___/
+| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  ) 
+|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/  
+    Allow players to interact with materials fetched from the web
 ]]
 
-desc("egpImageBox(xwl:nxv2xv2s)","Creates an egp box with its material set to a URL, whitelisted by default")
+-- webMaterial*
+desc("webMaterialCanCreate()","Returns 1 or 0 for whether you can create a webmaterial")
+
+desc("webMaterialClear()","Clears your web materials so you can use other ones")
+desc("webMaterialCanClear()","Returns 1 or 0 for whether you can clear your webmaterials right now")
+
+desc("webMaterialCount()","Returns the number of webmaterials remaining for you to use.")
+desc("webMaterialMax()","Returns the maximum number of webmaterials you can make")
+
+-- egp
+
+desc("egpImageBox(xwl:nxv2xv2s)","Creates an egp box with its material set to a URL, whitelisted by default. If this url has not already been used, will create and use one of your webmaterials")

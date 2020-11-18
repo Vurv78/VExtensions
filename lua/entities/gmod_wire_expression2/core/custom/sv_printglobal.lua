@@ -12,7 +12,7 @@
 
 if not vex then print("vexlib was not detected in printglobal??!!??! Please report this to here: https://github.com/Vurv78/VExtensions") end
 
-E2Lib.RegisterExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
+vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
 
 vex.addNetString("printglobal")
 

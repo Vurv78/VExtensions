@@ -1,16 +1,16 @@
 --[[
-    ____                              ____                      
-   /  _/___ ___  ____ _____ ____     / __ )____  _  _____  _____
-   / // __ `__ \/ __ `/ __ `/ _ \   / __  / __ \| |/_/ _ \/ ___/
- _/ // / / / / / /_/ / /_/ /  __/  / /_/ / /_/ />  </  __(__  ) 
-/___/_/ /_/ /_/\__,_/\__, /\___/  /_____/\____/_/|_|\___/____/  
-                    /____/                                      
-    Allow players to create boxes with their textures set to a URL.
+ _       __     __    __  ___      __            _       __    
+| |     / /__  / /_  /  |/  /___ _/ /____  _____(_)___ _/ /____
+| | /| / / _ \/ __ \/ /|_/ / __ `/ __/ _ \/ ___/ / __ `/ / ___/
+| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  ) 
+|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/  
+    Allow players to interact with materials fetched from the web
 ]]
 
 local URLWhitelist = CreateConVar("vex_webmaterials_whitelist_sv","1",FCVAR_REPLICATED,"Whether EGP Image boxes should be restricted by the whitelist or not.")
 local MaxMaterials = CreateConVar("vex_webmaterials_max_sv","3",FCVAR_REPLICATED,"How many webmaterials each player is allowed to have at once before overwriting materials with others.")
 
+vex.registerExtension("webMaterials", true, "Allows E2s to use webmaterials in egp, with functions like egpImageBox, to see whitelisted links.")
 vex.addNetString("imageboxes")
 
 -- This is the whitelist of all urls that will be available. We do this so people can't theoretically just
