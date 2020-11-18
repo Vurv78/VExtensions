@@ -15,14 +15,6 @@ This is comparable to addons like Antagonise-Core / AntCore or E2Power, except, 
 
 Allows you to print to other players chats with Expression 2, behaves like chat.AddText
 
-## VRMod Functions
-![](https://img.shields.io/badge/StarfallEx-yes-green)
-![](https://img.shields.io/badge/Expression-yes-green)
-
-Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on your server
-
-This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
-
 ## CoroutineCore
 ![](https://img.shields.io/badge/Expression-yes-green)
 
@@ -46,6 +38,15 @@ vex_webmaterials_max_sv
 Allows you to make use of a custom tool in the wiremod tab, the 'E2 Controller'
 
 By right clicking a chip with the tool, you can take control of it and handle things inside of it with runOn* events when the tool clicks, that receive ranger data of the click.. etc
+
+## VRMod Functions
+![](https://img.shields.io/badge/StarfallEx-yes-green)
+![](https://img.shields.io/badge/Expression-yes-green)
+
+Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on your server
+
+This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
+
 
 ## Selfaware Extended
 ![](https://img.shields.io/badge/Expression-yes-green)
