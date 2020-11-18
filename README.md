@@ -26,10 +26,11 @@ https://github.com/Vurv78/E2-CoroutineCore
 
 Allows you to interact with materials pulled off of the web, through egp image boxes (and more later? props?)
 
-Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21
+Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L16
 
 ConVars:
 vex_webmaterials_whitelist_sv
+
 vex_webmaterials_max_sv
 
 ## Tool Core
