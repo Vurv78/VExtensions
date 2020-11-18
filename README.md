@@ -29,14 +29,16 @@ This includes functions to get the vr player's headset position, hand position, 
 Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can xco:wait(n) and xco:yield(), and retrieve results from xco:resume().
 https://github.com/Vurv78/E2-CoroutineCore
 
-## EGP Image Boxes
+## WebMaterials
 ![](https://img.shields.io/badge/Expression-yes-green)
 
-Allows you to make EGP boxes with their material set to an image hosted on a url.
+Allows you to interact with materials pulled off of the web, through egp image boxes (and more later? props?)
 
 Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21
 
-vex_url_whitelist_sv
+ConVars:
+vex_webmaterials_whitelist_sv
+vex_webmaterials_max_sv
 
 ## Tool Core
 ![](https://img.shields.io/badge/Expression-yes-green)
