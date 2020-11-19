@@ -1,0 +1,37 @@
+@name Hologram Placer Example
+@persist HoloInd ColorInd Colors:array SelectedColor:vector
+# Example of how to use the E2 Controller from VExtensions.
+
+if(first()){
+    runOnE2CLeftClick(1)
+    runOnE2CReload(1)
+    runOnE2CRightClick(1)
+    
+    # These are the colors that will be cycled through when we right click.
+    Colors = array(
+        vec(255,0,0), # Red
+        vec(255,69,0), # Orange
+        vec(255,255,0), # Yellow
+        vec(0,255,0), # Green
+        vec(0,255,200), # Aqua
+        vec(0,0,255), # Blue
+        vec(180,0,255), # Purple
+        vec(255,0,255) # Pink
+    )
+    ColorInd = 1
+    SelectedColor = Colors[1,vector]
+}elseif(e2CLeftMouseClk()){
+    local RData = lastE2CRangerInfo()
+    local Pos = RData:pos()
+    local Normal = RData:hitNormal()
+    holoCreate(HoloInd,Pos,vec(1,5,5),Normal:toAngle(),SelectedColor)
+    HoloInd = (HoloInd+1)%holoMaxAmount()
+}elseif(e2CReloadClk()){
+    print("Deleted all holos!")
+    HoloInd = 0
+    holoDeleteAll(1)
+}elseif(e2CRightMouseClk()){
+    ColorInd = (ColorInd+1)%Colors:count()
+    SelectedColor = Colors[ColorInd+1,vector]
+    printColor(SelectedColor,"Changed Color!")
+}

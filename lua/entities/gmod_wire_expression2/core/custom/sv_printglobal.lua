@@ -9,11 +9,17 @@
 ]]
 
 -- Disabled by default
-E2Lib.RegisterExtension("printGlobal", false, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
 
-local CharMax = GetConVar("printglobal_charmax_sv")
-local ArgMax = GetConVar("printglobal_argmax_sv")
-local BurstMax = GetConVar("printglobal_burst_sv")
+if not vex then print("vexlib was not detected in printglobal??!!??! Please report this to here: https://github.com/Vurv78/VExtensions") end
+
+vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
+
+vex.addNetString("printglobal")
+
+local CharMax = CreateConVar("vex_printglobal_charmax_sv","450",FCVAR_REPLICATED,"The amount of chars that can be sent with the e2function printGlobal(). Max 2000, default 450",0,2000)
+local ArgMax = CreateConVar("vex_printglobal_argmax_sv","100",FCVAR_REPLICATED,"The amount of arguments that can be sent with the e2function printGlobal(). Max 255, default 100",0,255)
+local BurstMax = CreateConVar("vex_printglobal_burst_sv","4",FCVAR_REPLICATED,"How many times printGlobal can be used in a second. Default 4 times per second, same as default print")
+
 local PrintGBurstCount = {}
 local PrintGCache = { recent = {NULL,{},""} }
 local PrintGAlert = {}

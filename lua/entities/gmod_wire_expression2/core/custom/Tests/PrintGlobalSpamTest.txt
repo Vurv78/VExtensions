@@ -1,0 +1,23 @@
+@name PrintGlobal Spam / Stress Test
+@persist Test
+if(first()){
+    Test = 2
+    
+    # Tests are:
+    # 1 = While loop spam
+    # 2 = Argument spam
+    runOnTick(1)  
+}elseif(tickClk()){
+    if(Test==1){
+        while(perf()){
+            printGlobal(owner(),"cool")
+        }
+    }elseif(Test==2){
+        Args = array(vec(255,0,0),"test")
+        while(perf(5)){
+            Args=Args:add(Args)
+        }
+        print(Args)
+        printGlobal(owner(),Args)
+    }
+}

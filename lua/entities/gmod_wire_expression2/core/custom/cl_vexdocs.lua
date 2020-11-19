@@ -25,9 +25,9 @@ desc("canHideChatPly(e)","Returns whether you can hide a chats player, checking 
 desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 for whether it should")
 
 --- These two actually come from sv_coroutine.lua but don't really fit with the addon.
-desc("try(s)","Tries to run the first function, and returns an array with the first element being a number 1 or 0 for whether it successfully ran, and the next either being the error message or the return value of the 'try' function.")
+desc("try(s)","Tries to run the first function, and returns an array with the first element being a number 1 or 0 for whether it successfully ran, and the next either being the error message or the return value of the 'try' function. Like pcall")
 -- With catching
-desc("try(ss)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results.")    
+desc("catch(ss)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results. Like xpcall")
 
 --[[
     ____         _         __   ______ __        __            __
@@ -65,8 +65,8 @@ desc("lastGPrintText(e)","Returns the last text to be sent by player e with prin
  Adds functions similarly to regular-e2's self-aware core.
 ]]
 
-desc("ifdef(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an e2 function, 2 if the function is a user-defined function and exists")
-desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon.")
+desc("defined(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an e2 function, 2 if the function is a user-defined function and exists")
+desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon")
 
 --[[
  _    __ ____   __  ___            __   ______                                 __   _  __     _  __ _  __        
@@ -92,6 +92,30 @@ desc("getLeftHandAngVR(e:)","Returns angle of player in VR's left hand")
 desc("getRightHandPosVR(e:)","Returns vector position of player in VR's right hand")
 desc("getRightHandAngVR(e:)","Returns angle of player in VR's right hand")
 
+-- RunOn*
+
+-- Enter
+desc("runOnVREnter(n)","Sets the chip to run on players entering VR")
+desc("vrPickupClk()","Returns whether the chip was ran by someone entering VR")
+desc("vrEnterPly()","Returns the last player to enter VR")
+
+-- Exit
+desc("runOnVRExit(n)","Sets the chip to run on players exiting VR")
+desc("vrExitClk()","Returns whether the chip was ran by someone leaving VR")
+desc("vrExitPly()","Returns the last player to leave VR")
+
+-- Pickup
+desc("runOnVRPickup(n)","Sets the chip to run on players picking up a prop in VR")
+desc("vrPickupClk()","Returns whether the chip was ran by someone picking up a prop in VR")
+desc("vrPickupPly()","Returns the last player to pick up a prop in VR")
+desc("vrPickupEnt()","Returns the last prop to be picked up by a player in VR")
+
+-- Drop
+desc("runOnVRDrop(n)","Sets the chip to run on players letting go of a prop in VR")
+desc("vrDropClk()","Returns whether the chip was ran by someone dropping a prop in VR")
+desc("vrDropPly()","Returns the last player to drop a prop VR")
+desc("vrDropEnt()","Returns the last prop to be dropped by a player in VR")
+
 --[[
    ______                            __   _                   
   / ____/____   _____ ____   __  __ / /_ (_)____   ___   _____
@@ -104,9 +128,66 @@ desc("getRightHandAngVR(e:)","Returns angle of player in VR's right hand")
 
 desc("coroutine(s)","Creates a coroutine object to be run with xco:resume()")
 desc("coroutineRunning()","Returns the current e2 coroutine running, else nothing")
+desc("coroutineYield()","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
+desc("coroutineWait(n)","Makes a coroutine wait for n amount of seconds, in this time, it is yielded and cannot be resumed")
 
 -- Metamethods
 desc("status(xco:)","Returns a string of the status of the coroutine, 'dead' for finished, 'suspended' for yielded, and 'running' for obvious reasons")
 desc("wait(xco:n)","Makes a coroutine wait for n amount of seconds, in this time, it is yielded and cannot be resumed")
 desc("yield(xco:)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
 desc("reboot(xco:)","Returns a coroutine object that behaves as if the coroutine given was never started or was reset, 'rebooting' it")
+
+--[[
+    _________      ______            __   ______              
+   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________ 
+  / __/  __/ /     / / / __ \/ __ \/ /  / /   / __ \/ ___/ _ \
+ / /___ / __/     / / / /_/ / /_/ / /  / /___/ /_/ / /  /  __/
+/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/   
+    This is an expression2 core that adds functionality with the e2 controller tool.
+        It adds runOn* events for when any player selecting the e2 with the e2 controller clicks or presses reload.
+            You can use functions to forcefully set your own selected chip. (Keyword: Your own. This behaves like starfall's setHUDActive.)
+]]
+
+-- Selecting
+desc("setE2CSelected(n)","Sets your own current e2 controller's selected chip to the chip running the code so you can use runOnE2C events")
+desc("runOnE2CSelected(n)","Makes your e2 chip run when someone selects the chip with the e2 controller")
+desc("e2CSelectedClk()","Returns the person who just triggered the e2c select event, triggering your chip") -- This is confusing to put in words
+
+-- Left Mouse Button
+desc("runOnE2CLeftClick(n)","Makes your e2 chip run when any selected player's e2 controller left clicks")
+desc("e2CLeftMouseClk()","Returns 1 or 0 for whether the e2 chip was ran by someone with your chip selected with the e2 controller left clicking")
+
+-- Right Mouse Button
+desc("runOnE2CRightClick(n)","Makes your e2 chip run when any selected player's e2 controller right clicks")
+desc("e2CRightMouseClk()","Returns 1 or 0 for whether the e2 chip was ran by someone with your chip selected with the e2 controller right clicking")
+
+-- Reload Event
+desc("runOnE2CReload(n)","Makes your e2 chip run when any selected player's e2 controller presses their reload key")
+desc("e2CReloadClk()","Returns 1 or 0 for whether the e2 chip was ran by someone with your chip selected with the e2 controller right clicking")
+
+-- Information, like the trace info for when any reload/click/selected event is triggered.
+
+desc("lastE2CUser()","Returns the last user to trigger an e2c event. By clicking their mouse or by selecting your e2")
+desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event, so you can get the position of a left click event for example")
+
+--[[
+ _       __     __    __  ___      __            _       __    
+| |     / /__  / /_  /  |/  /___ _/ /____  _____(_)___ _/ /____
+| | /| / / _ \/ __ \/ /|_/ / __ `/ __/ _ \/ ___/ / __ `/ / ___/
+| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  ) 
+|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/  
+    Allow players to interact with materials fetched from the web
+]]
+
+-- webMaterial*
+desc("webMaterialCanCreate()","Returns 1 or 0 for whether you can create a webmaterial")
+
+desc("webMaterialClear()","Clears your web materials so you can use other ones")
+desc("webMaterialCanClear()","Returns 1 or 0 for whether you can clear your webmaterials right now")
+
+desc("webMaterialCount()","Returns the number of webmaterials remaining for you to use.")
+desc("webMaterialMax()","Returns the maximum number of webmaterials you can make")
+
+-- egp
+
+desc("egpImageBox(xwl:nxv2xv2s)","Creates an egp box with its material set to a URL, whitelisted by default. If this url has not already been used, will create and use one of your webmaterials")
