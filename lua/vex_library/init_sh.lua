@@ -52,9 +52,11 @@ end
 if vex then
     VEx_toconstruct = vex.constructors
     VEx_todestruct = vex.destructors
+    VEx_topersist = vex.persists
 end
 
 vex = {
+    persists = VEx_topersist or {},
     constructors = VEx_toconstruct or {},
     destructors = VEx_todestruct or {},
 }

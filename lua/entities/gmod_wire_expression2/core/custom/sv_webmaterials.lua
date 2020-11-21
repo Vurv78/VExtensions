@@ -280,9 +280,10 @@ e2function webmaterial wirelink:egpImageBox(number index, vector2 pos, vector2 s
     return wm
 end
 
-local function isOwner(context,ent)
-    if not context then return false end
-    return ent:GetOwner() == context.player
+local function isOwner(self,ent)
+    if not self then return false end
+    if not IsValid(ent:GetOwner()) then return true end
+    return ent:GetOwner() == self.player
 end
 
 e2function number entity:setMaterial(webmaterial wm)

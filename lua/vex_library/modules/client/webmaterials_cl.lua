@@ -117,7 +117,6 @@ local function toVertexLit(material)
 end
 
 local function applyWebMat(url,prop)
-    print("applywebmat")
     if not IsValid(prop) then return end
     local WebMat = WebMaterials[url]
     if WebMat then
@@ -171,7 +170,7 @@ local handleDestroy = {
         if not WebMaterials[url] then return end
         WebMaterials[url]:destroy()
         WebMaterials[url] = nil
-        print("Destroyed wm: " .. url)
+        --print("Destroyed wm: " .. url)
     end,
     [1] = function()
         -- Destroying all of the webmaterials registered to a chip.
@@ -183,7 +182,7 @@ local handleDestroy = {
                 if not mat then continue end
                 mat:destroy()
                 WebMaterials[url] = nil
-                print("Destroyed webmaterial " .. url)
+                --print("Destroyed webmaterial " .. url)
             end
         else
             --print("No webmaterials found for that chip.")
@@ -195,7 +194,7 @@ local handleDestroy = {
         local ply = net.ReadEntity()
         if not WebMaterials.plys[ply] then return end -- None registered.
         for url in next,WebMaterials.plys[ply] do
-            print("Destroying wm: " .. url)
+            --print("Destroying wm: " .. url)
             WebMaterials[url]:destroy()
             WebMaterials[url] = nil
         end
@@ -203,11 +202,10 @@ local handleDestroy = {
     [3] = function()
         -- Destroy all of the webmaterials registered to a player + deleting the player. Kinda unnecessary.
         local ply = net.ReadEntity()
-        print("Destroying a player.")
-        print(ply)
+        --print("Destroying a player.")
         if not WebMaterials.plys[ply] then return end -- None registered.
         for url in next,WebMaterials.plys[ply] do
-            print("Destroying wm: " .. url)
+            --print("Destroying wm: " .. url)
             WebMaterials[url]:destroy()
             WebMaterials[url] = nil
         end
@@ -223,6 +221,7 @@ end)
 vex.net_Receive("webmaterial_apply",function()
     local url = net.ReadString()
     local prop = net.ReadEntity()
+    print(url,prop)
     if not IsValid(prop) then return end
     applyWebMat(url,prop)
 end)
