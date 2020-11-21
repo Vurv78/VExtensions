@@ -1,3 +1,4 @@
+local table_remove = table.remove
 local table_insert = table.insert
 
 
