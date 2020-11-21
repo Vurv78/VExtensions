@@ -43,10 +43,10 @@ Allows you to make use of a custom tool in the wiremod tab, the 'E2 Controller'
 By right clicking a chip with the tool, you can take control of it and handle things inside of it with runOn* events when the tool clicks, that receive ranger data of the click.. etc
 
 ## VRMod Functions
-![](https://img.shields.io/badge/StarfallEx-yes-green)
 ![](https://img.shields.io/badge/Expression-yes-green)
 
 Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on your server
+StarfallEx already has these builtin now, so they have been removed from VExtensions. See https://github.com/thegrb93/StarfallEx/commit/111d81e8c97f01d3b290909c333b675f901bfa77
 
 This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
 
