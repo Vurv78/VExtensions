@@ -24,7 +24,7 @@ https://github.com/Vurv78/E2-CoroutineCore
 ## WebMaterials
 ![](https://img.shields.io/badge/Expression-yes-green)
 
-Allows you to interact with materials pulled off of the web, through egp image boxes (and more later? props?)
+Allows you to interact with images pulled off of the web that can be applied as a material to props and egp image boxes.
 
 Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L16
 
