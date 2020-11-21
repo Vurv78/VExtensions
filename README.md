@@ -26,12 +26,14 @@ https://github.com/Vurv78/E2-CoroutineCore
 
 Allows you to interact with images pulled off of the web that can be applied as a material to props and egp image boxes.
 
-Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L16
+Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_webmaterials.lua#L25
 
 ConVars:
 vex_webmaterials_whitelist_sv
 
 vex_webmaterials_max_sv
+
+vex_webmaterials_enabled_cl 1 .. etc
 
 ## Tool Core
 ![](https://img.shields.io/badge/Expression-yes-green)
