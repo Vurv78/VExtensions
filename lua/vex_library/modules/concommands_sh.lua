@@ -10,8 +10,7 @@ local function registerConcommand(storeIt,name,callback,...)
 end
 
 vex.addConsoleCommand = function(name,callback,...)
-    local full_name = name .. ""
-    registerConcommand(fullname,callback,...)
+    registerConcommand(name,callback,...)
 end
 
 vex.addConsoleCommandShared = function(name,callback,...)

@@ -17,6 +17,12 @@ All of the clientside properties will be set to nil if we do end up cleaning the
 Webmaterials will automatically be destroyed on player leave / chip destruction.
 ]]
 
+CreateConVar("vex_webmaterials_enabled_cl","1",FCVAR_USERINFO,"Whether to allow net messages from the server to change the material of props to a webmaterial.")
+
+--[[vex.addConsoleCommand("vex_webmaterials_purge_cl",function()
+
+end,nil,"Purges all of the currently shown webmaterials.")]]
+
 local WebMaterials = {
     chips = {}, -- Every webmaterial registered to a chip entity
     plys = {} -- Every webmaterial registered to player ply.
@@ -130,7 +136,6 @@ local function applyWebMat(url,prop)
         end
     else
         timer.Simple(1,function()
-            print("timersimple")
             applyWebMat(url,prop)
         end)
     end
@@ -218,10 +223,13 @@ vex.net_Receive("webmaterial_destroy",function()
     handleDestroy[mode]()
 end)
 
+local last_applied = NULL
+
 vex.net_Receive("webmaterial_apply",function()
     local url = net.ReadString()
     local prop = net.ReadEntity()
-    print(url,prop)
     if not IsValid(prop) then return end
+    if last_applied == prop then return end -- Avoid some spam
+    last_applied = prop
     applyWebMat(url,prop)
 end)

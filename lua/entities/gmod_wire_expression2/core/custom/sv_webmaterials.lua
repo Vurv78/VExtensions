@@ -114,6 +114,7 @@ end
 local webmat_net = vex.cooldownManager(0.75) -- Webmaterial creation
 local webmat_net_destroy = vex.cooldownManager(0.5) -- Webmaterial clearing / destruction
 local webmat_net_apply = vex.cooldownManager(0.25) -- Webmaterial applying on props
+local webmat_net_spam = vex.cooldownManager(0.25) -- We will use this alongside queues.
 
 -- Modes:
 -- 0 -- Destroy single web material, provide player and string url
@@ -122,6 +123,7 @@ local webmat_net_apply = vex.cooldownManager(0.25) -- Webmaterial applying on pr
 -- 3 -- Destroy a player's web material setup as a whole, because they just left the server, provide player.
 
 local function destroyWebMaterials(ply,mode,ply_or_chip,url)
+    if not webmat_net_spam:use(ply) then return end
     webmat_net_destroy:queue(ply,function()
         vex.net_Start("webmaterial_destroy")
             net.WriteUInt(mode,2)
@@ -135,6 +137,18 @@ local function destroyWebMaterials(ply,mode,ply_or_chip,url)
             end
         net.Broadcast()
     end)
+end
+
+-- Returns a table of players who have vex_webmaterials_enabled_cl set to 1
+-- Could replace with something like cvars.AddChangeCallback but for clientside cvars?
+local function getNetPlayerList()
+    local list = {}
+    for K,Ply in pairs(player.GetAll()) do
+        if Ply:GetInfoNum("vex_webmaterials_enabled_cl",1) == 1 then
+            table.insert(list,Ply)
+        end
+    end
+    return list
 end
 
 registerCallback("destruct",function(self)
@@ -152,11 +166,12 @@ e2function number webMaterialClear()
     local ply = self.player
     if not material_manager[ply] then return 0 end
     if material_manager[ply].counter == 0 then return 0 end
+    if not webmat_net_spam:use(ply) then return end
     webmat_net_destroy:queue(ply,function()
         vex.net_Start("webmaterial_destroy")
             net.WriteBool(true) -- Tell the client to delete ALL of this player's materials.
             net.WriteEntity(ply)
-        net.Broadcast()
+        net.Send(getNetPlayerList())
         material_manager:clear(ply)
     end)
     return 1
@@ -203,11 +218,12 @@ e2function number webmaterial:destroy()
     material_manager:release(ply,this.url)
     this.destroyed = true
     if this.creator ~= ply then return 1 end -- Will destroy the serverside object, but not the clientside one if this one was created from a cache.
+    if not webmat_net_spam:use(ply) then return 0 end
     webmat_net_destroy:queue(ply,function()
         vex.net_Start("webmaterial_destroy")
             net.WriteBool(false)
             net.WriteString(this.url)
-        net.Broadcast()
+        net.Send(getNetPlayerList())
     end)
     return 1
 end
@@ -243,7 +259,7 @@ e2function webmaterial webMaterial(string url)
         net.WriteString(url)
         net.WriteEntity(ply)
         net.WriteUInt(self.entity:EntIndex(),16)
-    net.Broadcast()
+    net.Send(getNetPlayerList())
     return wm
 end
 
@@ -290,11 +306,12 @@ e2function number entity:setMaterial(webmaterial wm)
     if not iswm(wm) then return 0 end
     if not IsValid(this) then return 0 end
     if not isOwner(self, this) then return 0 end
+    if not webmat_net_spam:use(ply) then return 0 end
     webmat_net_apply:queue(self.player,function()
         vex.net_Start("webmaterial_apply")
             net.WriteString(wm.url)
             net.WriteEntity(this)
-        net.Broadcast()
+        net.Send(getNetPlayerList())
     end)
     return 1
 end
