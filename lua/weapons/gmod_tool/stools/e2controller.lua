@@ -38,7 +38,7 @@ end
 
 if SERVER then
     -- Add custom e2controller funcs to vex.
-    vex.constructor(function()
+    vex.constructor("e2controller",function()
         function vex.getE2ControllerChip(ply)
             return selectedChips[ply]
         end

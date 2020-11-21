@@ -180,14 +180,28 @@ desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event
 ]]
 
 -- webMaterial*
-desc("webMaterialCanCreate()","Returns 1 or 0 for whether you can create a webmaterial")
+desc("webMaterialCanCreate()","Returns 1 or 0 for whether you can create a webmaterial, depending on how many you've made and whether you are abiding by the webMaterial creation cooldown")
+desc("webMaterial(s)","Creates a webmaterial from an image at a (whitelisted by default) url. You can use these in egpImageBox(es) and in setting the material of a prop to a web image")
 
-desc("webMaterialClear()","Clears your web materials so you can use other ones")
-desc("webMaterialCanClear()","Returns 1 or 0 for whether you can clear your webmaterials right now")
+desc("webMaterialClear()","Clears all of the web materials you've made as a player, so you can use other ones. (Not just from your chip)")
 
-desc("webMaterialCount()","Returns the number of webmaterials remaining for you to use.")
+desc("webMaterialCount()","Returns the number of webmaterials remaining for you to use")
 desc("webMaterialMax()","Returns the maximum number of webmaterials you can make")
 
--- egp
+-- webMaterial metamethods
+desc("url(xwm:)","Returns the url of the webmaterial")
+desc("creator(xwm:)","Returns the original creator of the webmaterial. Bloat function, might be removed")
+desc("cached(xwm:)","Returns whether this is a cached webmaterial (Cached webmaterials can be created infinitely since they are cached on the client). Bloat function, might be removed")
+desc("destroyed(xwm:)","Returns whether this webmaterial was destroyed by you calling webmaterial:destroy()")
+desc("destroy(xwm:)","Destroys a webmaterial, therefore freeing another slot to make a web material")
 
-desc("egpImageBox(xwl:nxv2xv2s)","Creates an egp box with its material set to a URL, whitelisted by default. If this url has not already been used, will create and use one of your webmaterials")
+-- webMaterial application on props
+desc("setMaterial(e:xwm)","Sets the material of a prop to a web material. You need to own the prop")
+
+-- EGP Functions
+
+-- wirelink:egpImageBox(vector2,vector2,string)
+desc("egpImageBox(xwl:nxv2xv2s)","Creates an egp box with its material set to a URL, whitelisted by default. If this url has not already been used, will create and use one of your webmaterials, returns this webmaterial")
+
+-- wirelink:egpImageBox(vector2,vector2,webmaterial)
+desc("egpImageBox(xwl:nxv2xv2xwm)","Creates an egp box with its material set to a webmaterial, Returns the webmaterial used")
