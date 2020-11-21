@@ -1,5 +1,4 @@
 -- PrintGlobal by Vurv (363590853140152321)
-if SERVER then AddCSLuaFile() return end -- tbh Idk what this does sorry man
 
 -- These are replicated from the server, so you cannot edit them but you can access their values.
 CreateConVar("printglobal_charmax_sv","350",FCVAR_REPLICATED,"The amount of chars that can be sent with the e2function printGlobal()",0,2000)
@@ -13,13 +12,13 @@ local function warnClient(sender)
     print(format("%s is printing to your chat with printGlobal.\nTo disable printGlobal for yourself, use the convar printglobal_enable_cl and set it to 0",sender and sender:GetName() or "Unknown Player"))
 end
 
-net.Receive("PrintGlobal_Net", function()
+vex.net_Receive("printglobal", function()
     local sender = net.ReadEntity()
     warnClient(sender)
 	local args = net.ReadInt(9)
     local result = {}
     for I = 1,args do
-        table.insert(result,net.ReadColor()) -- TODO: Don't use net.ReadColor, instead read UInts so that this uses less bits
+        table.insert(result,net.ReadColor())
 		table.insert(result,net.ReadString())
     end
 	chat.AddText( unpack( result ) )

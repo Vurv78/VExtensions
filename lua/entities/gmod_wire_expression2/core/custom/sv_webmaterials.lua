@@ -58,7 +58,6 @@ local function Update(self,this)
 end
 
 local printf = vex.printf
-
 local material_manager = vex.objectManager(80,"vex_webmaterials_max_sv")
 
 -- Webmaterial e2 type
@@ -122,6 +121,7 @@ local webmat_net_spam = vex.cooldownManager(0.25) -- We will use this alongside 
 -- 2 -- Destroy all web materials of a player, but only because they requested to. Send player
 -- 3 -- Destroy a player's web material setup as a whole, because they just left the server, provide player.
 
+-- This (only) destroys web materials on the clientside. You have to destroy them on the server separately
 local function destroyWebMaterials(ply,mode,ply_or_chip,url)
     if not webmat_net_spam:use(ply) then return end
     webmat_net_destroy:queue(ply,function()
@@ -151,12 +151,24 @@ local function getNetPlayerList()
     return list
 end
 
+registerCallback("construct",function(self)
+    self.data.webmaterials = {} -- Keep track of all of the webmaterials created by this context.
+end)
+
 registerCallback("destruct",function(self)
-    -- When the e2 is deleted, tell all of the clients on the server to destroy all webmaterials created by this player using this chip.
-    destroyWebMaterials(self.player,1,self.entity:EntIndex())
+    local ply = self.player
+    -- Release serverside objects
+    for webmat_object in next,self.data.webmaterials do
+        material_manager:release(ply,webmat_object.url)
+    end
+    -- Release clientside materials
+    destroyWebMaterials(ply,1,self.entity:EntIndex())
 end)
 
 vex.onPlayerLeave(function(ply)
+    -- Kill serverside object pool of player ply
+    material_manager:clear(ply)
+    -- Kill clientside materials
     destroyWebMaterials(ply,3,ply) -- weird
 end)
 
@@ -231,9 +243,9 @@ end
 __e2setcost(5)
 
 e2function number webMaterialCanCreate()
-    if not webmat_net:available(self.player) then return 0 end
-    if material_manager.counter >= material_manager.maxply then return 0 end
     local ply = self.player
+    if not webmat_net:available(ply) then return 0 end
+    if material_manager.counter >= material_manager.maxply then return 0 end
     if not material_manager[ply] then return 1 end
     return (material_manager[ply].counter < material_manager.maxply) and 1 or 0
 end
@@ -241,20 +253,21 @@ end
 __e2setcost(100)
 
 e2function webmaterial webMaterial(string url)
-    if not webmat_net:use(self.player) then return end
+    local ply = self.player
+    if not webmat_net:use(ply) then return end
     if #url > 2000 then
         error("This url is too long!",0)
     end
     if not isGoodURL(url) then
-        self.player:ChatPrint("For the full list of whitelisted domains for urls, check here: [https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21]")
+        ply:ChatPrint("For the full list of whitelisted domains for urls, check here: [https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21]")
         error("This is not a whitelisted url! See your chat box for more details",0)
     end
-    local ply = self.player
     local wm = webMaterial(url,ply)
     if not material_manager:set(ply,url,wm) then
         printf("%s (%s) just hit the max # of webmaterials (%d)!",ply:GetName(),ply:SteamID(),material_manager.maxply)
         error("You have reached the max amount of webmaterials!",0)
     end
+    self.data.webmaterials[wm] = true -- Keep in chip's storage to destroy on chip deletion
     vex.net_Start("webmaterial_create")
         net.WriteString(url)
         net.WriteEntity(ply)
@@ -282,6 +295,7 @@ e2function webmaterial wirelink:egpImageBox( number index, vector2 pos, vector2 
         printf("%s (%s) just hit the max # of webmaterials (%d)!",ply:GetName(),ply:SteamID(),material_manager.maxply)
         error("You have reached the max amount of webmaterials!",0)
     end
+    self.data.webmaterials[wm] = true -- Keep in chip's storage to destroy on chip deletion
     printf("Someone (%s) is creating an image url.. %s",ply:SteamID(),url)
 	local bool, obj = EGP:CreateObject( this, EGP.Objects.Names["ImageBox"], { index = index, w = size[1], h = size[2], x = pos[1], y = pos[2], url = url, ply = ply}, self.player )
     if bool then EGP:DoAction( this, self, "SendObject", obj ) Update(self,this) end
@@ -306,8 +320,9 @@ e2function number entity:setMaterial(webmaterial wm)
     if not iswm(wm) then return 0 end
     if not IsValid(this) then return 0 end
     if not isOwner(self, this) then return 0 end
+    local ply = self.player
     if not webmat_net_spam:use(ply) then return 0 end
-    webmat_net_apply:queue(self.player,function()
+    webmat_net_apply:queue(ply,function()
         vex.net_Start("webmaterial_apply")
             net.WriteString(wm.url)
             net.WriteEntity(this)

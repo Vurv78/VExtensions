@@ -1,6 +1,8 @@
 -- Just a more centralized hook system for VEx (that also gets deconstructed)
-local registeredCallbacks = {}
+local registeredCallbacks = vex.persists.registeredCallbacks or {}
+vex.persists.registeredCallbacks = registeredCallbacks
 
+-- Only call this in the modules
 vex.registerCallback = function(hookname,id)
     registeredCallbacks[id] = {}
     hook.Add(hookname,id,function(...)

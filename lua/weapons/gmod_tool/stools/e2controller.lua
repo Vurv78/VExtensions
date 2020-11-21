@@ -38,13 +38,16 @@ end
 
 if SERVER then
     -- Add custom e2controller funcs to vex.
+    local forceowner = vex.cooldownManager(0.5)
+    vex.addNetString("e2controller_force_selected")
     vex.constructor("e2controller",function()
         function vex.getE2ControllerChip(ply)
             return selectedChips[ply]
         end
         function vex.setE2ControllerChip(ply,chip)
             -- Only when
-            if chip ~= selectedChips[ply] and IsValid(chip) and chip.context then
+            if not IsValid(chip) then return end
+            if chip ~= selectedChips[ply] and chip.context then
                 selectedChips[ply] = chip
                 local context = chip.context
                 if vex.e2DoesRunOn(context,"e2CSelectedClk") then
@@ -54,8 +57,20 @@ if SERVER then
                     context.data.E2CConnectedPly = nil
                 end
             end
+            -- We send the new selected chip to the player, so on the client you don't get that 'you don't have an e2 chip selected!' prompt
+            forceowner:queue(ply,function()
+                vex.net_Start("e2controller_force_selected")
+                    net.WriteEntity(chip)
+                net.Send(ply)
+            end)
+
             selectedChips[ply] = chip
         end
+    end)
+else
+    vex.net_Receive("e2controller_force_selected",function()
+        local ent = net.ReadEntity()
+        selectedChip = IsValid(ent) and ent or selectedChip
     end)
 end
 

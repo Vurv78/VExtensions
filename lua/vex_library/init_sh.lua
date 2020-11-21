@@ -14,7 +14,6 @@
 -- Additionally, we might add some custom vex functions in other places than this library, like in an e2 core, so we want to save those.
 
 -- Persistent variables 
-local VEx_Persistent = {}
 local VEx_toconstruct = nil
 local VEx_todestruct = nil
 

@@ -2,6 +2,23 @@ local table_remove = table.remove
 local table_insert = table.insert
 
 
+-- Builds a body to run an e2 udf and pass args to it.
+local function buildBody(args) -- Why does the wireteam do this
+    local body = {
+        false -- No idea what this does, but it is necessary
+    }
+    local types = {}
+    for Type,Value in pairs(args) do
+        table_insert(body,{
+            [1] = function() return Value end,
+            ["TraceName"] = "LITERAL"
+        })
+        table_insert(types,Type)
+    end
+    table_insert(body,types)
+    return body
+end
+
 -- We use this for try and catch
 local function runE2InstanceSafe(compiler,func,body) -- Varargs to pass to the e2 function
     -- Will always return pcallerror,errstr first even if it didn't error.
@@ -12,6 +29,7 @@ local function runE2InstanceSafe(compiler,func,body) -- Varargs to pass to the e
     else
         -- Don't return args, that would be a waste
         local errmsg = table_remove(args,1)
+        if errmsg == "exit" then return true,"none",{} end -- nice exit()
         if errmsg == "perf" then errmsg = "tick quota exceeded" end
         return false,errmsg
     end
