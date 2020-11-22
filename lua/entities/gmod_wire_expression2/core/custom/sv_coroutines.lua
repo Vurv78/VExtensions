@@ -106,22 +106,6 @@ local function getE2FuncFromStr(compiler,funcname)
     end
 end
 
-local function buildBody(args) -- WHY WIRETEAM WHY??? ( We need this to pass args into udfs )
-    local body = {
-        false -- No idea what this does, but it is necessary
-    }
-    local types = {}
-    for Type,Value in pairs(args) do
-        table_insert(body,{
-            [1] = function() return Value end,
-            ["TraceName"] = "LITERAL" -- yup
-        })
-        table_insert(types,Type)
-    end
-    table_insert(body,types)
-    return body
-end -- We need to build a body in order to pass args to an e2 function.
-
 __e2setcost(20)
 
 e2function coroutine coroutine(string FuncName)

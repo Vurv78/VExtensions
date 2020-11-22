@@ -24,7 +24,7 @@ chip.context.data:: = {
 __e2setcost(10)
 
 e2function void setE2CSelected(number enable)
-    vex.setE2ControllerChip(self.player,self.entity or nil)
+    vex.setE2ControllerChip(self.player,self.entity or nil)    
     --self.player:ChatPrint("Note that this function is currently pretty bad.. for some reason it executes e2's 'first' twice..")
 end
 

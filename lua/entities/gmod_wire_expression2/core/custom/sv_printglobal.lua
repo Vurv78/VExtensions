@@ -97,7 +97,7 @@ local function printGlobal(T,Sender,Plys)
     local ArgCount = (#NewT)/2
     if ArgCount <= 100 then
         -- Make sure there aren't more args than max convar setting (somehow)
-        net.Start("PrintGlobal_Net")
+        vex.net_Start("printglobal")
             net.WriteEntity(Sender)
             net.WriteInt(ArgCount,9)
             for I = 1,ArgCount do
