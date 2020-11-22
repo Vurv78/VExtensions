@@ -8,7 +8,7 @@ CreateConVar("vex_printglobal_burst_sv","4",FCVAR_REPLICATED,"How many times pri
 local CV_GlobalChat = CreateClientConVar("vex_printglobal_enable_cl","1",true,true,"Allows players to print messages to your chat with expression2")
 
 local function warnClient(sender)
-    print(string.format("%s is printing to your chat with printGlobal.\nTo disable printGlobal for yourself, use the convar printglobal_enable_cl and set it to 0",sender and sender:GetName() or "Unknown Player"))
+    print(string.format("%s is printing to your chat with printGlobal.\nTo disable printGlobal for yourself, use the convar vex_printglobal_enable_cl and set it to 0",IsValid(sender) and sender:GetName() or "Unknown Player"))
 end
 
 vex.net_Receive("printglobal", function()
