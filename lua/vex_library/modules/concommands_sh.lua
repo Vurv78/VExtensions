@@ -10,7 +10,7 @@ local function registerConcommand(storeIt,name,callback,...)
 end
 
 vex.addConsoleCommand = function(name,callback,...)
-    registerConcommand(name,callback,...)
+    registerConcommand(true,name,callback,...)
 end
 
 vex.addConsoleCommandShared = function(name,callback,...)
@@ -18,7 +18,7 @@ vex.addConsoleCommandShared = function(name,callback,...)
 end
 
 -- Reload a specific module
-registerConcommand(true,"vex_reload",function(ply,cmd,args)
+vex.addConsoleCommand("vex_reload",function(ply,cmd,args)
     if not args[1] then print("Use vex_reload_" .. RLM .. " if you want to reload all modules.") return end
     vex.reloadModule(args[1])
 end,function(cmd,argStr)

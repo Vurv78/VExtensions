@@ -111,6 +111,20 @@ vex.loadModules = function(folder,doRun,type)
     end
 end
 
+vex.help = function()
+    -- Prints information about VExtensions.
+    print([[
+=============================================================
+
+This is the VExtensions addon's help command. Here you will find info about the addon.
+
+This is an addon that adds several extensions and functions to expression2 and starfal
+lex... (more info here)
+
+=============================================================
+    ]])
+end
+
 vex.printf = printf
 
 vex.loadModules("vex_library/modules/*_sh.lua",true,"SHARED")
@@ -122,4 +136,7 @@ vex.addConsoleCommandShared("vex_reload",function()
     destroyVEx()
     include("vex_library/init_sh.lua")
     buildVEx()
-end,true)
+end)
+
+vex.addConsoleCommand("vex_help",vex.help)
+vex.addConsoleCommand("vex_info",vex.help)
