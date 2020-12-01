@@ -1,5 +1,6 @@
 local table_remove = table.remove
 local table_insert = table.insert
+local luaTableToE2, getE2UDF, getE2Func = vex.luaTableToE2, vex.getE2UDF, vex.getE2Func
 
 
 -- Builds a body to run an e2 udf and pass args to it.
@@ -20,69 +21,54 @@ local function buildBody(args) -- Why does the wireteam do this
 end
 
 -- We use this for try and catch
-local function runE2InstanceSafe(compiler,func,body) -- Varargs to pass to the e2 function
-    -- Will always return pcallerror,errstr first even if it didn't error.
-    local args = {pcall(func,compiler,body)}
+local function runE2InstanceSafe(compiler,func,body,...)
+    -- Always return pcallerror,errstr first even if it didn't error.
+    local args = {pcall(func,compiler,body,...)}
     local success = table_remove(args,1)
     if success then
-        return true,"none",args
-    else
-        -- Don't return args, that would be a waste
-        local errmsg = table_remove(args,1)
-        if errmsg == "exit" then return true,"none",{} end -- nice exit()
-        if errmsg == "perf" then errmsg = "tick quota exceeded" end
-        return false,errmsg
+        return true,nil,args
     end
+    -- If unsuccessful, don't return args, that would be a waste
+    local errmsg = table_remove(args,1)
+    if errmsg == "exit" then return true,nil,{} end -- nice exit()
+    if errmsg == "perf" then errmsg = "tick quota exceeded" end
+    return false,errmsg
 end
 
-local function getE2FuncFromStr(compiler,funcname)
-    local funcs = compiler.funcs
-    local e2func = funcs[funcname]
-    if not e2func then -- We will look for any udfs that have the name before the parenthesis.
-        local fncnameproper = funcname:match("(%w*)%(") or funcname
-        for K,V in pairs(funcs) do
-            local proper = K:match("(%w*)%(")
-            if proper and string.find(proper,fncnameproper) then return V end
-        end
-    else
-        return e2func
-    end
-end
+-- TODO: Set E2 costs ( __e2setcost(N) ).
 
 
 -- Literally like pcall()
--- Returns array, first argument is a number stating whether the function executed successfully, rest are varargs.
-
-e2function array try(string try) -- If you *really* want to pass arguments to the function then just make another function that calls that function.
-    local tryfnc = getE2FuncFromStr(self,try)
-    if not tryfnc then error("Try called without an existing try function ["..try.."]",0) end
-    local success,errstr,args = runE2InstanceSafe(self,tryfnc)
+-- Returns table, first argument is a number stating whether the function executed successfully, rest are varargs.
+-- TODO: variadic/varargs support [see array(...) / table(...) / select(N...) E2 functions for reference]
+e2function table try(string try)
+    local tryfun = getE2UDF(self,try) --or getE2Func(self,try) -- Keeping it at UDF only?
+    -- Do *not* throw error from this function!! ಠ_ಠ (¬_¬)
+    if not tryfun then return luaTableToE2{false,"Try was called with undefined function ["..try.."]"} end
+    local success,errstr,args = runE2InstanceSafe(self,tryfun)
     if success then
-        table_insert(args,1,1)
-        return args
-    else
-        return {0,errstr}
+        table_insert(args,1,true)
+        return luaTableToE2(args)
     end
+    return luaTableToE2{false,errstr}
 end
 
 
--- Literally like xpcall()
+-- Literally like xpcall() ... Actually, not really, no it is not; If you get/make an error in your E2 catch callback, it will stop executing...
 -- Behaves exactly like try(string try) except it also calls a catch function given.
--- The catch function will only run if it errored.
-
-e2function array catch(string try,string catch) -- If you *really* want to pass arguments to the function then just make another function that calls that function.
-    local tryfnc,catchfnc = getE2FuncFromStr(self,try),getE2FuncFromStr(self,catch)
-    if not tryfnc then error("Try called without an existing try function ["..try.."]",0) end
-    if not catchfnc then error("Try called without an existing catch function ["..catch.."]",0) end
-    
-    local success,errstr,args = runE2InstanceSafe(self,tryfnc)
-    if success then
-        table_insert(args,1,1)
-        return args
-    else
-        runE2InstanceSafe(self,catchfnc,buildBody{
-            ["s"] = errstr
-        })
-        return {0,errstr}
-    end
-end
+-- The catch function will only run if it errored ... Which is something you can already do using try function and check if it was unsuccessful.
+-- Why does this exist if it doesn't work "Literally like xpcall"?
+--e2function table catch(string try,string catch,...)
+--    local tryfun,catchfnc = getE2UDF(self,try) or getE2Func(self,try),getE2UDF(self,catch) or getE2Func(self,catch)
+--    if not tryfun then return luaTableToE2{false,"Catch was called with undefined try function ["..try.."]"} end
+--    if not tryfun then return luaTableToE2{false,"Catch was called with undefined catch function ["..catch.."]"} end
+--    local success,errstr,args = runE2InstanceSafe(self,tryfun,nil,...)
+--    if success then
+--        table_insert(args,1,true)
+--        return luaTableToE2(args)
+--    end
+--    runE2InstanceSafe(self,catchfnc,buildBody{
+--        ["s"] = errstr
+--    })
+--    return luaTableToE2{false,errstr}
+--end

@@ -7,40 +7,18 @@
  Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
 ]]
 
-local E2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
-
-local function luaTablToE2(T)
-    local Strt = E2Table()
-    local Sz = 0
-    for Key,Value in pairs(T) do
-        local TypeV = type(Value)
-        local WriteV = Strt.n
-        local WriteType = Strt.ntypes
-        if type(Key)=="string" then WriteV = Strt.s WriteType=Strt.stypes end
-        local Clean = Value
-        if TypeV=="bool" then Clean = Value and 1 or 0 elseif
-        TypeV=="table" then Clean = luaTablToE2(Value) end
-        Sz = Sz + 1
-        WriteV[Key] = Clean
-        WriteType[Key] = TypeV[1]
-    end
-    Strt.size = Sz
-    return Strt
-end
+local newE2Table, luaTableToE2 = vex.newE2Table, vex.luaTableToE2
 
 -- Lib functions
 
 __e2setcost(10)
 e2function table rangerOffsetManual(vector pos,vector endpos, array filt)
-    local Start = Vector(pos[1],pos[2],pos[3])
-    local End = Vector(endpos[1],endpos[2],endpos[3])
-	local tr = util.TraceLine( {
-		start = Start,
-		endpos = End,
-		filter = filt
+    local tr = util.TraceLine( {
+        start = Vector(pos[1],pos[2],pos[3]),
+        endpos = Vector(endpos[1],endpos[2],endpos[3]),
+        filter = filt
     } )
-	if not tr then return E2Table() end
-	return luaTablToE2(tr)
+    return tr and luaTableToE2(tr) or newE2Table()
 end
 
 __e2setcost(5)
@@ -48,12 +26,13 @@ e2function number rangerSetFilter(array filter)
     if #filter == 0 then self.data.rangerfilter = {} return 1 end
     if #filter > 3000 then return 0 end
     self.prf = self.prf + #filter*1.5
-	local fixed = {}
+    local fixed = {}
     for _,V in pairs(filter) do
-		if type(V)~="Entity" or type(V)~="Player" then
+        -- TODO: What about NPC, Vehicle, Weapon... these return different type string. Perhaps use isentity function?
+        if type(V)~="Entity" or type(V)~="Player" then
             table.insert(fixed,V)
         end
-	end
+    end
     self.data.rangerfilter = filter
     return 1
 end
