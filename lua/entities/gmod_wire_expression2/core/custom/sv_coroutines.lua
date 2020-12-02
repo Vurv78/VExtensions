@@ -42,7 +42,7 @@ end)
 
 
 registerCallback("destruct",function(self) -- On e2 deleted, deletes all coroutines. gives compiler to function
-    self.coroutines = {} -- TODO: Why not set this to nil?
+    self.coroutines = nil
 end)
 
 __e2setcost(2)
@@ -147,7 +147,7 @@ e2function void coroutine:resume()
     local bench = SysTime()
     local co_success,prfDataOrDone,vararg = coroutine_resume(this,popPrfData(self))
     -- If this isn't true, then the coroutine has not finished.
-    if prfDataOrDone then return end
+    if prfDataOrDone == true then return end
     if not co_success then
         local err = prfDataOrDone
         if err == "exit" then return end
