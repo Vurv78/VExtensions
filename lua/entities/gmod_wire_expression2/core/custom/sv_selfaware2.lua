@@ -57,6 +57,13 @@ e2function table getExtensionsInfo()
     return luaTableToE2(ret, true) -- This will take care of converting the Lua table into an E2 compatible table.
 end
 
+-- Returns a table containing all registered E2 constants. This function exists for dynamic/runtime kind of lookups.
+e2function table getConstants()
+    -- Must return a copy table to prevent reference modifications; luaTableToE2 takes care of this at the same time.
+    -- Table structure: constant name is used as the table key and constant value (number) as the table value.
+    return luaTableToE2(wire_expression2_constants)
+end
+
 -- Returns an array containing only names of all User-Defined Functions.
 e2function array udfNames()
     -- Populate keys on the table (to avoid duplicate entries) and then get the keys on return.
