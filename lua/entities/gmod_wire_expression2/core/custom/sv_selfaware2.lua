@@ -18,20 +18,19 @@ local luaTableToE2, getE2UDF, getE2Func = vex.luaTableToE2, vex.getE2UDF, vex.ge
 
 -- Ex: print(defined("print(...)")) or print(defined("health(e:)"))
 -- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function.
--- Note: If you are checking for availability of the builtin function and if you know the signature ahead of time,
---       then it is preferred to use #ifdef pre-processor statement; this function exists for dynamic kind of checks.
+-- Note: If you are checking for availability of the UDF function, you should look into either udfNames/udfAll functions,
+--       because this function becomes unreliable if you only provide it with UDF name to it.
+--       If you are checking for availability of the builtin function and if you know the signature ahead of time,
+--       then it is preferred to use #ifdef pre-processor statement; this function exists for dynamic/runtime kind of checks.
 e2function number defined(string funcname)
-    -- Check UDF first (see the above note for why).
-    local isUDF, udfDirect = getE2UDF(self, funcname)
-    if udfDirect then return 2 end -- UDF perfect match.
+    -- Check/Prefer builtin first.
     local isFunc, funcDirect = getE2Func(self, funcname)
     if funcDirect then return 1 end -- Builtin perfect match.
-    -- Name only match after this point :(
-    -- Which one to prefer if they are both defined with identical name? It makes sense to prefer UDF?    *smh*
-    -- Should this return a negative number to indicate uncertainity?
-    -- To be honest, this function should be split into 2, respectively. To avoid such dilemma...
-    if isUDF --[[and not isFunc]] then return 2 end -- Found named UDF match.
+    local isUDF, udfDirect = getE2UDF(self, funcname)
+    if udfDirect then return 2 end -- UDF perfect match.
+    -- Name-only match after this point, still prefer the builtin.
     if isFunc --[[and not isUDF]] then return 1 end -- Found named builtin match.
+    if isUDF --[[and not isFunc]] then return 2 end -- Found named UDF match.
     return 0
 end
 
