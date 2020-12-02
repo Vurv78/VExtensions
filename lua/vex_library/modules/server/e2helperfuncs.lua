@@ -166,18 +166,18 @@ vex.getE2UDF = function(compiler, funcname)
     end
 end
 
-vex.getE2Func = function(compiler, funcname)
+vex.getE2Func = function(compiler, funcname, returnTable)
     local funcs = wire_expression2_funcs
     local e2func = funcs[funcname]
     if e2func then
-        return e2func[3], true -- Direct/Full match.
+        return returnTable and e2func or e2func[3], true -- Direct/Full match.
     end
     -- Look for any builtin function that has the same name (before the parenthesis).
     funcname = string_match(funcname, E2FuncNamePattern) or funcname
     for name, data in pairs(funcs) do
         local proper = string_match(name, E2FuncNamePattern)
         if proper == funcname then
-            return data[3], false -- Name only match.
+            return returnTable and data or data[3], false -- Name only match.
         end
     end
 end
