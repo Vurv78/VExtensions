@@ -45,12 +45,13 @@ end
 -- Returns an array containing only names of all User-Defined Functions.
 e2function array udfNames()
     -- Populate keys on the table (to avoid duplicate entries) and then get the keys on return.
+    -- Duplicates? Yes, you can define many UDF with identical name (as long as the signature/argtypes are different).
     local ret = {}
     for name in pairs(self.funcs_ret) do
         local idx = string_find(name, "(", 2, true) -- This should never return a nil.
-        ret[string_sub(name, 1, idx - 1)] = true
+        ret[string_sub(name, 1, idx - 1)] = true -- Extract the function name and store it as the key on the table.
     end
-    return table_GetKeys(ret)
+    return table_GetKeys(ret) -- We return all the UDF names (without duplicates).
 end
 
 --[[-------------------------------------------------------------------------------------------------------------------
@@ -92,14 +93,12 @@ local UDF_ALL_MODES = {
                 [2] = Comma-separated string containing names of arguments
                 [3] = Filename and line number specifying where the UDF is defined at (within the current E2)
             --]]--
-            local funcs_ret = self.funcs_ret
-            --print("[E2 funcs_ret]") PrintTable(funcs_ret, 1) -- Quick debugging shit...
             local res = {}
-            -- MYTODO
-            for name,returnType in pairs(funcs_ret) do
-                res[name] = { [1] = returnType or "" }
+            for fullsig,returnType in pairs(self.funcs_ret) do
+                -- MYTODO: entries [2] and [3] in the table (not sure yet how to obtain these)
+                res[fullsig] = { [1] = returnType or "" }
             end
-            return luaTableToE2(res, true) -- Convert to E2 table with array optimization.
+            return luaTableToE2(res, true) -- Convert to E2 table with array optimization enabled.
         end;
     [vex.registerConstant("UDF_ALL_DNC", 1)] =
         function(self)
@@ -111,11 +110,21 @@ local UDF_ALL_MODES = {
                 [3] = Comma-separated string containing names of arguments
                 [4] = Filename and line number specifying where the UDF is defined at (within the current E2)
             --]]--
-            local funcs_ret = self.funcs_ret
-            --print("[E2 funcs_ret]") PrintTable(funcs_ret, 1) -- Quick debugging shit...
             local res = {}
-            -- MYTODO
-            return luaTableToE2(res, false) -- Convert to E2 table without array optimization.
+            for sig,returnType in pairs(self.funcs_ret) do
+                -- This should never return a nil. Not using patterns due performance.
+                -- Starting at the index 2, since the index 1 is always a letter.
+                local idx = string_find(sig, "(", 2, true)
+                local name = string_sub(sig, 1, idx - 1) -- This will contain only the function name.
+                -- Extract the portion between parentheses (function signature; data-types of args).
+                -- Again not using patterns, since we already know the index.
+                sig = string_sub(sig, idx + 1, -2) -- -2 in order to drop the ')' at the end.
+                local collection = res[name] or {}
+                res[name] = collection
+                -- MYTODO: entries [3] and [4] in the table (not sure yet how to obtain these)
+                collection[#collection + 1] = { [1] = sig, [2] = returnType or "" }
+            end
+            return luaTableToE2(res, false) -- Convert to E2 table *without* array optimization.
         end;
 }
 e2function table udfAll(mode)
