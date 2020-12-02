@@ -42,6 +42,21 @@ e2function string getFunctionPath(string funcname)
     return isfunction(func) and debug_getinfo(func, "S").source or ""
 end
 
+-- Returns a table of arrays containing information about E2 extensions (status and description).
+-- This function exists for dynamic/runtime kind of checks.
+e2function table getExtensionsInfo()
+    local ret = {}
+    for _, name in pairs(E2Lib.GetExtensions()) do
+        ret[name] = { -- A table of extension info (will be converted into an E2 array),
+            -- Boolean, indicating whether the extension is enabled (will be converted to 0 or 1)
+            [1] = E2Lib.GetExtensionStatus(name) or false,
+            -- String, short description about the extension
+            [2] = E2Lib.GetExtensionDocumentation(name).Description or ""
+        }
+    end
+    return luaTableToE2(ret, true) -- This will take care of converting the Lua table into an E2 compatible table.
+end
+
 -- Returns an array containing only names of all User-Defined Functions.
 e2function array udfNames()
     -- Populate keys on the table (to avoid duplicate entries) and then get the keys on return.
