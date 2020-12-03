@@ -137,7 +137,7 @@ vex.sanitizeLuaVar = function(v,aggressiveTypeGuessing,arrayOptimization,donotWr
             end
         end
         ]==]
-        return vex.luaTableToE2(v,arrayOptimization,true)
+        return vex.luaTableToE2(v,arrayOptimization)
     end
     --if type(v)=="thread" then return v end -- Use the `vex.getE2Type` function if you need to check for "3rd-party" types.
     --if isfunction(v) or type(v)=="userdata" then return end -- Discard Lua function and C userdata from being passed to the E2.
