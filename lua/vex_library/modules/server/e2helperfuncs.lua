@@ -26,66 +26,123 @@ end
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 local Default_E2Tbl = vex.newE2Table()
 
--- Could technically make an 'expensive' arg that looks into the types of the keys, but if a table has these
--- specific keys, then they are malicious at this point.
-vex.isE2Table = function(tbl)
-    if not istable(tbl) or getmetatable(tbl) then return false end
-    for k in next,Default_E2Tbl do
-        if not tbl[k] then return false end
+-- Allows to very accurately determine whether the given argument has a valid E2 table structure (presence of table fields/keys).
+-- However, it does not validate inner contents (it is assumed to not be malformed inside).
+vex.isE2Table = function(tbl,accurateCheck)
+    if not istable(tbl) then return false end
+    if accurateCheck then
+        -- We perform very accurate checks. (Do not change this code!)
+        -- This can't be made any faster *and* accurate than it is.
+        if getmetatable(tbl) then return false end -- E2 table shouldn't have metatable attached to it.
+        -- This loop does 6 iterations at most, at 6th it will stop too.
+        for k in next,tbl do -- We have to be sure, so we loop over the given tbl -- not over the default E2 tbl.
+            -- We still stop the loop as soon as possible (if the key doesn't exist in default).
+            if not Default_E2Tbl[k] then return false end -- < Therefore performance is not an issue.
+        end
+        return true
     end
-    return true
     -- Do a for loop in case the table structure changes in the future i guess
-    -- Hardcoded version: if tbl.s and tbl.size and tbl.stypes and tbl.n and tbl.ntypes then return true end
+    -- ^> E2 table structure is not going to change.. if it does, then it will break a SH*T TON of addons (including their own/Wire code)
+    -- We perform less reliable (this is just a tiny bit faster than the accurate check, saving 1 table lookup):
+    return tbl.s and tbl.size and tbl.stypes and tbl.n and tbl.ntypes and true or false
 end
 
 -- Hardcoded e2 type guessing. (Not sure why are these made out as global functions now?)
-vex.guessE2Type = function(v)
-    if isnumber(v) or isbool(v) then return "n" end
+vex.guessE2Type = function(v,donotWrapClassReference,typeGuessAheadOfTime)
+    if isnumber(v) then return "n" end
+    if isbool(v) then return "n", true end -- Returning an additional true, to indicate it must be sanitized (using `vex.sanitizeLuaVar`).
     if isstring(v) then return "s" end
     if isentity(v) then return "e" end
-    if isangle(v) then return "a" end -- But must be sanitized.
-    if isvector(v) then return "v" end -- But must be sanitized.
-    if IsColor(v) then return "xv4" end -- But must be sanitized.
+    if isangle(v) then return "a", not donotWrapClassReference end -- Requires serialization to prevent reference modification.
+    if isvector(v) then
+        return v.z == 0 and "xv2" or "v",  -- Optimize into Vector2.
+               not donotWrapClassReference -- Requires serialization to prevent reference modification.
+    end
+    if IsValid(v) and type(v)=="PhysObj" then return "b" end -- Optimize into E2 `bone`.
+    --[[
+    if typeGuessAheadOfTime then
+        --if type(v)=="thread" then return "xco" end
+        -- This is left blank for now (to be filled in future).
+    end
+    ]]
     if istable(v) then
+        if IsColor(v) then return "xv4", true end -- Returning an additional true, to indicate it must be sanitized (using `vex.sanitizeLuaVar`).
         if getmetatable(v) then return end -- Most likely we don't want this to be passed to the E2.
         -- E2 Tables will never be sequential.
         if table_IsEmpty(v) then return "r" end -- Potentially faster than depending on sequential doing a for loop that never executes?
                                                 -- Huh, not sure about that. Well if the table is empty, it will never go into the loop at all.
                                                 -- So, is this extra call+branch worth the performance? I doubt it is.
                                                 -- https://github.com/Facepunch/garrysmod/blob/master/garrysmod/lua/includes/extensions/table.lua#L180
-        if table_IsSequential(v) then return "r" end -- Works for empty tables too
-        if vex.isE2Table(tbl) then return "t" end -- Why not just directly return "t" at this point tho?
-    elseif type(v)=="thread" then return "xco" end -- Assuming coroutine core is enabled.
+        if table_IsSequential(v) then return "r" end -- Works for empty tables too (of course it does)
+        if vex.isE2Table(tbl,true) then return "t" end
+    end
+    -- Unsupported; Returning no value. Use the `vex.getE2Type` function if you need to check for official/3rd-party types.
 end
 
-vex.getE2Type = function(val)
-    local guessedType = vex.guessE2Type(val)
-    if guessedType then return guessedType end -- Has to be 100% sure.
+vex.getE2Type = function(val,skipTypeGuessing)
+    if not skipTypeGuessing then
+        local guessedType, mustBeSanitized = vex.guessE2Type(val)
+        if guessedType then return guessedType, mustBeSanitized end -- Has to be 100% sure.
+    end
     for TypeName,TypeData in pairs(wire_expression_types) do
         -- Every e2 registered type has a type-validating function, which is [6] in the typedata. It returns whether the object isn't type x.
         -- It isn't perfect, it just tells the compiler whether it is valid for functions of type x to use the object.
         local success,is_not_type = pcall(TypeData[6],val)
         -- We have to pcall it because some methods do things like :isValid which would error on numbers and strings.. etc :/
         if success and not is_not_type then
-            return wire_expression_types2[TypeData[1]][1] -- Returns the type name (uppercased).
+            TypeName = wire_expression_types2[TypeData[1]][1]
+            -- Returns the type name (uppercased).
+            return TypeName == "NORMAL" and "NUMBER" or TypeName -- E1 normal -> E2 number type alias fixup.
         end
     end
 end
 
 -- Some variables need to be sanitized before we give them to e2. Like booleans will be turned to 1 or 0
 -- ~~We don't need to sanitize anything else like vectors or angles.~~
--- But we actually do need to, because they are sequential array in the E2. And also because this is a global function.
--- Also why not make this return type ID along with the value, instead of having functions split apart (guessE2Type)?
-vex.sanitizeLuaVar = function(v)
-    if isnumber(v) or isstring(v) then return v end -- These are fine, pass them as is.
+-- ^> But we actually do need to, because they are sequential array in the E2, we have to prevent value change by modying a reference!
+-- And also because this is a global function, which means it can now be used by other addons, so it must be able to work on its own.
+-- Also why not make this return type ID along with the value, instead of having functions split apart (vex.guessE2Type)??
+-- Now we have to make sure to mimic if-statements inside here, to match with the `vex.guessE2Type` function :(
+vex.sanitizeLuaVar = function(v,aggressiveTypeGuessing,arrayOptimization,donotWrapClassReference)
     if isbool(v) then return v and 1 or 0 end -- Convert a boolean into either 1 or 0.
-    if isangle(v) then return {v.p,v.y,v.r} end -- GLua Angle in the E2 is implemented as sequential array with 3 numbers,
-    if isvector(v) then return {v.x,v.y,v.z} end -- Same for GLua Vector.
-    if IsColor(v) then return {v.r,v.g,v.b,v.a} end -- Optimize out into Vector4 (for use with entity:setColor(xv4) function)
-    if type(v)=="thread" then return v end -- Assuming coroutine core is enabled.
-    --if isfunction(v) then return end -- Nope.
+    -- With aggressive type guessing disabled, just pass it over (and hope you don't crash the E2 type system)
+    if not aggressiveTypeGuessing
+    -- With aggressive type guessing enabled, we process more checks (merged into single if-statement):
+    or isnumber(v) or isstring(v) or isentity(v) -- These are fine, pass them as is.
+    or (IsValid(v) and type(v)=="PhysObj") -- Let physics object go through (this translates to E2 `bone` data-type)
+    then
+        return v
+    end
+    if isangle(v) then return donotWrapClassReference and v or {v[1],v[2],v[3]} end -- Required wrap (because Angle is GLua class); to prevent reference modification!
+    if isvector(v) then
+        if v.z == 0 then return donotWrapClassReference and v or {v[1],v[2]} end -- Optimize into Vector2.
+        return donotWrapClassReference and v or {v[1],v[2],v[3]} -- Required wrap (because Vector is GLua class); to prevent reference modification!
+    end
+    if istable(v) then
+        if IsColor(v) then return {v.r,v.g,v.b,v.a} end -- Convert into Vector4 (for use with entity:setColor(xv4) function)
+        --[==[
+        -- Commented this out, because it might be an E2 array/table.
+        if arrayOptimization and table_IsSequential(v) then
+            if #v == 16 -- Optimization type guess: Matrix4
+            or #v == 9  -- Optimization type guess: Matrix
+            or #v == 4  -- Optimization type guess: Vector4/Quaternion/Matrix2
+            or #v == 3  -- Optimization type guess: Vector/Angle
+            or #v == 2  -- Optimization type guess: Vector2/Complex
+            then
+                -- Check to make sure they are all numbers.
+                --[[for i=1,#v do
+                    if not isnumber(v[i]) then return end -- Stop and return no value, it is not of type we expected to find.
+                end]]
+                return v
+            end
+        end
+        ]==]
+        return vex.luaTableToE2(v,arrayOptimization,true)
+    end
+    --if type(v)=="thread" then return v end -- Use the `vex.getE2Type` function if you need to check for "3rd-party" types.
+    --if isfunction(v) or type(v)=="userdata" then return end -- Discard Lua function and C userdata from being passed to the E2.
     -- It is a bad idea to return v; This shouldn't be returning v unless it is ok with E2!
-    -- This function should work as *whitelist* rather than *blacklist*. Therefore we return nothing here, that is a nil value.
+    -- This function should work as *whitelist* rather than *blacklist*. Therefore we return no value at this point.
 end
 
 
@@ -103,9 +160,8 @@ vex.luaTableToE2 = function(tbl,arrayOptimization)
         elseif isstring(K) then
             t,t_types = s,stypes
         else continue end -- Don't do non-string/number keys
-        size = size + 1
         if istable(V) then
-            t_types[K] = "t"
+            t_types[K] = "t" -- How certain is this?
             if V == tbl then
                 t[K] = output
             elseif arrayOptimization and table_IsSequential(V) then
@@ -114,8 +170,15 @@ vex.luaTableToE2 = function(tbl,arrayOptimization)
                 t[K] = vex.luaTableToE2(V,arrayOptimization)
             end
         else
-            t[K],t_types[K] = vex.sanitizeLuaVar(V),vex.getE2Type(V)
+            -- Reasons unknown, why was this split apart and made into globals?
+            -- But it is your decision. Expect this to run quite slower now because of many global lookups...
+            local VType = vex.getE2Type(V) -- Determine the E2 type before calling the sanitizer.
+            V = vex.sanitizeLuaVar(V,true,arrayOptimization,false) -- Sanitize a Lua value for safe use by E2.
+            if V and VType then -- Only set value and type when this actually returned a value
+                t[K],t_types[K] = V,VType
+            else continue end -- Skip! We surely don't want this value in E2 table, filter it out.
         end
+        size = size + 1 -- Increment the size at the end of this loop, because we are using `continue` above.
     end
     output.size = size
     return output
