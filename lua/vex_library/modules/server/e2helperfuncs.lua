@@ -52,15 +52,15 @@ end
 -- This is a breaking change in terms of the lua code, getE2Type will now return the type id, like xco for the COROUTINE type.
 -- Will need to change printGlobal and all other code that depends on it.
 vex.getE2Type = function(val)
-    local exactType = vex.guessE2Type(val)
-    if exactType then return exactType end -- Has to be 100% sure.
+    local guessedType = vex.guessE2Type(val)
+    if guessedType then return guessedType end -- Has to be 100% sure.
     for TypeName,TypeData in pairs(wire_expression_types) do
         -- Every e2 registered type has a type-validating function, which is [6] in the typedata. It returns whether the object isn't type x.
         -- It isn't perfect, it just tells the compiler whether it is valid for functions of type x to use the object.
         local success,is_not_type = pcall(TypeData[6],val)
         -- We have to pcall it because some methods do things like :isValid which would error on numbers and strings.. etc :/
         if success and not is_not_type then
-            return TypeData[1] -- Returns the type id.
+            return wire_expression_types2[TypeData[1]][1] -- Returns the type name (uppercased).
         end
     end
 end

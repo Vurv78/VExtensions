@@ -44,13 +44,13 @@ local function printGlobalFormatting(T)
         local Next = T[Ind+1]
         if not Current then break end
         local _type = e2type(Current)
-        if _type=="v" then
-            if e2type(Next)=="v" then
+        if _type=="VECTOR" then
+            if e2type(Next)=="VECTOR" then
                 table.remove(T,Ind) -- Make sure we don't have trailing vectors
-                goto cont
+                continue
             end
-        elseif _type=="s" then
-            if e2type(Next) == "s" then
+        elseif _type=="STRING" then
+            if e2type(Next) == "STRING" then
                 T[Ind] = Current..Next
                 table.remove(T,Ind+1)
                 continue
@@ -59,7 +59,7 @@ local function printGlobalFormatting(T)
         Ind = Ind + 1
     end
     if type(T[#T]) ~= "string" then T[#T] = nil end
-    if e2type(T[1]) ~= "v" then table.insert(T,1,{100,100,255}) end
+    if e2type(T[1]) ~= "VECTOR" then table.insert(T,1,{100,100,255}) end
     return T
 end
 
@@ -79,7 +79,7 @@ local function printGlobal(T,Sender,Plys)
     for K,V in pairs(T) do
         if type(V)=="string" then
             table.insert(printStringTable,V)
-        elseif e2type(V) ~= "v" then
+        elseif e2type(V) ~= "VECTOR" then
             T[K] = tostring(V)
         end
     end
@@ -161,7 +161,7 @@ e2function void printGlobal(...)
     if type(args[1]) == "Player" then
         local ply = table.remove(args,1)
         printGlobalArrayFunc(args,sender,{ply})
-    elseif e2type(args[1]) == "r" then -- printGlobal(array plys, varargs)
+    elseif e2type(args[1]) == "ARRAY" then -- printGlobal(array plys, varargs)
         local plys = table.remove(args,1)
         printGlobalArrayFunc(args,sender,plys)
     else
