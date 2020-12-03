@@ -141,3 +141,50 @@ e2function table getUserFunctionInfo(mode)
     mode = GET_UDF_MODE[mode]
     return mode and mode(self) or luaTableToE2{}
 end
+
+local opcost = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
+-- A small helper function to help with creation of the builtin function info table.
+local function createBuiltinFuncInfoTable(tbl)
+    return {
+        -- String, full function signature
+        [1] = tbl[1] or "",
+        -- String, return type (ID)
+        [2] = tbl[2] or "",
+        -- Number, function cost (OPS)
+        [3] = tbl[4] or 0,
+        -- Table of strings, holding arguments' names (will be converted into an array)
+        --[4] = tbl.argnames or {} -- FIXME: Something breaks out when using this...
+    }
+end
+-- Returns a table containing information about the builtin (non-UDF) E2 functions.
+-- Either use "*" as a `funcname` to get infos for all or specify a function name/signature (e.g. "selfDestruct").
+e2function table getBuiltinFuncInfo(string funcname)
+    if funcname == "*" then
+        -- Loop over all builtin functions and populate the table.
+        local ret = {}
+        local size = 0 -- We need to count entries manually. (Used for bumping up OPS.)
+        for sig, tbl in pairs(wire_expression2_funcs) do
+            if string_sub(sig, 1, 3) == "op:" then
+                -- If this is a special operator node which represents an operation (such as addition/subtraction/etc),
+                continue -- We skip it.
+            end
+            ret[sig] = createBuiltinFuncInfoTable(tbl)
+            size = size + 1
+        end
+        -- Dynamically bump up OPS based on the size of the output table. (Keep this after the loop.)
+        self.prf = self.prf + size * opcost
+        -- Convert the result table into E2 compatible table, with array optimization enabled.
+        return luaTableToE2(ret, true)
+    end
+    -- Otherwise, search for the specified function and only return its information.
+    local tbl = getE2Func(self, funcname, true)
+    return tbl
+        and
+        -- If the function is found, create a Lua table and convert into a compatible E2 table,
+            luaTableToE2(
+                createBuiltinFuncInfoTable(tbl),
+                true -- With array optimization enabled.
+            )
+        -- If the function is not found, return an empty E2 table.
+        or newE2Table()
+end
