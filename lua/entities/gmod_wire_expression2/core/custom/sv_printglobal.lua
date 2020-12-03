@@ -26,17 +26,17 @@ local PrintGAlert = {}
 local format = string.format
 local e2type = vex.getE2Type
 
+-- TODO: Make the cooldownManager compatible for bursts or make a burstManager or something :/
 timer.Create("VurvE2_PrintGlobal",1,0,function()
-    -- Not sure if this would be cheaper than checking manually with curtime.
+    -- Doing this feels terrible
     PrintGBurstCount = {}
 end)
 
 local function canPrintToPly(ply)
-    return ply:GetInfoNum("printglobal_enable_cl",0)==1
+    return ply:GetInfoNum("vex_printglobal_enable_cl",0)==1
 end
 
 -- TODO: Make this more efficient
--- Doing Ind = Ind + 1 doesn't feel right but then again we don't have 'continue'
 local function printGlobalFormatting(T)
     local Ind = 1
     while true do
@@ -44,23 +44,22 @@ local function printGlobalFormatting(T)
         local Next = T[Ind+1]
         if not Current then break end
         local _type = e2type(Current)
-        if _type=="VECTOR" then
-            if e2type(Next)=="VECTOR" then
+        if _type=="v" then
+            if e2type(Next)=="v" then
                 table.remove(T,Ind) -- Make sure we don't have trailing vectors
                 goto cont
             end
-        elseif _type=="STRING" then
-            if e2type(Next) == "STRING" then
+        elseif _type=="s" then
+            if e2type(Next) == "s" then
                 T[Ind] = Current..Next
                 table.remove(T,Ind+1)
-                goto cont
+                continue
             end
         end
         Ind = Ind + 1
-        ::cont::
     end
     if type(T[#T]) ~= "string" then T[#T] = nil end
-    if e2type(T[1]) ~= "VECTOR" then table.insert(T,1,{100,100,255}) end
+    if e2type(T[1]) ~= "v" then table.insert(T,1,{100,100,255}) end
     return T
 end
 
@@ -80,7 +79,7 @@ local function printGlobal(T,Sender,Plys)
     for K,V in pairs(T) do
         if type(V)=="string" then
             table.insert(printStringTable,V)
-        elseif e2type(V) ~= "VECTOR" then
+        elseif e2type(V) ~= "v" then
             T[K] = tostring(V)
         end
     end
@@ -162,7 +161,7 @@ e2function void printGlobal(...)
     if type(args[1]) == "Player" then
         local ply = table.remove(args,1)
         printGlobalArrayFunc(args,sender,{ply})
-    elseif e2type(args[1]) == "ARRAY" then -- printGlobal(array plys, varargs)
+    elseif e2type(args[1]) == "r" then -- printGlobal(array plys, varargs)
         local plys = table.remove(args,1)
         printGlobalArrayFunc(args,sender,plys)
     else
