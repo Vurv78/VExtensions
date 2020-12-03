@@ -18,7 +18,7 @@ local luaTableToE2, getE2UDF, getE2Func = vex.luaTableToE2, vex.getE2UDF, vex.ge
 
 -- Ex: print(defined("print(...)")) or print(defined("health(e:)"))
 -- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function.
--- Note: If you are checking for availability of the UDF function, you should look into either udfNames/udfAll functions,
+-- Note: If you are checking for availability of the UDF function, you should look into the getUserFunctionInfo function,
 --       because this function becomes unreliable if you only provide it with UDF name to it.
 --       If you are checking for availability of the builtin function and if you know the signature ahead of time,
 --       then it is preferred to use #ifdef pre-processor statement; this function exists for dynamic/runtime kind of checks.
@@ -93,8 +93,8 @@ end
             }
         }
 ---------------------------------------------------------------------------------------------------------------------]]
-local UDF_ALL_MODES = {
-    [vex.registerConstant("UDF_ALL_FLAT", 0)] =
+local GET_UDF_MODE = {
+    [vex.registerConstant("UDF_FLAT", 0)] =
         function(self)
             --[[--
             Table key is the same string as in the funcs_ret table (name + signature).
@@ -110,7 +110,7 @@ local UDF_ALL_MODES = {
             end
             return luaTableToE2(res, true) -- Convert to E2 table with array optimization enabled.
         end;
-    [vex.registerConstant("UDF_ALL_DNC", 1)] =
+    [vex.registerConstant("UDF_DNC", 1)] =
         function(self)
             --[[--
             Table key is made of just the name of the UDF.
@@ -137,7 +137,7 @@ local UDF_ALL_MODES = {
             return luaTableToE2(res, false) -- Convert to E2 table *without* array optimization.
         end;
 }
-e2function table udfAll(mode)
-    mode = UDF_ALL_MODES[mode]
+e2function table getUserFunctionInfo(mode)
+    mode = GET_UDF_MODE[mode]
     return mode and mode(self) or luaTableToE2{}
 end
