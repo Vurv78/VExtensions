@@ -17,9 +17,9 @@ vex.registerExtension = function(name,enabled,helpstr,...)
     E2Lib.RegisterExtension(name,enabled,helpstr,...)
 end
 
-vex.registerConstant = function(name, value, ...)
+vex.registerConstant = function(name, value)
     -- This exists because E2Lib doesn't return a passed value, which can be handy (see selfaware2).
-    E2Lib.registerConstant(string.upper(name), value)
+    E2Lib.registerConstant(string_upper(name), value)
     return value
 end
 
