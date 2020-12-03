@@ -1,10 +1,9 @@
 -- E2HelperFuncs.lua in vex_library server modules.
 -- This originally used to be the entire vex_library.. oh how far we've come :o
 
-
 local printf = vex.printf
 
--- Fucking horrible hack
+-- Horrible hack
 if not vex.persists.runs_on then
     vex.persists.runs_on = {}
 end
@@ -23,84 +22,89 @@ vex.registerConstant = function(name, value, ...)
 end
 
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
+local Default_E2Tbl = vex.newE2Table()
 
-local EMPTY_TABLE = vex.newE2Table()
-local istable, type = istable, type
+-- Could technically make an 'expensive' arg that looks into the types of the keys, but if a table has these
+-- specific keys, then they are malicious at this point.
 vex.isE2Table = function(tbl)
     if not istable(tbl) then return false end
-    --if getmetatable(tbl) then return false end -- E2 table never has metatable attached. (Commented out for now.)
-    for k,v in pairs(tbl) do
-        local def = EMPTY_TABLE[k]
-        if not def then return false end
-        if type(v) ~= type(def) then return false end
+    for k in next,Default_E2Tbl do
+        if not tbl[k] then return false end
     end
     return true
+    -- Do a for loop in case the table structure changes in the future i guess
+    -- Hardcoded version: if tbl.s and tbl.size and tbl.stypes and tbl.n and tbl.ntypes then return true end
 end
 
-local isnumber, isstring, string_lower, table_IsSequential = isnumber, isstring, string.lower, table.IsSequential
-vex.luaTableToE2 = function(tbl,arrayOptimization) -- TODO: Fix cyclic/infinite Lo0oP (see GMod's PrintTable code for reference).
-    -- Note: Be very careful in this function. Some of the E2 functions are now relying on this to work like so.
-    -- Let's try our best...
-    local Strt = vex.newE2Table()
-    local Sz = 0
-    for Key,Value in pairs(tbl) do
-        local TypeV = string_lower(type(Value))
-        local WriteV
-        local WriteType
-        if isnumber(Key) then
-            WriteV = Strt.n
-            WriteType = Strt.ntypes
-        elseif isstring(Key) then
-            WriteV = Strt.s
-            WriteType = Strt.stypes
-        else -- Nope.
-            continue
-        end
-        local Clean = Value
-        if     isbool  (Value) then Clean = Value and 1 or 0          TypeV = "n"
-        elseif isangle (Value) then Clean = {Value.p,Value.y,Value.r}
-        elseif isvector(Value) then Clean = {Value.x,Value.y,Value.z}
-        -- TODO: Color, Vector2/Vector4, Matrix*...
-        elseif isentity(Value) then TypeV = "e" -- isentity includes every type of Entity (Player, NPC, Vehicle, Weapon, etc.)
-        elseif TypeV=="thread" then Clean = "xco" -- MYTODO: Verify this, probably not the right way... check the type's [6] as in getE2Type?
-        elseif istable (Value) then
-            if getmetatable(Value) then continue end -- Nope.
-            if not vex.isE2Table(Value) then -- Important: Only do this stuff if it is not an E2 table.
-                if arrayOptimization and table_IsSequential(Value) then
-                    TypeV = "r"
-                else
-                    Clean = vex.luaTableToE2(Value,arrayOptimization)
-                end
-            end
-        elseif isnumber(Value) or isstring(Value) then
-            -- This check is needed to allow number and string to pass. (Just do nothing here.)
-        else -- If it is none of the above, then it is probably unsupported.
-            continue -- So we skip this value (probably a function, userdata, etc...)
-        end
-        Sz = Sz + 1
-        WriteV[Key] = Clean
-        local TypeFirstChar = TypeV:sub(1, 1)
-        WriteType[Key] = TypeFirstChar == "x" and TypeV:sub(1, 3) or TypeFirstChar
+-- Hardcoded e2 type guessing
+vex.guessE2Type = function(var)
+    if isnumber(var) or isbool(var) then return "n" end
+    if istable(var) then
+        -- E2 Tables will never be sequential.
+        if table.IsEmpty(var) then return "r" end -- Potentially faster than depending on sequential doing a for loop that never executes?
+        if table.IsSequential(var) then return "r" end -- Works for empty tables too
+        if vex.isE2Table(var) then return "t" end
     end
-    Strt.size = Sz
-    return Strt
 end
 
--- Note: This is terrible
+-- This is a breaking change in terms of the lua code, getE2Type will now return the type id, like xco for the COROUTINE type.
+-- Will need to change printGlobal and all other code that depends on it.
 vex.getE2Type = function(val)
-    local e2types = wire_expression_types
-    for TypeName,TypeData in pairs(e2types) do
-        if istable(val) then
-            -- These are incredibly hacky but they work
-            if vex.isE2Table(val) then return "TABLE" end -- At least this one is more accurate now.
-            if #val == 3 and isnumber(val[1]) and isnumber(val[2]) and isnumber(val[3]) then return "VECTOR" end -- It could also be an Angle (or an array with 3 numbers).
-            return "ARRAY"
+    local exactType = vex.guessE2Type(val)
+    if exactType then return exactType end -- Has to be 100% sure.
+    for TypeName,TypeData in pairs(wire_expression_types) do
+        -- Every e2 registered type has a type-validating function, which is [6] in the typedata. It returns whether the object isn't type x.
+        -- It isn't perfect, it just tells the compiler whether it is valid for functions of type x to use the object.
+        local success,is_not_type = pcall(TypeData[6],val)
+        -- We have to pcall it because some methods do things like :isValid which would error on numbers and strings.. etc :/
+        if success and not is_not_type then
+            return TypeData[1] -- Returns the type id.
         end
-        local success,isnottype = pcall(TypeData[6],val) -- We have to pcall it because some methods do things like :isValid which would error on numbers and strings.. etc
-        if success and not isnottype then return TypeName end
     end
-    return "UNKNOWN"
 end
+
+-- Some variables need to be sanitized before we give them to e2. Like booleans will be turned to 1 or 0
+-- We don't need to sanitize anything else like vectors or angles.
+vex.sanitizeLuaVar = function(v)
+    if isbool(v) then return v and 1 or 0 end
+    return v
+end
+
+vex.luaTableToE2 = function(tbl)
+    local output = vex.newE2Table()
+    local n,ntypes = output.n,output.ntypes
+    local s,stypes = output.s,output.stypes
+    local size = 0
+    local set,get
+    for K,V in pairs(tbl) do
+        if isnumber(K) then
+            t,t_types = n,ntypes
+        elseif isstring(K) then
+            t, t_types = s,stypes
+        else continue end -- Don't do non-string/number keys
+        size = size + 1
+        if V == tbl then
+            t[K],t_types[K] = output,"t"
+        else
+            t[K],t_types[K] = vex.sanitizeLuaVar(V),vex.getE2Type(V)
+        end
+    end
+    output.size = size
+    return output
+end
+
+--[[
+-- Test code
+local TestTbl = {1,2,3,4,5}
+TestTbl["stringindex"] = 69
+TestTbl["self"] = TestTbl
+TestTbl["cool"] = coroutine.create(function() end)
+TestTbl.test = {1,2,3,4,5}
+TestTbl.yes = luaTblToE2{1,2,3,4,5}
+
+local t = luaTblToE2(TestTbl)
+PrintTable(t)
+]]
 
 vex.listenE2Hook = function(context,id,dorun)
     if not runs_on[id] then runs_on[id] = {} end
