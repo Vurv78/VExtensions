@@ -74,7 +74,7 @@ vex.guessE2Type = function(v,donotWrapClassReference,typeGuessAheadOfTime)
                                                 -- So, is this extra call+branch worth the performance? I doubt it is.
                                                 -- https://github.com/Facepunch/garrysmod/blob/master/garrysmod/lua/includes/extensions/table.lua#L180
         if table_IsSequential(v) then return "r" end -- Works for empty tables too (of course it does)
-        if vex.isE2Table(tbl,true) then return "t" end
+        return "t" -- Just return it as a table type (we are not going to validate contents)
     end
     -- Unsupported; Returning no value. Use the `vex.getE2Type` function if you need to check for official/3rd-party types.
 end
