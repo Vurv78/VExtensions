@@ -53,10 +53,10 @@ vex.guessE2Type = function(v,donotWrapClassReference,typeGuessAheadOfTime)
     if isbool(v) then return "n", true end -- Returning an additional true, to indicate it must be sanitized (using `vex.sanitizeLuaVar`).
     if isstring(v) then return "s" end
     if isentity(v) then return "e" end
-    if isangle(v) then return "a", not donotWrapClassReference end -- Requires serialization to prevent reference modification.
+    if isangle(v) then return "a", not donotWrapClassReference end -- By default, requires wrapping to prevent reference modification.
     if isvector(v) then
         return v.z == 0 and "xv2" or "v",  -- Optimize into Vector2.
-               not donotWrapClassReference -- Requires serialization to prevent reference modification.
+               not donotWrapClassReference -- By default, requires wrapping to prevent reference modification.
     end
     if IsValid(v) and type(v)=="PhysObj" then return "b" end -- Optimize into E2 `bone`.
     --[[
