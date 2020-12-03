@@ -91,10 +91,10 @@ vex.luaTableToE2 = function(tbl,arrayOptimization)
             t_types[K] = "t"
             if V == tbl then
                 t[K] = output
-            elseif arrayOptimization and table.IsSequential(V) then
+            elseif arrayOptimization and table_IsSequential(V) then
                 t[K],t_types[K] = V,"r"
             else
-                t[K] = vex.luaTableToE2(V)
+                t[K] = vex.luaTableToE2(V,arrayOptimization)
             end
         else
             t[K],t_types[K] = vex.sanitizeLuaVar(V),vex.getE2Type(V)
