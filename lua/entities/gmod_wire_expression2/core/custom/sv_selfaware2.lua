@@ -12,7 +12,7 @@
 
 local isfunction, debug_getinfo = isfunction, debug.getinfo
 local string_find, string_lower, string_sub, table_GetKeys = string.find, string.lower, string.sub, table.GetKeys
-local luaTableToE2, getE2UDF, getE2Func = vex.luaTableToE2, vex.getE2UDF, vex.getE2Func
+local newE2Table, luaTableToE2, getE2UDF, getE2Func = vex.newE2Table, vex.luaTableToE2, vex.getE2UDF, vex.getE2Func
 
 -- TODO: Set E2 costs ( __e2setcost(N) ).
 
@@ -139,7 +139,7 @@ local GET_UDF_MODE = {
 }
 e2function table getUserFunctionInfo(mode)
     mode = GET_UDF_MODE[mode]
-    return mode and mode(self) or luaTableToE2{}
+    return mode and mode(self) or newE2Table()
 end
 
 local opcost = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
