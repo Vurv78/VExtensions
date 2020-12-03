@@ -11,7 +11,7 @@
 ]]
 
 local isfunction, debug_getinfo = isfunction, debug.getinfo
-local string_find, string_sub, table_GetKeys = string.find, string.sub, table.GetKeys
+local string_find, string_lower, string_sub, table_GetKeys = string.find, string.lower, string.sub, table.GetKeys
 local luaTableToE2, getE2UDF, getE2Func = vex.luaTableToE2, vex.getE2UDF, vex.getE2Func
 
 -- TODO: Set E2 costs ( __e2setcost(N) ).
@@ -187,4 +187,14 @@ e2function table getBuiltinFuncInfo(string funcname)
             )
         -- If the function is not found, return an empty E2 table.
         or newE2Table()
+end
+
+-- Returns a table containing E2 types information ([type ID] = type name).
+-- If you need it other way around, just use invert function. (You should cache the result in your E2 for performance.)
+e2function table getTypeInfo()
+    local ret = {}
+    for typeName,tbl in pairs(wire_expression_types) do
+        ret[tbl[1]] = string_lower(typeName)
+    end
+    return luaTableToE2(ret)
 end
