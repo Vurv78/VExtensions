@@ -64,18 +64,6 @@ e2function table getConstants()
     return luaTableToE2(wire_expression2_constants)
 end
 
--- Returns an array containing only names of all User-Defined Functions.
-e2function array udfNames()
-    -- Populate keys on the table (to avoid duplicate entries) and then get the keys on return.
-    -- Duplicates? Yes, you can define many UDF with identical name (as long as the signature/argtypes are different).
-    local ret = {}
-    for name in pairs(self.funcs_ret) do
-        local idx = string_find(name, "(", 2, true) -- This should never return a nil.
-        ret[string_sub(name, 1, idx - 1)] = true -- Extract the function name and store it as the key on the table.
-    end
-    return table_GetKeys(ret) -- We return all the UDF names (without duplicates).
-end
-
 --[[-------------------------------------------------------------------------------------------------------------------
     Returns a table containing useful information about all User-Defined Functions.
     This function can operate differently, the `mode` argument controls how the output table will be structured:
