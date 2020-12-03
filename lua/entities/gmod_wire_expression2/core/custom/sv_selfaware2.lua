@@ -194,7 +194,7 @@ end
 e2function table getTypeInfo()
     local ret = {}
     for typeName,tbl in pairs(wire_expression_types) do
-        ret[tbl[1]] = string_lower(typeName)
+        ret[tbl[1]] = typeName == "NORMAL" and "number" or string_lower(typeName) -- E1 normal -> E2 number type alias
     end
     return luaTableToE2(ret)
 end
