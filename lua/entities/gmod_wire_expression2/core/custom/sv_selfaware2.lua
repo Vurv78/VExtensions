@@ -38,8 +38,8 @@ end
 -- Returns the path where the function was defined, useful for finding whether something was added with an addon.
 e2function string getFunctionPath(string funcname)
     local func = getE2Func(self, funcname)
-    -- source is better than short_src, because it can help identify custom addon/core more easily.
-    return isfunction(func) and debug_getinfo(func, "S").source or ""
+    -- source is better than short_src, because it can help identify custom addon/core more easily (without path trim).
+    return isfunction(func) and string_sub(debug_getinfo(func, "S").source, 2) or ""
 end
 
 -- Returns a table of arrays containing information about E2 extensions (status and description).
