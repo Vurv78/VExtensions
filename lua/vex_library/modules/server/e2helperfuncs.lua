@@ -70,12 +70,13 @@ vex.sanitizeLuaVar = function(v)
     return v
 end
 
-vex.luaTableToE2 = function(tbl)
+
+-- arrayOptimization detects if a lua table would fit as an e2 array (is sequential, and if so, returns the table untouched as an array type)
+vex.luaTableToE2 = function(tbl,arrayOptimization)
     local output = vex.newE2Table()
     local n,ntypes = output.n,output.ntypes
     local s,stypes = output.s,output.stypes
     local size = 0
-    local set,get
     for K,V in pairs(tbl) do
         local t,t_types
         if isnumber(K) then
@@ -84,8 +85,15 @@ vex.luaTableToE2 = function(tbl)
             t,t_types = s,stypes
         else continue end -- Don't do non-string/number keys
         size = size + 1
-        if V == tbl then
-            t[K],t_types[K] = output,"t"
+        if istable(V) then
+            t_types[K] = "t"
+            if V == tbl then
+                t[K] = output
+            elseif arrayOptimization and table.IsSequential(V) then
+                t[K],t_types[K] = V,"r"
+            else
+                t[K] = vex.luaTableToE2(V)
+            end
         else
             t[K],t_types[K] = vex.sanitizeLuaVar(V),vex.getE2Type(V)
         end
@@ -93,19 +101,6 @@ vex.luaTableToE2 = function(tbl)
     output.size = size
     return output
 end
-
---[[
--- Test code
-local TestTbl = {1,2,3,4,5}
-TestTbl["stringindex"] = 69
-TestTbl["self"] = TestTbl
-TestTbl["cool"] = coroutine.create(function() end)
-TestTbl.test = {1,2,3,4,5}
-TestTbl.yes = luaTblToE2{1,2,3,4,5}
-
-local t = luaTblToE2(TestTbl)
-PrintTable(t)
-]]
 
 vex.listenE2Hook = function(context,id,dorun)
     if not runs_on[id] then runs_on[id] = {} end
