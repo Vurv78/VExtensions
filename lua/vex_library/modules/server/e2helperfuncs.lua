@@ -2,6 +2,8 @@
 -- This originally used to be the entire vex_library.. oh how far we've come :o
 
 local printf = vex.printf
+local isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction, getmetatable, pcall = isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction, getmetatable, pcall
+local table_copy, table_IsEmpty, table_IsSequential = table.Copy, table.IsEmpty, table.IsSequential
 
 -- Horrible hack
 if not vex.persists.runs_on then
