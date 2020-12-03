@@ -77,10 +77,11 @@ vex.luaTableToE2 = function(tbl)
     local size = 0
     local set,get
     for K,V in pairs(tbl) do
+        local t,t_types
         if isnumber(K) then
             t,t_types = n,ntypes
         elseif isstring(K) then
-            t, t_types = s,stypes
+            t,t_types = s,stypes
         else continue end -- Don't do non-string/number keys
         size = size + 1
         if V == tbl then
