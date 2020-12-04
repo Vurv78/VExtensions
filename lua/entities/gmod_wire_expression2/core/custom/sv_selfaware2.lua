@@ -10,11 +10,44 @@
  Adds functions similarly to regular-e2's self-aware core.
 ]]
 
-local isfunction, debug_getinfo = isfunction, debug.getinfo
-local string_find, string_lower, string_sub, table_GetKeys = string.find, string.lower, string.sub, table.GetKeys
-local newE2Table, luaTableToE2, getE2UDF, getE2Func = vex.newE2Table, vex.luaTableToE2, vex.getE2UDF, vex.getE2Func
+-- Localization of global functions
+local newE2Table, getE2UDF, getE2Func = vex.newE2Table, vex.getE2UDF, vex.getE2Func
 
--- TODO: Set E2 costs ( __e2setcost(N) ).
+local luaTableToE2
+do
+    -- Localized and tailored towards just for SelfAware2's needs (for best CPU speed).
+    -- Therefore this is not guaranteed to work outside from here (do not copy/paste this code).
+    -- This could have been written in 15 lines of code, but I really prefer best CPU speed here instead.
+    -- Besides we know what this function is supposed to do, and it does just that -- but faster.
+    local next, type, isnumber, isstring, istable = next, type, isnumber, isstring, istable
+    luaTableToE2 = function(tbl,arrayOptim)
+        local out = newE2Table()
+        local key,value = next(tbl)
+        if not key then return out end
+        local size,values,types = 0
+        if     isnumber(key) then values,types = out.n,out.ntypes
+        elseif isstring(key) then values,types = out.s,out.stypes
+        end
+        while key do
+            local vType
+            if istable(value) then
+                if arrayOptim>0 and isnumber(next(value)) then vType = "r"
+                else value = luaTableToE2(value,arrayOptim+1) vType = "t"
+                end
+            else
+                vType = type(value)[1] -- This will be either "n" or "s" (since that's all types we care about here)
+            end
+            values[key],types[key],size = value,vType,size+1
+            key,value = next(tbl,key)
+        end
+        out.size = size
+        return out
+    end
+end
+
+--===========================================================================================================================
+
+-- TODO (Patch #2): Set E2 costs ( __e2setcost(N) ).
 
 -- Ex: print(defined("print(...)")) or print(defined("health(e:)"))
 -- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function.
@@ -34,6 +67,9 @@ e2function number defined(string funcname)
     return 0
 end
 
+--===========================================================================================================================
+
+local isfunction, debug_getinfo, string_sub = isfunction, debug.getinfo, string.sub
 -- Ex: print(getFunctionPath("print(...)")) would print the path to .../core/debug.lua file.
 -- Returns the path where the function was defined, useful for finding whether something was added with an addon.
 e2function string getFunctionPath(string funcname)
@@ -42,6 +78,8 @@ e2function string getFunctionPath(string funcname)
     return isfunction(func) and string_sub(debug_getinfo(func, "S").source, 2) or ""
 end
 
+--===========================================================================================================================
+
 -- Returns a table of arrays containing information about E2 extensions (status and description).
 -- This function exists for dynamic/runtime kind of checks.
 e2function table getExtensionsInfo()
@@ -49,22 +87,26 @@ e2function table getExtensionsInfo()
     for _, name in pairs(E2Lib.GetExtensions()) do
         ret[name] = { -- A table of extension info (will be converted into an E2 array),
             -- Boolean, indicating whether the extension is enabled (will be converted to 0 or 1)
-            [1] = E2Lib.GetExtensionStatus(name) or false,
+            [1] = E2Lib.GetExtensionStatus(name) and 1 or 0,
             -- String, short description about the extension
             [2] = E2Lib.GetExtensionDocumentation(name).Description or ""
         }
     end
-    return luaTableToE2(ret, true) -- This will take care of converting the Lua table into an E2 compatible table.
+    return luaTableToE2(ret, 1) -- This will take care of converting the Lua table into an E2 compatible table.
 end
+
+--===========================================================================================================================
 
 -- Returns a table containing all registered E2 constants. This function exists for dynamic/runtime kind of lookups.
 e2function table getConstants()
     -- Must return a copy table to prevent reference modifications; luaTableToE2 takes care of this at the same time.
     -- Table structure: constant name is used as the table key and constant value (number) as the table value.
-    return luaTableToE2(wire_expression2_constants)
+    return luaTableToE2(wire_expression2_constants, 0)
 end
 
---[[-------------------------------------------------------------------------------------------------------------------
+--===========================================================================================================================
+
+--[[-------------------------------------------------------------------------------------------------------------------------
     Returns a table containing useful information about all User-Defined Functions.
     This function can operate differently, the `mode` argument controls how the output table will be structured:
         Mode 0 (aka Flat): [See below].
@@ -92,7 +134,8 @@ end
                 { [1]="e:av", [2]="t", [3]="Rot,Pos", [4]="myfuncs.txt:7" }
             }
         }
----------------------------------------------------------------------------------------------------------------------]]
+---------------------------------------------------------------------------------------------------------------------------]]
+local string_find = string.find
 local GET_UDF_MODE = {
     [vex.registerConstant("UDF_FLAT", 0)] =
         function(self)
@@ -105,10 +148,10 @@ local GET_UDF_MODE = {
             --]]--
             local res = {}
             for fullsig,returnType in pairs(self.funcs_ret) do
-                -- MYTODO: entries [2] and [3] in the table (not sure yet how to obtain these)
+                -- TODO (Patch #2): entries [2] and [3] in the table (not sure yet how to obtain these)
                 res[fullsig] = { [1] = returnType or "" }
             end
-            return luaTableToE2(res, true) -- Convert to E2 table with array optimization enabled.
+            return luaTableToE2(res, 1) -- Convert to E2 table with array optimization enabled.
         end;
     [vex.registerConstant("UDF_DNC", 1)] =
         function(self)
@@ -131,16 +174,18 @@ local GET_UDF_MODE = {
                 sig = string_sub(sig, idx + 1, -2) -- -2 in order to drop the ')' at the end.
                 local collection = res[name] or {}
                 res[name] = collection
-                -- MYTODO: entries [3] and [4] in the table (not sure yet how to obtain these)
+                -- TODO (Patch #2): entries [3] and [4] in the table (not sure yet how to obtain these)
                 collection[#collection + 1] = { [1] = sig, [2] = returnType or "" }
             end
-            return luaTableToE2(res, false) -- Convert to E2 table *without* array optimization.
+            return luaTableToE2(res, 0) -- Convert to E2 table with array optimization disabled (initially).
         end;
 }
 e2function table getUserFunctionInfo(mode)
     mode = GET_UDF_MODE[mode]
     return mode and mode(self) or newE2Table()
 end
+
+--===========================================================================================================================
 
 local opcost = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
 -- A small helper function to help with creation of the builtin function info table.
@@ -174,7 +219,7 @@ e2function table getBuiltinFuncInfo(string funcname)
         -- Dynamically bump up OPS based on the size of the output table. (Keep this after the loop.)
         self.prf = self.prf + size * opcost
         -- Convert the result table into E2 compatible table, with array optimization enabled.
-        return luaTableToE2(ret, true)
+        return luaTableToE2(ret, 1)
     end
     -- Otherwise, search for the specified function and only return its information.
     local tbl = getE2Func(self, funcname, true)
@@ -183,12 +228,15 @@ e2function table getBuiltinFuncInfo(string funcname)
         -- If the function is found, create a Lua table and convert into a compatible E2 table,
             luaTableToE2(
                 createBuiltinFuncInfoTable(tbl),
-                true -- With array optimization enabled.
+                1 -- With array optimization enabled.
             )
         -- If the function is not found, return an empty E2 table.
         or newE2Table()
 end
 
+--===========================================================================================================================
+
+local string_lower = string.lower
 -- Returns a table containing E2 types information ([type ID] = type name).
 -- If you need it other way around, just use invert function. (You should cache the result in your E2 for performance.)
 e2function table getTypeInfo()
@@ -196,5 +244,5 @@ e2function table getTypeInfo()
     for typeName,tbl in pairs(wire_expression_types) do
         ret[tbl[1]] = typeName == "NORMAL" and "number" or string_lower(typeName) -- E1 normal -> E2 number type alias
     end
-    return luaTableToE2(ret)
+    return luaTableToE2(ret, 0)
 end
