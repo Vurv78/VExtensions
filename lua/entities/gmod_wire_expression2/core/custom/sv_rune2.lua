@@ -1,6 +1,6 @@
 local table_remove = table.remove
 local table_insert = table.insert
-local luaTableToE2, getE2UDF, getE2Func = vex.luaTableToE2, vex.getE2UDF, vex.getE2Func
+local luaTableToE2, getE2UDF = vex.luaTableToE2, vex.getE2UDF
 
 
 -- Builds a body to run an e2 udf and pass args to it.
