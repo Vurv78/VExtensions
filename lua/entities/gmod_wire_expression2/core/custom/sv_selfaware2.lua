@@ -114,21 +114,21 @@ end
         function string entity:myFunc(Col:vector4, Ar:array)
         function table entity:myFunc(Rot:angle, Pos:vector)
     You would get the following table in Mode 0 (aka Flat):
-        {
-            ["foo(ns)"] = { [1]="", [2]="", [2] = "Num,Text", [3]="myfuncs.txt:1" },
-            ["myFunc(e:xv4r)"] = { [1]="s", [2]="Col,Ar", [3]="myfuncs.txt:4" },
-            ["myFunc(e:av)"] = { [1]="t", [2]="Rot,Pos", [3]="myfuncs.txt:7" }
+        { -- table
+            ["foo(ns)"       ] = { [1]="",  [2]="Num,Text", [3]="myfuncs.txt:1" }, -- array
+            ["myFunc(e:xv4r)"] = { [1]="s", [2]="Col,Ar",   [3]="myfuncs.txt:4" }, -- array
+            ["myFunc(e:av)"  ] = { [1]="t", [2]="Rot,Pos",  [3]="myfuncs.txt:7" }  -- array
         }
     You would get the following table in Mode 1 (aka D&C):
-        {
+        { -- table
             ["foo"] =
-            {
-                { [1]="ns", [2]="", [3]="Num,Text", [4]="myfuncs.txt:1" }
+            { -- table
+                { [1]="ns", [2]="", [3]="Num,Text", [4]="myfuncs.txt:1" } -- array
             },
             ["myFunc"] =
-            {
-                { [1]="e:xv4r", [2]="s", [3]="Col,Ar", [4]="myfuncs.txt:4" },
-                { [1]="e:av", [2]="t", [3]="Rot,Pos", [4]="myfuncs.txt:7" }
+            { -- table
+                { [1]="e:xv4r", [2]="s", [3]="Col,Ar",  [4]="myfuncs.txt:4" }, -- array
+                { [1]="e:av",   [2]="t", [3]="Rot,Pos", [4]="myfuncs.txt:7" }  -- array
             }
         }
 ---------------------------------------------------------------------------------------------------------------------------]]
@@ -195,7 +195,7 @@ local function createBuiltinFuncInfoTable(tbl)
         -- Number, function cost (OPS)
         [3] = tbl[4] or 0,
         -- Table of strings, holding arguments' names (will be converted into an array)
-        --[4] = tbl.argnames or {} -- FIXME: Something breaks out when using this...
+        --[4] = tbl.argnames or {} -- FIXME (Patch #2): Something breaks out when using this...
     }
 end
 -- Returns a table containing information about the builtin (non-UDF) E2 functions.
@@ -224,8 +224,8 @@ e2function table getBuiltinFuncInfo(string funcname)
         and
         -- If the function is found, create a Lua table and convert into a compatible E2 table,
             luaTableToE2(
-                createBuiltinFuncInfoTable(tbl),
-                1 -- With array optimization enabled.
+                createBuiltinFuncInfoTable(tbl), -- This is just an array, but this function must return a table.
+                0 -- With array optimization disabled, because we just want to wrap an array into a table.
             )
         -- If the function is not found, return an empty E2 table.
         or newE2Table()
@@ -241,5 +241,5 @@ e2function table getTypeInfo()
     for typeName,tbl in pairs(wire_expression_types) do
         ret[tbl[1]] = typeName == "NORMAL" and "number" or string_lower(typeName) -- E1 normal -> E2 number type alias
     end
-    return luaTableToE2(ret, 0)
+    return luaTableToE2(ret, 0) -- Convert into a compatible E2 table without array optimization.
 end
