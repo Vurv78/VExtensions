@@ -17,28 +17,25 @@ local luaTableToE2
 do
     -- Localized and tailored towards just for SelfAware2's needs (for best CPU speed).
     -- Therefore this is not guaranteed to work outside from here (do not copy/paste this code).
-    -- This could have been written in 15 lines of code, but I really prefer best CPU speed here instead.
+    -- This could have been written in 12 lines of code, but I really prefer best CPU speed here instead of readability.
     -- Besides we know what this function is supposed to do, and it does just that -- but faster.
     local next, type, isnumber, isstring, istable = next, type, isnumber, isstring, istable
     luaTableToE2 = function(tbl,arrayOptim)
-        local out = newE2Table()
-        local key,value = next(tbl)
+        local out,key,value = newE2Table(),next(tbl)
         if not key then return out end
-        local size,values,types = 0
+        local size,values,types,vType = 0
         if     isnumber(key) then values,types = out.n,out.ntypes
         elseif isstring(key) then values,types = out.s,out.stypes
         end
         while key do
-            local vType
             if istable(value) then
                 if arrayOptim>0 and isnumber(next(value)) then vType = "r"
                 else value = luaTableToE2(value,arrayOptim+1) vType = "t"
                 end
             else
-                vType = type(value)[1] -- This will be either "n" or "s" (since that's all types we care about here)
+                vType = type(value)[1] -- This will be either "n" or "s" (they are the only types we care about in SA2)
             end
-            values[key],types[key],size = value,vType,size+1
-            key,value = next(tbl,key)
+            values[key],types[key],size,key,value = value,vType,size+1,next(tbl,key)
         end
         out.size = size
         return out
