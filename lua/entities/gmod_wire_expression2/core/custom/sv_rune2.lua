@@ -2,24 +2,6 @@ local table_remove = table.remove
 local table_insert = table.insert
 local luaTableToE2, getE2UDF = vex.luaTableToE2, vex.getE2UDF
 
-
--- Builds a body to run an e2 udf and pass args to it.
-local function buildBody(args) -- Why does the wireteam do this
-    local body = {
-        false -- No idea what this does, but it is necessary
-    }
-    local types = {}
-    for Type,Value in pairs(args) do
-        table_insert(body,{
-            [1] = function() return Value end,
-            ["TraceName"] = "LITERAL"
-        })
-        table_insert(types,Type)
-    end
-    table_insert(body,types)
-    return body
-end
-
 -- We use this for try and catch
 local function runE2InstanceSafe(compiler,func,body,...)
     local args = {pcall(func,compiler,body,...)}
@@ -40,8 +22,9 @@ __e2setcost(5)
 -- Returns table, first argument is a number stating whether the function executed successfully, rest are varargs.
 -- TODO: vararg input
 e2function table try(string try)
+    -- TODO: We probably wanna scrap using type inferrence for functions like try(), since it'd just be super inconvenient..
+    -- Currently, it returns a table if you wanna return anything like an array or vector in a tried function
     local tryfun = getE2UDF(self,try)
-    -- Do *not* throw error from this function!! ಠ_ಠ (¬_¬)
     if not tryfun then return luaTableToE2{false,"Try was called with undefined function ["..try.."]"} end
     local success,errstr,args = runE2InstanceSafe(self,tryfun)
     if success then

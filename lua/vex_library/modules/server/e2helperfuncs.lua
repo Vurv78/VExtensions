@@ -52,8 +52,7 @@ vex.isE2Table = function(tbl,accurateCheck)
         -- This can't be made any faster *and* accurate than it is.
         if getmetatable(tbl) then return false end -- E2 table shouldn't have metatable attached to it.
         -- This loop does 6 iterations at most, at 6th it will stop too.
-        for k in next,tbl do -- We have to be sure, so we loop over the given tbl -- not over the default E2 tbl.
-            -- We still stop the loop as soon as possible (if the key doesn't exist in default).
+        for k in next,tbl do
             if not Default_E2Tbl[k] then return false end -- < Therefore performance is not an issue.
         end
         return true
@@ -63,18 +62,18 @@ vex.isE2Table = function(tbl,accurateCheck)
 end
 
 -- For now, we'll wrap everything that needs to be sanitized by default i guess?
--- We will sanitize everything inside of here to avoid the cancer what was in sanitizeLuaVar before.
 local function getVarTypeAndSanitize(v,checkForArrays)
     -- If we're gonna sanitize userdata like angles and vectors, should we clone tables found?
     if isnumber(v) then return "n" end
-    if isbool(v) then return "n", true end -- Returning an additional true, to indicate it must be sanitized (using `vex.sanitizeLuaVar`).
+    if isbool(v) then return "n", v and 1 or 0 end
     if isstring(v) then return "s" end
     if isentity(v) then return "e" end
-    if isangle(v) then return "a",{v[1],v[2],v[3]} end -- By default, requires wrapping to prevent reference modification.
+    if isangle(v) then return "a",{v[1],v[2],v[3]} end
     if isvector(v) then return "v",{v[1],v[2],v[3]} end
-    if IsValid(v) and type(v)=="PhysObj" then return "b" end -- Optimize into E2 `bone`.
+    if type(v)=="PhysObj" then return "b" end -- No IsValid check because that would index userdata. This caused lua errors when sanitizing something like a coroutine
     if istable(v) then
-        if IsColor(v) then return "t",{v.r,v.g,v.b,v.a} end -- Should this be vector4 or array or table..
+        if IsColor(v) then return "t",{v.r,v.g,v.b,v.a} end
+        if v.HitPos then return "xrd" end -- Ranger/Trace data
         if getmetatable(v) then return end -- Most likely we don't want this to be passed to the E2.
         if checkForArrays and validArray(v) then return "r" end
         return "t" -- Just return it as a table type (we are not going to validate contents)
@@ -82,29 +81,24 @@ local function getVarTypeAndSanitize(v,checkForArrays)
     -- Unsupported; Returning no value. Use the `vex.getE2Type` function if you need to check for official/3rd-party types.
 end
 
--- Ret: typeid, typename
+local wire_types = wire_expression_types
 vex.getE2Type = function(val,checkForArrays)
     local inferred_type, sanitizedVar = getVarTypeAndSanitize(val,checkForArrays)
     if inferred_type then return inferred_type, sanitizedVar end -- Has to be 100% sure.
-
     -- This is mostly for custom-types that are added by addons like for effect core, coroutine core..
-    for TypeName,TypeData in pairs(wire_expression_types) do
-        -- Every e2 registered type has a type-validating function, which is [6] in the typedata. It returns whether the object isn't type x.
-        -- It isn't perfect, it just tells the compiler whether it is valid for functions of type x to use the object.
-        local success,is_not_type = pcall(TypeData[6],val)
-        -- We have to pcall it because some methods do things like :isValid which would error on numbers and strings.. etc :/
-        if success and not is_not_type then
-            TypeName = wire_expression_types2[TypeData[1]][1]
-            -- Returns TypeID. If you want the type name, do "TypeName = wire_expression_types2[TypeID][1]"
-            return TypeData[1]
+    for TypeName,TypeData in pairs(wire_types) do
+        local validator = TypeData[index]
+        if validator then
+            local success,is_not_type = pcall(validator,value)
+            if success and not is_not_type then
+                return TypeData[1]
+            end
         end
     end
 end
 
--- arrayOptimization detects if a lua table would fit as an e2 array (if sequential, returns the table untouched as an array type)
--- if we checkForArrays, we will check if a lua table is valid to fit as an e2 array.
--- This would lead to some inconsistencies if we deal with a table that may or may not contain a non-numeric index / a table.
--- Therefore, we DO need to keep the arrayOptimization variable, in order to make sure that the end e2 user can consistently index a table correctly.
+
+-- Should avoid checking for arrays, since it might lead to inconsistencies with tables being inferred as arrays or tables depending on their contents.
 vex.luaTableToE2 = function(tbl,checkForArrays)
     if vex.isE2Table(tbl) then return tbl end
     local output = vex.newE2Table()
@@ -122,22 +116,44 @@ vex.luaTableToE2 = function(tbl,checkForArrays)
             t_types[K] = "t"
             if V == tbl then
                 t[K] = output
-            elseif checkForArrays and validArray(V) then
-                t[K],t_types[K] = V,"r"
             else
-                t[K] = vex.luaTableToE2(V,checkForArrays)
+                -- So we can see if the table is actually xrd or an array.
+                local inferred_type,sanitized = vex.getE2Type(V,checkForArrays)
+                if inferred_type then
+                    t[K],t_types[K] = sanitized or V, inferred_type
+                else
+                    t[K] = vex.luaTableToE2(V,checkForArrays)
+                end
             end
         else
             local v_type,sanitized = vex.getE2Type(V)
             if v_type then
-                -- We could do sanitized or V, but then if V was 'false' it wouldn't work
-                t[K],t_types[K] = Either(sanitized,sanitized,V),v_type
+                t[K],t_types[K] = sanitized or V,v_type
             else continue end -- Skip! We surely don't want this value in E2 table, filter it out. (Not in 'whitelist')
         end
         size = size + 1
     end
     output.size = size
     return output
+end
+
+-- Moved from rune2
+-- Builds a body to run an e2 udf and pass args to it.
+-- TODO: Probably want to use type inferrence with this so we don't have to provide types in the table (and could turn this into a vararg function)
+vex.buildBody = function(args)
+    local body = {
+        false -- No idea what this does, but it is necessary
+    }
+    local types = {}
+    for Type,Value in pairs(args) do
+        table_insert(body,{
+            [1] = function() return Value end,
+            ["TraceName"] = "LITERAL"
+        })
+        table_insert(types,Type)
+    end
+    table_insert(body,types)
+    return body
 end
 
 vex.listenE2Hook = function(context,id,dorun)
@@ -188,17 +204,17 @@ end
 
 local E2FuncNamePattern = "^([a-z][a-zA-Z0-9_]*)%("
 local string_match = string.match
-vex.getE2UDF = function(compiler, funcname)
+vex.getE2UDF = function(compiler, func_name)
     local funcs = compiler.funcs
-    local e2func = funcs[funcname]
+    local e2func = funcs[func_name]
     if e2func then
         return e2func, true -- Direct/Full match.
     end
     -- Look for any UDF that has the same name (before the parenthesis).
-    funcname = string_match(funcname, E2FuncNamePattern) or funcname
+    func_name = string_match(func_name, E2FuncNamePattern) or func_name
     for name, fn in pairs(funcs) do
         local proper = string_match(name, E2FuncNamePattern)
-        if proper == funcname then
+        if proper == func_name then
             return fn, false -- Name only match.
         end
     end
