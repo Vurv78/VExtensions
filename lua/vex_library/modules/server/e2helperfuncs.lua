@@ -1,9 +1,9 @@
--- E2HelperFuncs.lua in vex_library server modules.
--- This originally used to be the entire vex_library.. oh how far we've come :o
+-- Helper functions for use in e2 modules / mini-extensions.
+-- Helps you create e2 hooks, tables, etc
 
 local printf = vex.printf
-local isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction, getmetatable, pcall, IsValid = isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction, getmetatable, pcall, IsValid
-local string_upper, table_copy, table_IsSequential = string.upper, table.Copy, table.IsEmpty, table.IsSequential
+local isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction = isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction
+local getmetatable, pcall, IsValid = getmetatable, pcall, IsValid
 
 -- Horrible hack
 if not vex.persists.runs_on then
@@ -19,7 +19,7 @@ end
 
 vex.registerConstant = function(name, value)
     -- This exists because E2Lib doesn't return a passed value, which can be handy (see selfaware2).
-    E2Lib.registerConstant(string_upper(name), value)
+    E2Lib.registerConstant(string.upper(name), value) -- Upper shouldn't be used a lot
     return value
 end
 
@@ -62,8 +62,6 @@ vex.isE2Table = function(tbl,accurateCheck)
     return tbl.s and tbl.size and tbl.stypes and tbl.n and tbl.ntypes and true or false
 end
 
--- Hardcoded e2 type grabbing, so we know 100% the type of a lua var -> e2
--- Ignore the name...
 -- For now, we'll wrap everything that needs to be sanitized by default i guess?
 -- We will sanitize everything inside of here to avoid the cancer what was in sanitizeLuaVar before.
 local function getVarTypeAndSanitize(v,checkForArrays)
