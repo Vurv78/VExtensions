@@ -8,7 +8,7 @@
 ]]
 
 local newE2Table, luaTableToE2 = vex.newE2Table, vex.luaTableToE2
-local table_insert = table.insert -- Gonna be using this a lot
+local table_insert, util_TraceLine = table.insert, util.TraceLine -- Gonna be using this a lot
 
 -- Takes out everything that isn't a valid entity in a table
 local function cleanupTable(t)
@@ -24,13 +24,12 @@ end
 -- Lib functions
 
 __e2setcost(10)
-e2function table rangerOffsetManual(vector pos,vector endpos, array filt)
-    local tr = util.TraceLine {
+e2function ranger rangerOffsetManual(vector pos,vector endpos, array filt)
+    return util_TraceLine {
         start = Vector(pos[1],pos[2],pos[3]),
         endpos = Vector(endpos[1],endpos[2],endpos[3]),
         filter = cleanupTable(filt)
     }
-    return tr and luaTableToE2(tr) or newE2Table()
 end
 
 __e2setcost(5)
