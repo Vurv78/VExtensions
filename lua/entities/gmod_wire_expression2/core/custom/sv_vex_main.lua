@@ -10,11 +10,11 @@
 local table_insert, util_TraceLine = table.insert, util.TraceLine -- Gonna be using this a lot
 
 -- Takes out everything that isn't a valid entity in a table
-local function cleanupTable(t)
+local function cleanupTable(filter)
     local out = {}
     for _,to_filter in pairs(filter) do
         if isentity(to_filter) then
-            table_insert(fixed,to_filter)
+            table_insert(out,to_filter)
         end
     end
     return out
