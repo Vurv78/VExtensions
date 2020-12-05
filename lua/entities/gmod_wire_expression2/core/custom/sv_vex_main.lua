@@ -7,7 +7,6 @@
  Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
 ]]
 
-local newE2Table, luaTableToE2 = vex.newE2Table, vex.luaTableToE2
 local table_insert, util_TraceLine = table.insert, util.TraceLine -- Gonna be using this a lot
 
 -- Takes out everything that isn't a valid entity in a table
