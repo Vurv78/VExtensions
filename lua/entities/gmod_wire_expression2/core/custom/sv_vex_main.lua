@@ -7,40 +7,28 @@
  Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
 ]]
 
-local E2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
+local table_insert, util_TraceLine = table.insert, util.TraceLine -- Gonna be using this a lot
 
-local function luaTablToE2(T)
-    local Strt = E2Table()
-    local Sz = 0
-    for Key,Value in pairs(T) do
-        local TypeV = type(Value)
-        local WriteV = Strt.n
-        local WriteType = Strt.ntypes
-        if type(Key)=="string" then WriteV = Strt.s WriteType=Strt.stypes end
-        local Clean = Value
-        if TypeV=="bool" then Clean = Value and 1 or 0 elseif
-        TypeV=="table" then Clean = luaTablToE2(Value) end
-        Sz = Sz + 1
-        WriteV[Key] = Clean
-        WriteType[Key] = TypeV[1]
+-- Takes out everything that isn't a valid entity in a table
+local function cleanupTable(filter)
+    local out = {}
+    for _,to_filter in pairs(filter) do
+        if isentity(to_filter) then
+            table_insert(out,to_filter)
+        end
     end
-    Strt.size = Sz
-    return Strt
+    return out
 end
 
 -- Lib functions
 
 __e2setcost(10)
-e2function table rangerOffsetManual(vector pos,vector endpos, array filt)
-    local Start = Vector(pos[1],pos[2],pos[3])
-    local End = Vector(endpos[1],endpos[2],endpos[3])
-	local tr = util.TraceLine( {
-		start = Start,
-		endpos = End,
-		filter = filt
-    } )
-	if not tr then return E2Table() end
-	return luaTablToE2(tr)
+e2function ranger rangerOffsetManual(vector pos,vector endpos, array filt)
+    return util_TraceLine {
+        start = Vector(pos[1],pos[2],pos[3]),
+        endpos = Vector(endpos[1],endpos[2],endpos[3]),
+        filter = cleanupTable(filt)
+    }
 end
 
 __e2setcost(5)
@@ -48,13 +36,7 @@ e2function number rangerSetFilter(array filter)
     if #filter == 0 then self.data.rangerfilter = {} return 1 end
     if #filter > 3000 then return 0 end
     self.prf = self.prf + #filter*1.5
-	local fixed = {}
-    for _,V in pairs(filter) do
-		if type(V)~="Entity" or type(V)~="Player" then
-            table.insert(fixed,V)
-        end
-	end
-    self.data.rangerfilter = filter
+    self.data.rangerfilter = cleanupTable(filter)
     return 1
 end
 
@@ -70,7 +52,7 @@ end
 __e2setcost(20)
 e2function void hideChatPly(entity ply, hide)
     if not ply:IsValid() then return end
-    if hide==0 then chatsHidden[ply] = false return end -- TODO: This may be abusable and would make it so people
+    if hide==0 then chatsHidden[ply] = false return end
     if self.player ~= ply then
         if ply:GetInfoNum("canhidechatply_cl",0)==0 then return end
         ply:PrintMessage(HUD_PRINTCONSOLE, string.format("Your chat was hidden by %s's expression 2 chip. See canhidechatply_cl to disable this.",self.player:GetName())) -- Notify the user that their chat was hidden by X
@@ -79,7 +61,7 @@ e2function void hideChatPly(entity ply, hide)
     chatsHidden[ply] = true -- Disregard the convar if you're the owner of the chip.
 end
 
-hook.Add("PlayerSay","vurve2_canhidechat_hide",function(sender)
+hook.Add("PlayerSay","vex_hidechatply",function(sender)
     if chatsHidden[sender] then
         chatsHidden[sender] = false
         -- Only hide chat once

@@ -5,12 +5,8 @@
  / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /  
 /_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/   
  Allows for people to print to other's consoles, with warnings and options to disable.
-
+    No RGBA support (for now?)
 ]]
-
--- Disabled by default
-
-if not vex then print("vexlib was not detected in printglobal??!!??! Please report this to here: https://github.com/Vurv78/VExtensions") end
 
 vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
 
@@ -23,44 +19,52 @@ local BurstMax = CreateConVar("vex_printglobal_burst_sv","4",FCVAR_REPLICATED,"H
 local PrintGBurstCount = {}
 local PrintGCache = { recent = {NULL,{},""} }
 local PrintGAlert = {}
-local format = string.format
-local e2type = vex.getE2Type
+local isE2Array = vex.isE2Array
+local format,table_concat,table_insert,table_remove = string.format,table.concat,table.insert,table.remove
+local isvector,isstring,istable,isnumber = isvector,isstring,istable,isnumber
 
+-- TODO: Make the cooldownManager compatible for bursts or make a burstManager or something :/
 timer.Create("VurvE2_PrintGlobal",1,0,function()
-    -- Not sure if this would be cheaper than checking manually with curtime.
+    -- Doing this feels terrible
     PrintGBurstCount = {}
 end)
 
 local function canPrintToPly(ply)
-    return ply:GetInfoNum("printglobal_enable_cl",0)==1
+    return ply:GetInfoNum("vex_printglobal_enable_cl",0)==1
+end
+
+-- Returns whether a value would be fine to use as a vector.
+local function validVector(val)
+    if isvector(val) then return true end
+    if not istable(val) then return false end
+    if #val>3 then return end
+    for I=1,3 do if not isnumber(val[I]) then return false end end
+    return true
 end
 
 -- TODO: Make this more efficient
--- Doing Ind = Ind + 1 doesn't feel right but then again we don't have 'continue'
 local function printGlobalFormatting(T)
     local Ind = 1
     while true do
         local Current = T[Ind]
         local Next = T[Ind+1]
         if not Current then break end
-        local _type = e2type(Current)
-        if _type=="VECTOR" then
-            if e2type(Next)=="VECTOR" then
-                table.remove(T,Ind) -- Make sure we don't have trailing vectors
-                goto cont
+        if validVector(Current) then
+            if validVector(Next) then
+                table_remove(T,Ind) -- Make sure we don't have trailing vectors
+                continue
             end
-        elseif _type=="STRING" then
-            if e2type(Next) == "STRING" then
+        elseif isstring(Current) then -- Stitch together trailing strings, so we always get a vector, then a string, repeat
+            if isstring(Next) then
                 T[Ind] = Current..Next
-                table.remove(T,Ind+1)
-                goto cont
+                table_remove(T,Ind+1)
+                continue
             end
         end
         Ind = Ind + 1
-        ::cont::
     end
-    if type(T[#T]) ~= "string" then T[#T] = nil end
-    if e2type(T[1]) ~= "VECTOR" then table.insert(T,1,{100,100,255}) end
+    if not isstring(T[#T]) then T[#T] = nil end
+    if not validVector(T[1]) then table_insert(T,1,{100,100,255}) end
     return T
 end
 
@@ -78,15 +82,15 @@ local function printGlobal(T,Sender,Plys)
     -- Compile all of the string inputs.
     local printStringTable = {}
     for K,V in pairs(T) do
-        if type(V)=="string" then
-            table.insert(printStringTable,V)
-        elseif e2type(V) ~= "VECTOR" then
+        if isstring(V) then
+            table_insert(printStringTable,V)
+        elseif not validVector(V) then
             T[K] = tostring(V)
         end
     end
     
     local charLimit = CharMax:GetInt()
-    local printString = table.concat(printStringTable)
+    local printString = table_concat(printStringTable)
     if #printString > charLimit then
         local error = format("printGlobal() silently failed due to arg count [%d] exceeding max chars [%d]",#printString,charLimit)
         Sender:PrintMessage(HUD_PRINTCONSOLE,error)
@@ -135,7 +139,7 @@ local function printGlobalArrayFunc(args,sender,plys)
     if #plys<1 or #args<1 then return end
     local sanitized = {}
     for K,Ply in pairs(plys) do
-        if Ply and Ply:IsValid() and Ply:IsPlayer() then table.insert(sanitized,Ply) end
+        if Ply and Ply:IsValid() and Ply:IsPlayer() then table_insert(sanitized,Ply) end
     end
     if #sanitized<1 then
         local error = format("printGlobal() silently failed due to no valid players being given")
@@ -157,13 +161,13 @@ end
 __e2setcost(100)
 e2function void printGlobal(...)
     local args = {...}
-    if #args<1 then return end
-    local sender = self.player
-    if type(args[1]) == "Player" then
-        local ply = table.remove(args,1)
+    if #args==0 then return end
+    local sender,first_arg = self.player,args[1]
+    if isentity(first_arg) and IsValid(first_arg) and first_arg:IsPlayer() then
+        local ply = table_remove(args,1)
         printGlobalArrayFunc(args,sender,{ply})
-    elseif e2type(args[1]) == "ARRAY" then -- printGlobal(array plys, varargs)
-        local plys = table.remove(args,1)
+    elseif isE2Array(first_arg) then -- printGlobal(array plys, varargs)
+        local plys = table_remove(args,1)
         printGlobalArrayFunc(args,sender,plys)
     else
         printGlobal(args,sender,player.GetHumans())
@@ -193,6 +197,7 @@ e2function number printGlobalClk()
     return self.data.runByPrintGClk and 1 or 0
 end
 
+-- TODO: Replace with vex e2helperfuncs runOn* system.
 e2function void runOnPrintGlobal(on)
     PrintGAlert[self.entity] = on~=0 and true or nil
 end
