@@ -140,6 +140,7 @@ end
 -- Moved from rune2
 -- Builds a body to run an e2 udf and pass args to it.
 -- TODO: Probably want to use type inferrence with this so we don't have to provide types in the table (and could turn this into a vararg function)
+local table_insert = table.insert
 vex.buildBody = function(args)
     local body = {
         false -- No idea what this does, but it is necessary
