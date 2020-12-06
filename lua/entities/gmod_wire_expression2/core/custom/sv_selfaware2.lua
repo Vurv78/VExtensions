@@ -67,7 +67,7 @@ e2cost(8)
 --       then it is preferred to use #ifdef pre-processor statement; this function exists for dynamic/runtime kind of checks.
 e2function number defined(string funcName)
     -- Check/Prefer builtin first.
-    local isFunc, funcDirect = getE2Func(funcName)
+    local isFunc, funcDirect = getE2Func(funcName) -- (Not skipping operator functions.)
     if funcDirect then return 1 end -- Builtin perfect match.
     local isUDF, udfDirect = getE2UDF(self, funcName)
     if udfDirect then return 2 end -- UDF perfect match.
@@ -166,7 +166,7 @@ local GET_UDF_MODE = {
             --]]--
             local res, size = {}, 0
             for fullsig, returnType in pairs(self.funcs_ret) do
-                -- TODO (Patch #2): entries [2] and [3] in the table (not sure yet how to obtain these)
+                -- TODO (Patch #3): entries [2] and [3] in the table (not sure yet how to obtain these)
                 res[fullsig] = { [1] = returnType or "" }
                 size = size + 1
             end
@@ -195,7 +195,7 @@ local GET_UDF_MODE = {
                 sig = string_sub(sig, idx + 1, -2) -- -2 in order to drop the ')' at the end.
                 local collection = res[name] or {}
                 res[name] = collection
-                -- TODO (Patch #2): entries [3] and [4] in the table (not sure yet how to obtain these)
+                -- TODO (Patch #3): entries [3] and [4] in the table (not sure yet how to obtain these)
                 collection[#collection + 1] = { [1] = sig, [2] = returnType or "" }
                 size = size + 1
             end
@@ -222,7 +222,7 @@ local function createBuiltinFuncInfoTable(tbl)
         -- Number, function cost (OPS)
         [3] = tbl[4] or 0,
         -- Table of strings, holding arguments' names (will be converted into an array)
-        --[4] = tbl.argnames or {} -- FIXME (Patch #2): Something breaks out when using this...
+        --[4] = tbl.argnames or {} -- FIXME (Patch #3): Something breaks out when using this...
     }
 end
 -- Returns a table containing information about the builtin (non-UDF) E2 functions.

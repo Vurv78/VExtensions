@@ -226,8 +226,8 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType)
     local funcs, funcs_ret = compiler.funcs, compiler.funcs_ret
     local e2func = funcs[funcName]
     if e2func then
-        -- Optionally, validate the return type is of the expected type (ID).
         local returnType = funcs_ret[funcName]
+        -- Optionally, validate the return type is of the expected type (ID).
         if expectedReturnType and returnType ~= expectedReturnType then
             -- Since this is direct match, we exit here because UDF can't have overloaded a return type on this signature.
             --[[ In other words, E2 does not allow this:

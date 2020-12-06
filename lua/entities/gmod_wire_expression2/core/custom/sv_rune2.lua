@@ -2,7 +2,7 @@ local table_remove = table.remove
 local table_insert = table.insert
 local luaTableToE2, getE2UDF, buildBody = vex.luaTableToE2, vex.getE2UDF, vex.buildBody
 
--- We use this for try and catch
+-- We use this for `try` E2 functions
 local function runE2InstanceSafe(compiler,func,body,...)
     local args = {pcall(func,compiler,body,...)}
     if table_remove(args,1) then -- We don't even use the success var anyway
@@ -28,7 +28,7 @@ end
 __e2setcost(3)
 
 -- Literally like pcall()
--- Returns table, first argument is a number stating whether the function executed successfully, rest are varargs.
+-- Returns table, 1st field is a number stating whether the function executed successfully, 2nd field is the return value of the given function.
 e2function table try(string funcName)
     -- TODO: We probably wanna scrap using type inferrence for functions like try(), since it'd just be super inconvenient..
     -- Currently, it returns a table if you wanna return anything like an array or vector in a tried function
