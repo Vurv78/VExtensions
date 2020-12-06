@@ -42,9 +42,14 @@ do
     end
 end
 
+local BaseCost = 0     -- The amount of OPS to be added for all E2 functions in here.
+local OpCost   = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
+local __e2setcost = __e2setcost
+local function e2cost(n) __e2setcost(n + BaseCost) end
+
 --===========================================================================================================================
 
--- TODO (Patch #2): Set E2 costs ( __e2setcost(N) ).
+e2cost(7)
 
 -- Ex: print(defined("print(...)")) or print(defined("health(e:)"))
 -- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function.
@@ -66,6 +71,8 @@ end
 
 --===========================================================================================================================
 
+e2cost(6)
+
 local isfunction, debug_getinfo, string_sub = isfunction, debug.getinfo, string.sub
 -- Ex: print(getFunctionPath("print(...)")) would print the path to .../core/debug.lua file.
 -- Returns the path where the function was defined, useful for finding whether something was added with an addon.
@@ -77,8 +84,10 @@ end
 
 --===========================================================================================================================
 
+e2cost(4)
+
 -- Returns a table of arrays containing information about E2 extensions (status and description).
--- This function exists for dynamic/runtime kind of checks.
+-- This function exists for dynamic/runtime kind of checks. (You should cache the result in your E2 for performance.)
 e2function table getExtensionsInfo()
     local ret = {}
     for _, name in pairs(E2Lib.GetExtensions()) do
@@ -94,7 +103,10 @@ end
 
 --===========================================================================================================================
 
+e2cost(3)
+
 -- Returns a table containing all registered E2 constants. This function exists for dynamic/runtime kind of lookups.
+-- (You should cache the result in your E2 for performance.)
 e2function table getConstants()
     -- Must return a copy table to prevent reference modifications; luaTableToE2 takes care of this at the same time.
     -- Table structure: constant name is used as the table key and constant value (number) as the table value.
@@ -132,6 +144,7 @@ end
             }
         }
 ---------------------------------------------------------------------------------------------------------------------------]]
+e2cost(2) -- Note: The cost is dynamically increased here.
 local string_find = string.find
 local GET_UDF_MODE = {
     [vex.registerConstant("UDF_FLAT", 0)] =
@@ -143,11 +156,14 @@ local GET_UDF_MODE = {
                 [2] = Comma-separated string containing names of arguments
                 [3] = Filename and line number specifying where the UDF is defined at (within the current E2)
             --]]--
-            local res = {}
-            for fullsig,returnType in pairs(self.funcs_ret) do
+            local res, size = {}, 0
+            for fullsig, returnType in pairs(self.funcs_ret) do
                 -- TODO (Patch #2): entries [2] and [3] in the table (not sure yet how to obtain these)
                 res[fullsig] = { [1] = returnType or "" }
+                size = size + 1
             end
+            -- Dynamically bump up OPS based on the size of the output table. (Keep this after the loop.)
+            self.prf = self.prf + size * OpCost
             return luaTableToE2(res, 1) -- Convert to E2 table with array optimization enabled.
         end;
     [vex.registerConstant("UDF_DNC", 1)] =
@@ -160,8 +176,8 @@ local GET_UDF_MODE = {
                 [3] = Comma-separated string containing names of arguments
                 [4] = Filename and line number specifying where the UDF is defined at (within the current E2)
             --]]--
-            local res = {}
-            for sig,returnType in pairs(self.funcs_ret) do
+            local res, size = {}, 0
+            for sig, returnType in pairs(self.funcs_ret) do
                 -- This should never return a nil. Not using patterns due performance.
                 -- Starting at the index 2, since the index 1 is always a letter.
                 local idx = string_find(sig, "(", 2, true)
@@ -173,7 +189,10 @@ local GET_UDF_MODE = {
                 res[name] = collection
                 -- TODO (Patch #2): entries [3] and [4] in the table (not sure yet how to obtain these)
                 collection[#collection + 1] = { [1] = sig, [2] = returnType or "" }
+                size = size + 1
             end
+            -- Dynamically bump up OPS based on the size of the output table. (Keep this after the loop.)
+            self.prf = self.prf + size * OpCost
             return luaTableToE2(res, 0) -- Convert to E2 table with array optimization disabled (initially).
         end;
 }
@@ -184,7 +203,7 @@ end
 
 --===========================================================================================================================
 
-local opcost = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
+e2cost(3) -- Note: The cost is dynamically increased here.
 -- A small helper function to help with creation of the builtin function info table.
 local function createBuiltinFuncInfoTable(tbl)
     return {
@@ -203,8 +222,7 @@ end
 e2function table getBuiltinFuncInfo(string funcname)
     if funcname == "*" then
         -- Loop over all builtin functions and populate the table.
-        local ret = {}
-        local size = 0 -- We need to count entries manually. (Used for bumping up OPS.)
+        local ret, size = {}, 0 -- We need to count entries manually. (Used for bumping up OPS.)
         for sig, tbl in pairs(wire_expression2_funcs) do
             if string_sub(sig, 1, 3) == "op:" then
                 -- If this is a special operator node which represents an operation (such as addition/subtraction/etc),
@@ -214,7 +232,7 @@ e2function table getBuiltinFuncInfo(string funcname)
             size = size + 1
         end
         -- Dynamically bump up OPS based on the size of the output table. (Keep this after the loop.)
-        self.prf = self.prf + size * opcost
+        self.prf = self.prf + size * OpCost
         -- Convert the result table into E2 compatible table, with array optimization enabled.
         return luaTableToE2(ret, 1)
     end
@@ -233,12 +251,13 @@ end
 
 --===========================================================================================================================
 
+e2cost(3)
 local string_lower = string.lower
 -- Returns a table containing E2 types information ([type ID] = type name).
 -- If you need it other way around, just use invert function. (You should cache the result in your E2 for performance.)
 e2function table getTypeInfo()
     local ret = {}
-    for typeName,tbl in pairs(wire_expression_types) do
+    for typeName, tbl in pairs(wire_expression_types) do
         ret[tbl[1]] = typeName == "NORMAL" and "number" or string_lower(typeName) -- E1 normal -> E2 number type alias
     end
     return luaTableToE2(ret, 0) -- Convert into a compatible E2 table without array optimization.
