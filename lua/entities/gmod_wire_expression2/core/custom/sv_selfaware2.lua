@@ -60,7 +60,7 @@ local function e2cost(cost) __e2setcost((cost * BaseMulCost) + BaseCost) end
 e2cost(8)
 
 -- Ex: print(defined("print(...)")) or print(defined("health(e:)"))
--- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function.
+-- Returns number; 0 being not defined, 1 being defined as a builtin E2 function, 2 being a user-defined function.
 -- Note: If you are checking for availability of the UDF function, you should look into the getUserFunctionInfo function,
 --       because this function becomes unreliable if you only provide it with UDF name to it.
 --       If you are checking for availability of the builtin function and if you know the signature ahead of time,
@@ -226,7 +226,7 @@ local function createBuiltinFuncInfoTable(tbl)
     }
 end
 -- Returns a table containing information about the builtin (non-UDF) E2 functions.
--- Either use "*" as a `funcName` to get infos for all or specify a function name/signature (e.g. "selfDestruct").
+-- Either use "*" as a `funcName` to get infos for all, or specify a function name/signature (e.g. "selfDestruct").
 e2function table getBuiltinFuncInfo(string funcName)
     if funcName == "*" then
         -- Loop over all builtin functions and populate the table.
@@ -261,7 +261,7 @@ end
 
 e2cost(3)
 local string_lower = string.lower
--- Returns a table containing E2 types information ([type ID] = type name).
+-- Returns a table containing E2 types information (type ID is used as table key, and type name as the table value).
 -- If you need it other way around, just use invert function. (You should cache the result in your E2 for performance.)
 e2function table getTypeInfo()
     local ret = {}

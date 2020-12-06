@@ -28,7 +28,7 @@ __e2setcost(3)
 -- Literally like pcall()
 -- Returns table, 1st field is a number stating whether the function executed successfully, 2nd field is the return value of the given function.
 e2function table try(string funcName)
-    local tryFunc,_,returnType = getE2UDF(self,funcName,nil,"") -- "" is to make sure UDF does not have any arguments.
+    local tryFunc,_,returnType = getE2UDF(self,funcName,nil,"") -- "" is to enforce UDF has no arguments.
     if not tryFunc then return luaTableToE2{false,"Try was called with undefined function ["..funcName.."]"} end
     local success,errstr,result = runE2InstanceSafe(self,tryFunc,returnType)
     if success then
@@ -38,7 +38,7 @@ e2function table try(string funcName)
 end
 
 e2function table try(string funcName, table args)
-    local tryFunc,_,returnType = getE2UDF(self,funcName,nil,"t") -- "t" is to make sure UDF has only 1 argument (of table type).
+    local tryFunc,_,returnType = getE2UDF(self,funcName,nil,"t") -- "t" is to enforce UDF has only 1 argument (of type table).
     if not tryFunc then return luaTableToE2{false,"Try was called with undefined function ["..funcName.."]"} end
     local success,errstr,result = runE2InstanceSafe(self,tryFunc,returnType,buildBody{["t"]=args}) -- Pass the captured args table.
     if success then
