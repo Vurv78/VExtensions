@@ -92,7 +92,7 @@ local function getVarTypeAndSanitize(v,checkForArrays)
         if IsColor(v) then return "xv4",{v.r,v.g,v.b,v.a} end -- This should be either Vector4 or Array (or Matrix2); any is fine.
         if v.HitPos then return "xrd" end -- Ranger/Trace data
         if getmetatable(v) then return end -- Most likely we don't want this to be passed to the E2.
-        if checkForArrays and better_validArray(v) then return "r" end
+        if checkForArrays and validArray(v) then return "r" end
         return "t" -- Just return it as a table type (we are not going to validate contents)
     end
     -- Unsupported; Returning no value. Use the `vex.getE2Type` function if you need to check for official/3rd-party types.
