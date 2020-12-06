@@ -205,18 +205,34 @@ end
 
 local E2FuncNamePattern = "^([a-z][a-zA-Z0-9_]*)%("
 local string_match = string.match
-vex.getE2UDF = function(compiler, func_name)
-    local funcs = compiler.funcs
-    local e2func = funcs[func_name]
+vex.getE2UDF = function(compiler, funcName, expectedReturnType)
+    local funcs, funcs_ret = compiler.funcs, compiler.funcs_ret
+    local e2func = funcs[funcName]
     if e2func then
+        -- Optionally, validate the return type is of the expected type (ID).
+        if expectedReturnType and funcs_ret[funcName] ~= expectedReturnType then
+            -- Since this is direct match, we exit here because UDF can't have overloaded a return type on this signature.
+            --[[ In other words, E2 does not allow this:
+                function number myFunc() { return 1 }
+                function string myFunc() { return "" }
+            ]]
+            return -- Stop here because the return type didn't match.
+        end
         return e2func, true -- Direct/Full match.
     end
     -- Look for any UDF that has the same name (before the parenthesis).
-    func_name = string_match(func_name, E2FuncNamePattern) or func_name
-    for name, fn in pairs(funcs) do
-        local proper = string_match(name, E2FuncNamePattern)
-        if proper == func_name then
-            return fn, false -- Name only match.
+    funcName = string_match(funcName, E2FuncNamePattern) or funcName
+    for signature, fn in pairs(funcs) do
+        local proper = string_match(signature, E2FuncNamePattern)
+        if proper == funcName then
+            if expectedReturnType and funcs_ret[signature] ~= expectedReturnType then
+                --[[ In this case, since we are doing name-only matching we just skip it. Because E2 does allow this:
+                    function number myFunc(N) { return N }
+                    function string myFunc(S:string) { return S }
+                ]]
+                continue
+            end
+            return fn, false -- Name-only match.
         end
     end
 end
@@ -224,18 +240,18 @@ end
 -- TODO: Get rid of the compiler arg in the second pr, we don't use it here
 -- Maybe the compiler stores it's functions in runtime though? I doubt e2 has support for some e2's having (builtin) functions that others don't.
 
-vex.getE2Func = function(compiler, funcname, returnTable)
+vex.getE2Func = function(_, funcName, returnTable)
     local funcs = wire_expression2_funcs
-    local e2func = funcs[funcname]
+    local e2func = funcs[funcName]
     if e2func then
         return returnTable and e2func or e2func[3], true -- Direct/Full match.
     end
     -- Look for any builtin function that has the same name (before the parenthesis).
-    funcname = string_match(funcname, E2FuncNamePattern) or funcname
-    for name, data in pairs(funcs) do
-        local proper = string_match(name, E2FuncNamePattern)
-        if proper == funcname then
-            return returnTable and data or data[3], false -- Name only match.
+    funcName = string_match(funcName, E2FuncNamePattern) or funcName
+    for signature, data in pairs(funcs) do
+        local proper = string_match(signature, E2FuncNamePattern)
+        if proper == funcName then
+            return returnTable and data or data[3], false -- Name-only match.
         end
     end
 end
