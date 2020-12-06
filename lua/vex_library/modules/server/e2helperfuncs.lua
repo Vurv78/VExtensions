@@ -237,10 +237,8 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType)
     end
 end
 
--- TODO: Get rid of the compiler arg in the second pr, we don't use it here
 -- Maybe the compiler stores it's functions in runtime though? I doubt e2 has support for some e2's having (builtin) functions that others don't.
-
-vex.getE2Func = function(_, funcName, returnTable)
+vex.getE2Func = function(funcName, returnTable)
     local funcs = wire_expression2_funcs
     local e2func = funcs[funcName]
     if e2func then

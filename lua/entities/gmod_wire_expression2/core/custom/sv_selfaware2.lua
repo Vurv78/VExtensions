@@ -54,7 +54,7 @@ end
 --       then it is preferred to use #ifdef pre-processor statement; this function exists for dynamic/runtime kind of checks.
 e2function number defined(string funcname)
     -- Check/Prefer builtin first.
-    local isFunc, funcDirect = getE2Func(self, funcname)
+    local isFunc, funcDirect = getE2Func(funcname)
     if funcDirect then return 1 end -- Builtin perfect match.
     local isUDF, udfDirect = getE2UDF(self, funcname)
     if udfDirect then return 2 end -- UDF perfect match.
@@ -70,7 +70,7 @@ local isfunction, debug_getinfo, string_sub = isfunction, debug.getinfo, string.
 -- Ex: print(getFunctionPath("print(...)")) would print the path to .../core/debug.lua file.
 -- Returns the path where the function was defined, useful for finding whether something was added with an addon.
 e2function string getFunctionPath(string funcname)
-    local func = getE2Func(self, funcname)
+    local func = getE2Func(funcname)
     -- source is better than short_src, because it can help identify custom addon/core more easily (without path trim).
     return isfunction(func) and string_sub(debug_getinfo(func, "S").source, 2) or ""
 end
@@ -219,7 +219,7 @@ e2function table getBuiltinFuncInfo(string funcname)
         return luaTableToE2(ret, 1)
     end
     -- Otherwise, search for the specified function and only return its information.
-    local tbl = getE2Func(self, funcname, true)
+    local tbl = getE2Func(funcname, true)
     return tbl
         and
         -- If the function is found, create a Lua table and convert into a compatible E2 table,
