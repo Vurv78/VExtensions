@@ -16,11 +16,10 @@ local function runE2InstanceSafe(compiler,func,body,...)
 end
 
 -- opcosts don't really matter in e2, especially for this function since it uses it's own compiler, so it runs just as if it was actually called
-__e2setcost(5)
+__e2setcost(3)
 
 -- Literally like pcall()
 -- Returns table, first argument is a number stating whether the function executed successfully, rest are varargs.
--- TODO: vararg input
 e2function table try(string try)
     -- TODO: We probably wanna scrap using type inferrence for functions like try(), since it'd just be super inconvenient..
     -- Currently, it returns a table if you wanna return anything like an array or vector in a tried function
