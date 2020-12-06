@@ -267,8 +267,8 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType, expectedArgTypes
     end
 end
 
--- Maybe the compiler stores it's functions in runtime though? I doubt e2 has support for some e2's having (builtin) functions that others don't.
-vex.getE2Func = function(funcName, returnTable)
+local string_sub = string.sub
+vex.getE2Func = function(funcName, returnTable, skipOperatorFunctions)
     local funcs = wire_expression2_funcs
     local e2func = funcs[funcName]
     if e2func then
@@ -276,10 +276,22 @@ vex.getE2Func = function(funcName, returnTable)
     end
     -- Look for any builtin function that has the same name (before the parenthesis).
     funcName = string_match(funcName, E2FuncNamePattern) or funcName
-    for signature, data in pairs(funcs) do
-        local proper = string_match(signature, E2FuncNamePattern)
-        if proper == funcName then
-            return returnTable and data or data[3], false -- Name-only match.
+    if skipOperatorFunctions then -- For faster execution time, checked once, instead of all the time within loop.
+        for signature, data in pairs(funcs) do
+            if string_sub(signature, 1, 3) == "op:" then
+                continue -- Skip operator functions.
+            end
+            local proper = string_match(signature, E2FuncNamePattern)
+            if proper == funcName then
+                return returnTable and data or data[3], false -- Name-only match.
+            end
+        end
+    else
+        for signature, data in pairs(funcs) do
+            local proper = string_match(signature, E2FuncNamePattern)
+            if proper == funcName then
+                return returnTable and data or data[3], false -- Name-only match.
+            end
         end
     end
 end
