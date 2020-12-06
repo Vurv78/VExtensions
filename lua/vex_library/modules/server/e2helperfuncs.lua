@@ -221,8 +221,9 @@ end
 
 
 local E2FuncNamePattern = "^([a-z][a-zA-Z0-9_]*)%("
+local E2SignaturePattern = E2FuncNamePattern .. "(.*)%)$"
 local string_match = string.match
-vex.getE2UDF = function(compiler, funcName, expectedReturnType)
+vex.getE2UDF = function(compiler, funcName, expectedReturnType, expectedArgTypes)
     local funcs, funcs_ret = compiler.funcs, compiler.funcs_ret
     local e2func = funcs[funcName]
     if e2func then
@@ -236,13 +237,20 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType)
             ]]
             return -- Stop here because the return type didn't match.
         end
+        -- Optionally, validate whether argument types matches the expectation.
+        if expectedArgTypes then
+            local _, argTypes = string_match(funcName, E2SignaturePattern)
+            if argTypes ~= expectedArgTypes then
+                return
+            end
+        end
         return e2func, true, returnType -- Direct/Full match.
     end
     -- Look for any UDF that has the same name (before the parenthesis).
     funcName = string_match(funcName, E2FuncNamePattern) or funcName
     for signature, fn in pairs(funcs) do
-        local proper = string_match(signature, E2FuncNamePattern)
-        if proper == funcName then
+        local name, argTypes = string_match(signature, E2SignaturePattern)
+        if name == funcName then
             local returnType = funcs_ret[signature]
             if expectedReturnType and returnType ~= expectedReturnType then
                 --[[ In this case, since we are doing name-only matching we just skip it. Because E2 does allow this:
@@ -250,6 +258,9 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType)
                     function string myFunc(S:string) { return S }
                 ]]
                 continue
+            end
+            if expectedArgTypes and argTypes ~= expectedArgTypes then
+                continue -- Skip this overload, doesn't match the expected argument types.
             end
             return fn, false, returnType -- Name-only match.
         end
