@@ -14,6 +14,7 @@ local table_remove = table.remove
 local table_copy = table.Copy
 local table_insert = table.insert
 local table_add = table.Add
+local newE2Table, buildBody = vex.newE2Table, vex.buildBody
 
 local function e2err(msg)
     error(msg,0)
@@ -99,11 +100,20 @@ local getE2UDF = vex.getE2UDF
 
 __e2setcost(20)
 
-e2function coroutine coroutine(string FuncName)
-    local e2func = getE2UDF(self,FuncName)
+e2function coroutine coroutine(string funcName)
+    local e2func = getE2UDF(self,funcName)
     if not e2func then return end
     local runtime = function()
         return true,e2func(table_copy(self))
+    end
+    return createCoroutine(self,runtime,e2func)
+end
+
+e2function coroutine coroutine(string funcName,table args)
+    local e2func = getE2UDF(self,funcName,"t") -- "t" is to make sure UDF's return type is a table.
+    if not e2func then return end
+    local runtime = function()
+        return true,e2func(table_copy(self),buildBody{["t"]=args}) -- Pass the captured args table.
     end
     return createCoroutine(self,runtime,e2func)
 end
@@ -117,17 +127,30 @@ local function customWait(instance,n)
     end
 end
 
--- TODO: Add return value support.
 e2function void coroutineYield()
-    if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") return end
-    loadPrfData(self, coroutine_yield( popPrfData(self) ) )
+    if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") end
+    loadPrfData(self, coroutine_yield(popPrfData(self)))
 end
 
--- TODO: Add return value support.
+e2function table coroutineYield(table args)
+    if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") end
+    local prfData, result = coroutine_yield(popPrfData(self), args)
+    loadPrfData(self, prfData)
+    return result or newE2Table()
+end
+
 e2function void coroutine:yield()
     if not this then return end
-    if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") return end
-    loadPrfData(self, coroutine_yield( popPrfData(self) ) )
+    if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") end
+    loadPrfData(self, coroutine_yield(popPrfData(self)))
+end
+
+e2function table coroutine:yield(table args)
+    if not this then return newE2Table() end
+    if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") end
+    local prfData, result = coroutine_yield(popPrfData(self), args)
+    loadPrfData(self, prfData)
+    return result or newE2Table()
 end
 
 e2function void coroutine:wait(n)
@@ -137,15 +160,14 @@ e2function void coroutine:wait(n)
 end
 
 e2function void coroutineWait(n)
-    if not runningCo(self) then e2err("Attempted to wait outside of an e2 coroutine.") return end
+    if not runningCo(self) then e2err("Attempted to wait outside of an e2 coroutine.") end
     customWait(self,n)
 end
 
--- TODO: Variadic/vararg support.
 e2function void coroutine:resume()
     if not this then return end
     local bench = SysTime()
-    local co_success,prfDataOrDone,vararg = coroutine_resume(this,popPrfData(self))
+    local co_success,prfDataOrDone = coroutine_resume(this,popPrfData(self))
     -- If this isn't true, then the coroutine has not finished.
     if prfDataOrDone == true then return end
     if not co_success then
@@ -160,10 +182,29 @@ e2function void coroutine:resume()
     self.entity:UpdateOverlay()
 end
 
+e2function table coroutine:resume(table args)
+    if not this then return newE2Table() end
+    local bench = SysTime()
+    local co_success,prfDataOrDone,result = coroutine_resume(this,popPrfData(self),args)
+    -- If this isn't true, then the coroutine has not finished.
+    if prfDataOrDone == true then return result end
+    if not co_success then
+        local err = prfDataOrDone
+        if err == "exit" then return newE2Table() end
+        if err == "perf" then err = "tick quota exceeded" end
+        err = string.match(err,"entities/gmod_wire_expression2/core/core.lua:%d+:(.*)") or err -- ( in e2 code ) error("hello world")
+        e2err("COROUTINE ERROR: " .. err)
+    end
+    prfDataOrDone.time = prfDataOrDone.time + (SysTime() - bench)
+    loadPrfData(self,prfDataOrDone)
+    self.entity:UpdateOverlay()
+    return result or newE2Table()
+end
+
 __e2setcost(3)
 
 e2function string coroutine:status()
-    if not this then return end
+    if not this then return "" end
     return coroutine_status(this)
 end
 
@@ -179,8 +220,8 @@ e2function coroutine coroutine:reboot()
     if not this then return end
     local e2func = self.coroutines[this]
     if not e2func then return end
-    local runtime = function()
-        return true,e2func(table_copy(self))
+    local runtime = function(tbl)
+        return true,e2func(table_copy(self),buildBody{["t"]=tbl or newE2Table()})
     end
     return createCoroutine(self,runtime,e2func)
 end
