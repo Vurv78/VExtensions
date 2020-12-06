@@ -1,6 +1,6 @@
 local table_remove = table.remove
 local table_insert = table.insert
-local luaTableToE2, getE2UDF = vex.luaTableToE2, vex.getE2UDF
+local luaTableToE2, getE2UDF, buildBody = vex.luaTableToE2, vex.getE2UDF, vex.buildBody
 
 -- We use this for try and catch
 local function runE2InstanceSafe(compiler,func,body,...)
@@ -26,10 +26,21 @@ e2function table try(string try)
     -- Currently, it returns a table if you wanna return anything like an array or vector in a tried function
     local tryfun = getE2UDF(self,try)
     if not tryfun then return luaTableToE2{false,"Try was called with undefined function ["..try.."]"} end
-    local success,errstr,args = runE2InstanceSafe(self,tryfun)
+    local success,errstr,result = runE2InstanceSafe(self,tryfun)
     if success then
-        table_insert(args,1,true)
-        return luaTableToE2(args)
+        table_insert(result,1,true)
+        return luaTableToE2(result)
+    end
+    return luaTableToE2{false,errstr}
+end
+
+e2function table try(string try, table args)
+    local tryfun = getE2UDF(self,try,"t") -- "t" is to make sure UDF's return type is a table.
+    if not tryfun then return luaTableToE2{false,"Try was called with undefined function ["..try.."]"} end
+    local success,errstr,result = runE2InstanceSafe(self,tryfun,buildBody{["t"]=args})
+    if success then
+        table_insert(result,1,true)
+        return luaTableToE2(result)
     end
     return luaTableToE2{false,errstr}
 end
