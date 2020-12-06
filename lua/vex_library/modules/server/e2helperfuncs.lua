@@ -26,6 +26,23 @@ end
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 local Default_E2Tbl = vex.newE2Table()
 
+-- Screw this anyways.
+--[[local function better_validArray(tbl)
+    if not istable(tbl) then return false end
+    for k,v in pairs(tbl) do
+        if not isnumber(k) then return false end -- E2 array cannot have non-number index.
+        if istable(v) then
+            if IsColor(v) then tbl[k] = {v.r,v.g,v.b,v.a} -- Color as Vector4/array
+            elseif v.HitPos then -- Ranger/Trace data
+                -- Do nothing.
+            else
+                return false -- Anything else is a no-no
+            end
+        end
+    end
+    return true
+end]]
+
 -- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
 -- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
 local function validArray(tbl,max)
@@ -41,7 +58,7 @@ local function validArray(tbl,max)
     end
     return true
 end
-vex.isE2Array = validArray
+vex.isE2Array = validArray --better_validArray
 
 -- Allows to very accurately determine whether the given argument has a valid E2 table structure (presence of table fields/keys).
 -- However, it does not validate inner contents (it is assumed to not be malformed inside).
@@ -72,10 +89,10 @@ local function getVarTypeAndSanitize(v,checkForArrays)
     if isvector(v) then return "v",{v[1],v[2],v[3]} end
     if type(v)=="PhysObj" then return "b" end -- No IsValid check because that would index userdata. This caused lua errors when sanitizing something like a coroutine
     if istable(v) then
-        if IsColor(v) then return "t",{v.r,v.g,v.b,v.a} end
+        if IsColor(v) then return "xv4",{v.r,v.g,v.b,v.a} end -- This should be either Vector4 or Array (or Matrix2); any is fine.
         if v.HitPos then return "xrd" end -- Ranger/Trace data
         if getmetatable(v) then return end -- Most likely we don't want this to be passed to the E2.
-        if checkForArrays and validArray(v) then return "r" end
+        if checkForArrays and better_validArray(v) then return "r" end
         return "t" -- Just return it as a table type (we are not going to validate contents)
     end
     -- Unsupported; Returning no value. Use the `vex.getE2Type` function if you need to check for official/3rd-party types.
@@ -210,7 +227,8 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType)
     local e2func = funcs[funcName]
     if e2func then
         -- Optionally, validate the return type is of the expected type (ID).
-        if expectedReturnType and funcs_ret[funcName] ~= expectedReturnType then
+        local returnType = funcs_ret[funcName]
+        if expectedReturnType and returnType ~= expectedReturnType then
             -- Since this is direct match, we exit here because UDF can't have overloaded a return type on this signature.
             --[[ In other words, E2 does not allow this:
                 function number myFunc() { return 1 }
@@ -218,21 +236,22 @@ vex.getE2UDF = function(compiler, funcName, expectedReturnType)
             ]]
             return -- Stop here because the return type didn't match.
         end
-        return e2func, true -- Direct/Full match.
+        return e2func, true, returnType -- Direct/Full match.
     end
     -- Look for any UDF that has the same name (before the parenthesis).
     funcName = string_match(funcName, E2FuncNamePattern) or funcName
     for signature, fn in pairs(funcs) do
         local proper = string_match(signature, E2FuncNamePattern)
         if proper == funcName then
-            if expectedReturnType and funcs_ret[signature] ~= expectedReturnType then
+            local returnType = funcs_ret[signature]
+            if expectedReturnType and returnType ~= expectedReturnType then
                 --[[ In this case, since we are doing name-only matching we just skip it. Because E2 does allow this:
                     function number myFunc(N) { return N }
                     function string myFunc(S:string) { return S }
                 ]]
                 continue
             end
-            return fn, false -- Name-only match.
+            return fn, false, returnType -- Name-only match.
         end
     end
 end
