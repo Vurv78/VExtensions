@@ -57,7 +57,7 @@ local function e2cost(cost) __e2setcost((cost * BaseMulCost) + BaseCost) end
 
 --===========================================================================================================================
 
-e2cost(7)
+e2cost(8)
 
 -- Ex: print(defined("print(...)")) or print(defined("health(e:)"))
 -- Returns number, 0 being not defined, 1 being defined as an official e2 function, 2 being a user-defined function.
@@ -79,13 +79,13 @@ end
 
 --===========================================================================================================================
 
-e2cost(6)
+e2cost(5)
 
 local isfunction, debug_getinfo, string_sub = isfunction, debug.getinfo, string.sub
 -- Ex: print(getFunctionPath("print(...)")) would print the path to .../core/debug.lua file.
 -- Returns the path where the function was defined, useful for finding whether something was added with an addon.
 e2function string getFunctionPath(string funcName)
-    local func = getE2Func(funcName)
+    local func = getE2Func(funcName) -- (Not skipping operator functions.)
     -- source is better than short_src, because it can help identify custom addon/core more easily (without path trim).
     return isfunction(func) and string_sub(debug_getinfo(func, "S").source, 2) or ""
 end
@@ -111,7 +111,7 @@ end
 
 --===========================================================================================================================
 
-e2cost(3)
+e2cost(2)
 
 -- Returns a table containing all registered E2 constants. This function exists for dynamic/runtime kind of lookups.
 -- (You should cache the result in your E2 for performance.)
@@ -211,7 +211,7 @@ end
 
 --===========================================================================================================================
 
-e2cost(3) -- Note: The cost is dynamically increased here.
+e2cost(4) -- Note: The cost is dynamically increased here.
 -- A small helper function to help with creation of the builtin function info table.
 local function createBuiltinFuncInfoTable(tbl)
     return {
