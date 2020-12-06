@@ -245,13 +245,13 @@ e2function table getBuiltinFuncInfo(string funcName)
         return luaTableToE2(ret, 1)
     end
     -- Otherwise, search for the specified function and only return its information.
-    local tbl = getE2Func(funcName, true)
+    local tbl = getE2Func(funcName, true, true) -- Skip operator functions.
     return tbl
         and
         -- If the function is found, create a Lua table and convert into a compatible E2 table,
             luaTableToE2(
                 createBuiltinFuncInfoTable(tbl), -- This is just an array, but this function must return a table.
-                0 -- With array optimization disabled, because we just want to wrap an array into a table.
+                0 -- With array optimization disabled, because we just want to wrap an array as a table.
             )
         -- If the function is not found, return an empty E2 table.
         or newE2Table()
