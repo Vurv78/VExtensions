@@ -101,7 +101,7 @@ local getE2UDF = vex.getE2UDF
 __e2setcost(20)
 
 e2function coroutine coroutine(string funcName)
-    local e2func = getE2UDF(self,funcName)
+    local e2func = getE2UDF(self,funcName,nil,"") -- "" is to enforce UDF has no arguments.
     if not e2func then return end
     local runtime = function()
         return true,e2func(table_copy(self))
@@ -110,7 +110,7 @@ e2function coroutine coroutine(string funcName)
 end
 
 e2function coroutine coroutine(string funcName,table args)
-    local e2func = getE2UDF(self,funcName,"t") -- "t" is to make sure UDF's return type is a table.
+    local e2func = getE2UDF(self,funcName,nil,"t") -- "t" is to enforce UDF has only 1 argument (of type table).
     if not e2func then return end
     local runtime = function()
         return true,e2func(table_copy(self),buildBody{["t"]=args}) -- Pass the captured args table.
@@ -132,9 +132,9 @@ e2function void coroutineYield()
     loadPrfData(self, coroutine_yield(popPrfData(self)))
 end
 
-e2function table coroutineYield(table args)
+e2function table coroutineYield(table data)
     if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") end
-    local prfData, result = coroutine_yield(popPrfData(self), args)
+    local prfData, result = coroutine_yield(popPrfData(self), data)
     loadPrfData(self, prfData)
     return result or newE2Table()
 end
@@ -145,10 +145,10 @@ e2function void coroutine:yield()
     loadPrfData(self, coroutine_yield(popPrfData(self)))
 end
 
-e2function table coroutine:yield(table args)
+e2function table coroutine:yield(table data)
     if not this then return newE2Table() end
     if not runningCo(self) then e2err("Attempted to yield a coroutine without an e2 coroutine running.") end
-    local prfData, result = coroutine_yield(popPrfData(self), args)
+    local prfData, result = coroutine_yield(popPrfData(self), data)
     loadPrfData(self, prfData)
     return result or newE2Table()
 end
@@ -182,12 +182,12 @@ e2function void coroutine:resume()
     self.entity:UpdateOverlay()
 end
 
-e2function table coroutine:resume(table args)
+e2function table coroutine:resume(table data)
     if not this then return newE2Table() end
     local bench = SysTime()
-    local co_success,prfDataOrDone,result = coroutine_resume(this,popPrfData(self),args)
+    local co_success,prfDataOrDone,result = coroutine_resume(this,popPrfData(self),data)
     -- If this isn't true, then the coroutine has not finished.
-    if prfDataOrDone == true then return result end
+    if prfDataOrDone == true then return result or newE2Table() end
     if not co_success then
         local err = prfDataOrDone
         if err == "exit" then return newE2Table() end
@@ -231,7 +231,7 @@ e2function coroutine coroutine:reboot(table args)
     local e2func = self.coroutines[this]
     if not e2func then return end
     local runtime = function()
-        return true,e2func(table_copy(self),buildBody{["t"]=args or newE2Table()})
+        return true,e2func(table_copy(self),buildBody{["t"]=args})
     end
     return createCoroutine(self,runtime,e2func)
 end
