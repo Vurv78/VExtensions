@@ -220,8 +220,18 @@ e2function coroutine coroutine:reboot()
     if not this then return end
     local e2func = self.coroutines[this]
     if not e2func then return end
-    local runtime = function(tbl)
-        return true,e2func(table_copy(self),buildBody{["t"]=tbl or newE2Table()})
+    local runtime = function()
+        return true,e2func(table_copy(self))
+    end
+    return createCoroutine(self,runtime,e2func)
+end
+
+e2function coroutine coroutine:reboot(table args)
+    if not this then return end
+    local e2func = self.coroutines[this]
+    if not e2func then return end
+    local runtime = function()
+        return true,e2func(table_copy(self),buildBody{["t"]=args or newE2Table()})
     end
     return createCoroutine(self,runtime,e2func)
 end
