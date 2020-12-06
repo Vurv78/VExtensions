@@ -42,10 +42,18 @@ do
     end
 end
 
-local BaseCost = 0     -- The amount of OPS to be added for all E2 functions in here.
-local OpCost   = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
+-- OPS management |
+local BaseCost    = 3     -- The amount of OPS to be added for all E2 functions in here.
+local BaseMulCost = 1     -- The amount which is to be multiplied with the assigned OPS cost.
+local OpCost      = 1 / 5 -- Cost of looping through table multiplier. Might need to adjust this later (add 1 per 5 for now).
 local __e2setcost = __e2setcost
-local function e2cost(n) __e2setcost(n + BaseCost) end
+local function e2cost(cost) __e2setcost((cost * BaseMulCost) + BaseCost) end
+--[[ The OPS was measured approximately:
+    +5  : If the function looks up builtins.
+    +4  : If the function looks up builtins, while skipping operator functions.
+    +3  : If the function looks up UDFs.
+    Note: Some of the functions will dynamically bump up OPS as required.
+]]
 
 --===========================================================================================================================
 
