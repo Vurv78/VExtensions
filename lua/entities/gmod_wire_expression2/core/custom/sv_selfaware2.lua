@@ -57,11 +57,11 @@ e2cost(7)
 --       because this function becomes unreliable if you only provide it with UDF name to it.
 --       If you are checking for availability of the builtin function and if you know the signature ahead of time,
 --       then it is preferred to use #ifdef pre-processor statement; this function exists for dynamic/runtime kind of checks.
-e2function number defined(string funcname)
+e2function number defined(string funcName)
     -- Check/Prefer builtin first.
-    local isFunc, funcDirect = getE2Func(funcname)
+    local isFunc, funcDirect = getE2Func(funcName)
     if funcDirect then return 1 end -- Builtin perfect match.
-    local isUDF, udfDirect = getE2UDF(self, funcname)
+    local isUDF, udfDirect = getE2UDF(self, funcName)
     if udfDirect then return 2 end -- UDF perfect match.
     -- Name-only match after this point, still prefer the builtin.
     if isFunc --[[and not isUDF]] then return 1 end -- Found named builtin match.
@@ -76,8 +76,8 @@ e2cost(6)
 local isfunction, debug_getinfo, string_sub = isfunction, debug.getinfo, string.sub
 -- Ex: print(getFunctionPath("print(...)")) would print the path to .../core/debug.lua file.
 -- Returns the path where the function was defined, useful for finding whether something was added with an addon.
-e2function string getFunctionPath(string funcname)
-    local func = getE2Func(funcname)
+e2function string getFunctionPath(string funcName)
+    local func = getE2Func(funcName)
     -- source is better than short_src, because it can help identify custom addon/core more easily (without path trim).
     return isfunction(func) and string_sub(debug_getinfo(func, "S").source, 2) or ""
 end
@@ -218,9 +218,9 @@ local function createBuiltinFuncInfoTable(tbl)
     }
 end
 -- Returns a table containing information about the builtin (non-UDF) E2 functions.
--- Either use "*" as a `funcname` to get infos for all or specify a function name/signature (e.g. "selfDestruct").
-e2function table getBuiltinFuncInfo(string funcname)
-    if funcname == "*" then
+-- Either use "*" as a `funcName` to get infos for all or specify a function name/signature (e.g. "selfDestruct").
+e2function table getBuiltinFuncInfo(string funcName)
+    if funcName == "*" then
         -- Loop over all builtin functions and populate the table.
         local ret, size = {}, 0 -- We need to count entries manually. (Used for bumping up OPS.)
         for sig, tbl in pairs(wire_expression2_funcs) do
@@ -237,7 +237,7 @@ e2function table getBuiltinFuncInfo(string funcname)
         return luaTableToE2(ret, 1)
     end
     -- Otherwise, search for the specified function and only return its information.
-    local tbl = getE2Func(funcname, true)
+    local tbl = getE2Func(funcName, true)
     return tbl
         and
         -- If the function is found, create a Lua table and convert into a compatible E2 table,
