@@ -45,12 +45,13 @@ end]]
 
 -- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
 -- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
-local function validArray(tbl,max)
-    local i = 1
-    max = max or 5000 -- Is this a good limit to the size of a table to infer of being an array?
+-- typeOf makes sure all elements in an array will be of lua type _.
+local function validArray(tbl,max,typeOf)
+    local i,max,type_check = 1,max or 5000, isstring(typeOf)
     for K,V in pairs(tbl) do
         -- Check if there's any tables in the table
         if istable(V) then return false end
+        if type_check and type(V) ~= typeOf then return false end
         -- IsSequential Check
         if tbl[i] == nil then return false end
         if i >= max then return false end
