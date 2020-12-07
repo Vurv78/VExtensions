@@ -26,14 +26,32 @@ end
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 local Default_E2Tbl = vex.newE2Table()
 
+-- Screw this anyways.
+--[[local function better_validArray(tbl)
+    if not istable(tbl) then return false end
+    for k,v in pairs(tbl) do
+        if not isnumber(k) then return false end -- E2 array cannot have non-number index.
+        if istable(v) then
+            if IsColor(v) then tbl[k] = {v.r,v.g,v.b,v.a} -- Color as Vector4/array
+            elseif v.HitPos then -- Ranger/Trace data
+                -- Do nothing.
+            else
+                return false -- Anything else is a no-no
+            end
+        end
+    end
+    return true
+end]]
+
 -- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
 -- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
-local function validArray(tbl,max)
-    local i = 1
-    max = max or 5000 -- Is this a good limit to the size of a table to infer of being an array?
+-- typeOf makes sure all elements in an array will be of lua type _.
+local function validArray(tbl,max,typeOf)
+    local i,max,type_check = 1,max or 5000, isstring(typeOf)
     for K,V in pairs(tbl) do
         -- Check if there's any tables in the table
         if istable(V) then return false end
+        if type_check and type(V) ~= typeOf then return false end
         -- IsSequential Check
         if tbl[i] == nil then return false end
         if i >= max then return false end
@@ -41,7 +59,7 @@ local function validArray(tbl,max)
     end
     return true
 end
-vex.isE2Array = validArray
+vex.isE2Array = validArray --better_validArray
 
 -- Allows to very accurately determine whether the given argument has a valid E2 table structure (presence of table fields/keys).
 -- However, it does not validate inner contents (it is assumed to not be malformed inside).
@@ -72,7 +90,7 @@ local function getVarTypeAndSanitize(v,checkForArrays)
     if isvector(v) then return "v",{v[1],v[2],v[3]} end
     if type(v)=="PhysObj" then return "b" end -- No IsValid check because that would index userdata. This caused lua errors when sanitizing something like a coroutine
     if istable(v) then
-        if IsColor(v) then return "t",{v.r,v.g,v.b,v.a} end
+        if IsColor(v) then return "xv4",{v.r,v.g,v.b,v.a} end -- This should be either Vector4 or Array (or Matrix2); any is fine.
         if v.HitPos then return "xrd" end -- Ranger/Trace data
         if getmetatable(v) then return end -- Most likely we don't want this to be passed to the E2.
         if checkForArrays and validArray(v) then return "r" end
@@ -140,6 +158,7 @@ end
 -- Moved from rune2
 -- Builds a body to run an e2 udf and pass args to it.
 -- TODO: Probably want to use type inferrence with this so we don't have to provide types in the table (and could turn this into a vararg function)
+local table_insert = table.insert
 vex.buildBody = function(args)
     local body = {
         false -- No idea what this does, but it is necessary
@@ -203,38 +222,77 @@ end
 
 
 local E2FuncNamePattern = "^([a-z][a-zA-Z0-9_]*)%("
+local E2SignaturePattern = E2FuncNamePattern .. "(.*)%)$"
 local string_match = string.match
-vex.getE2UDF = function(compiler, func_name)
-    local funcs = compiler.funcs
-    local e2func = funcs[func_name]
+vex.getE2UDF = function(compiler, funcName, expectedReturnType, expectedArgTypes)
+    local funcs, funcs_ret = compiler.funcs, compiler.funcs_ret
+    local e2func = funcs[funcName]
     if e2func then
-        return e2func, true -- Direct/Full match.
+        local returnType = funcs_ret[funcName]
+        -- Optionally, validate the return type is of the expected type (ID).
+        if expectedReturnType and returnType ~= expectedReturnType then
+            -- Since this is direct match, we exit here because UDF can't have overloaded a return type on this signature.
+            --[[ In other words, E2 does not allow this:
+                function number myFunc() { return 1 }
+                function string myFunc() { return "" }
+            ]]
+            return -- Stop here because the return type didn't match.
+        end
+        -- Optionally, validate whether argument types matches the expectation.
+        if expectedArgTypes then
+            local _, argTypes = string_match(funcName, E2SignaturePattern)
+            if argTypes ~= expectedArgTypes then
+                return
+            end
+        end
+        return e2func, true, returnType -- Direct/Full match.
     end
     -- Look for any UDF that has the same name (before the parenthesis).
-    func_name = string_match(func_name, E2FuncNamePattern) or func_name
-    for name, fn in pairs(funcs) do
-        local proper = string_match(name, E2FuncNamePattern)
-        if proper == func_name then
-            return fn, false -- Name only match.
+    funcName = string_match(funcName, E2FuncNamePattern) or funcName
+    for signature, fn in pairs(funcs) do
+        local name, argTypes = string_match(signature, E2SignaturePattern)
+        if name == funcName then
+            local returnType = funcs_ret[signature]
+            if expectedReturnType and returnType ~= expectedReturnType then
+                --[[ In this case, since we are doing name-only matching we just skip it. Because E2 does allow this:
+                    function number myFunc(N) { return N }
+                    function string myFunc(S:string) { return S }
+                ]]
+                continue
+            end
+            if expectedArgTypes and argTypes ~= expectedArgTypes then
+                continue -- Skip this overload, doesn't match the expected argument types.
+            end
+            return fn, false, returnType -- Name-only match.
         end
     end
 end
 
--- TODO: Get rid of the compiler arg in the second pr, we don't use it here
--- Maybe the compiler stores it's functions in runtime though? I doubt e2 has support for some e2's having (builtin) functions that others don't.
-
-vex.getE2Func = function(compiler, funcname, returnTable)
+local string_sub = string.sub
+vex.getE2Func = function(funcName, returnTable, skipOperatorFunctions)
     local funcs = wire_expression2_funcs
-    local e2func = funcs[funcname]
+    local e2func = funcs[funcName]
     if e2func then
         return returnTable and e2func or e2func[3], true -- Direct/Full match.
     end
     -- Look for any builtin function that has the same name (before the parenthesis).
-    funcname = string_match(funcname, E2FuncNamePattern) or funcname
-    for name, data in pairs(funcs) do
-        local proper = string_match(name, E2FuncNamePattern)
-        if proper == funcname then
-            return returnTable and data or data[3], false -- Name only match.
+    funcName = string_match(funcName, E2FuncNamePattern) or funcName
+    if skipOperatorFunctions then -- For faster execution time, checked once, instead of all the time within loop.
+        for signature, data in pairs(funcs) do
+            if string_sub(signature, 1, 3) == "op:" then
+                continue -- Skip operator functions.
+            end
+            local proper = string_match(signature, E2FuncNamePattern)
+            if proper == funcName then
+                return returnTable and data or data[3], false -- Name-only match.
+            end
+        end
+    else
+        for signature, data in pairs(funcs) do
+            local proper = string_match(signature, E2FuncNamePattern)
+            if proper == funcName then
+                return returnTable and data or data[3], false -- Name-only match.
+            end
         end
     end
 end

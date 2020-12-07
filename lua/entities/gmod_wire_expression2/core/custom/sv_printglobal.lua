@@ -8,7 +8,10 @@
     No RGBA support (for now?)
 ]]
 
-vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other people's chats with color securely")
+
+-- TODO: Rework this
+
+vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other player's chats with color, with configurable char, argument and burst limits. vex_printglobal_enable_cl")
 
 vex.addNetString("printglobal")
 
@@ -22,6 +25,7 @@ local PrintGAlert = {}
 local isE2Array = vex.isE2Array
 local format,table_concat,table_insert,table_remove = string.format,table.concat,table.insert,table.remove
 local isvector,isstring,istable,isnumber = isvector,isstring,istable,isnumber
+
 
 -- TODO: Make the cooldownManager compatible for bursts or make a burstManager or something :/
 timer.Create("VurvE2_PrintGlobal",1,0,function()
@@ -73,9 +77,9 @@ local function printGlobal(T,Sender,Plys)
     if currentBurst >= BurstMax:GetInt() then return end
 
     local argLimit = ArgMax:GetInt()
-    if #T > argLimit then
-        local error = format("printGlobal() silently failed due to arg count [%d] exceeding max args [%d]",#T,argLimit)
-        Sender:PrintMessage(HUD_PRINTCONSOLE,error)
+    local argCount = #T
+    if argCount > argLimit then
+        Sender:PrintMessage(HUD_PRINTCONSOLE, format( "printGlobal() silently failed due to arg count [%d] exceeding max args [%d]",argCount,argLimit ) )
         return
     end
     
@@ -92,8 +96,7 @@ local function printGlobal(T,Sender,Plys)
     local charLimit = CharMax:GetInt()
     local printString = table_concat(printStringTable)
     if #printString > charLimit then
-        local error = format("printGlobal() silently failed due to arg count [%d] exceeding max chars [%d]",#printString,charLimit)
-        Sender:PrintMessage(HUD_PRINTCONSOLE,error)
+        Sender:PrintMessage(HUD_PRINTCONSOLE, format("printGlobal() silently failed due to the given # of characters [%d] exceeding the maximum amount of characters [%d]",#printString,charLimit) )
         return
     end
 
@@ -163,15 +166,14 @@ e2function void printGlobal(...)
     local args = {...}
     if #args==0 then return end
     local sender,first_arg = self.player,args[1]
-    if isentity(first_arg) and IsValid(first_arg) and first_arg:IsPlayer() then
+    if isentity(first_arg) and IsValid(first_arg) and first_arg:IsPlayer() then -- printGlobal(entity owner(),varargs) to specific entity
         local ply = table_remove(args,1)
-        printGlobalArrayFunc(args,sender,{ply})
-    elseif isE2Array(first_arg) then -- printGlobal(array plys, varargs)
+        return printGlobalArrayFunc(args,sender,{ply})
+    elseif isE2Array(first_arg,150,"Player") then -- printGlobal(array plys, varargs) to array of players
         local plys = table_remove(args,1)
-        printGlobalArrayFunc(args,sender,plys)
-    else
-        printGlobal(args,sender,player.GetHumans())
+        return printGlobalArrayFunc(args,sender,plys)
     end
+    printGlobal(args,sender,player.GetHumans()) -- printGlobal(varargs) to everyone
 end
 
 __e2setcost(150)
@@ -184,11 +186,9 @@ e2function void printGlobal(array plys,array args)
     printGlobalArrayFunc(args,self.player,plys)
 end
 
--- Print Chat by Vurv
+-- RunOnGChat / Run on global prints -- Vurv
 
--- Global Print Chat Clk by Vurv
-
-registerCallback("destruct",function(self) -- Pretty sure this is when the chip is undone
+registerCallback("destruct",function(self)
     PrintGAlert[self.entity] = nil
 end)
 
@@ -222,5 +222,3 @@ end
 e2function string lastGPrintText(entity e) -- Pls give better name
     return PrintGCache[e].text or ""
 end
-
--- Global Print Chat Clk by Vurv

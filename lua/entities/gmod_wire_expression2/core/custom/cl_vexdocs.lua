@@ -11,32 +11,42 @@ end
 -- Sick ascii font generator @ http://patorjk.com/software/taag/f=Slant thanks whoever made this
 
 --[[
-    __  ___        _      
-   /  |/  /____ _ (_)____ 
+    __  ___        _
+   /  |/  /____ _ (_)____
   / /|_/ // __ `// // __ \
  / /  / // /_/ // // / / /
-/_/  /_/ \__,_//_//_/ /_/ 
+/_/  /_/ \__,_//_//_/ /_/
+
  Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
 ]]
 
-desc("rangerOffsetManual(vvr)","Returns direct table result from a util.traceLine call with startpos, endpos and filter")
+desc("rangerOffsetManual(vvr)","Returns a ranger, direct result from the util.TraceLine call with startpos, endpos and filter")
 desc("rangerSetFilter(r)","Sets the current filter to be used for rangers. Returns 1 or 0 for success")
 desc("canHideChatPly(e)","Returns whether you can hide a chats player, checking their convar")
 desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 for whether it should")
 
---- These two actually come from sv_coroutine.lua but don't really fit with the addon.
-desc("try(s)","Tries to run the first function, and returns an array with the first element being a number 1 or 0 for whether it successfully ran, and the next either being the error message or the return value of the 'try' function. Like pcall")
--- With catching
-desc("catch(ss)","Tries to run the first function, returns the same as try(s) but also calls a second callback function with the same results. Like xpcall")
+--[[
+    ____                         ___
+   / __ \ __  __ ____   ___     |__ \
+  / /_/ // / / // __ \ / _ \    __/ /
+ / _, _// /_/ // / / //  __/   / __/
+/_/ |_| \__,_//_/ /_/ \___/   /____/
+
+ Allows for calling user-defined functions dynamically at runtime (similar to callable strings),
+    with ability to check for success - to know whether an error occurred (like Lua pcall),
+        and also allows to pass arguments (via table overload) and retrieve the return value.
+]]
+desc("try(s)","Tries to run the given string as UDF. Returns a table with the first element being a number 1 or 0 stating whether it ran successfully, and the second element being either the error message or the return value of the given UDF function. Does not throw error if UDF is undefined. Like pcall")
+desc("try(st)","Works like the try(s) function, but also allows to pass arguments to the function in the form of table, make sure UDF's first argument is of type table")
 
 --[[
     ____         _         __   ______ __        __            __
    / __ \ _____ (_)____   / /_ / ____// /____   / /_   ____ _ / /
-  / /_/ // ___// // __ \ / __// / __ / // __ \ / __ \ / __ `// / 
- / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /  
-/_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/   
- Allows for people to print to other's consoles, with warnings and options to disable.
+  / /_/ // ___// // __ \ / __// / __ / // __ \ / __ \ / __ `// /
+ / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /
+/_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/
 
+ Allows for people to print to other's consoles, with warnings and options to disable.
 ]]
 desc("canPrintGlobal()","Returns 1 or 0 for whether you can call printGlobal()")
 desc("canPrintTo(e)","Returns 1 or 0 for whether you can printGlobal to player e")
@@ -56,25 +66,31 @@ desc("lastGPrintText()","Returns the last text to be sent with printGlobal with 
 desc("lastGPrintText(e)","Returns the last text to be sent by player e with printGlobal with e2")
 
 --[[
-   _____        __ ____   ___                                        ___ 
-  / ___/ ___   / // __/  /   | _      __ ____ _ _____ _____ ___     |__ \
-  \__ \ / _ \ / // /_   / /| || | /| / // __ `// ___// ___// _ \    __/ /
- ___/ //  __// // __/  / ___ || |/ |/ // /_/ // /   / /   /  __/   / __/ 
-/____/ \___//_//_/    /_/  |_||__/|__/ \__,_//_/   /_/    \___/   /____/ 
+   _____        __ ____   ___                                  ___
+  / ___/ ___   / // __/  /   | _      __ ____ _ _____ ___     |__ \
+  \__ \ / _ \ / // /_   / /| || | /| / // __ `// ___// _ \    __/ /
+ ___/ //  __// // __/  / ___ || |/ |/ // /_/ // /   /  __/   / __/
+/____/ \___//_//_/    /_/  |_||__/|__/ \__,_//_/    \___/   /____/
 
  Adds functions similarly to regular-e2's self-aware core.
 ]]
 
-desc("defined(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an e2 function, 2 if the function is a user-defined function and exists")
+desc("defined(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an E2 builtin function, 2 if the function is a user-defined function")
 desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon")
+desc("getExtensionsInfo()","Returns a table of arrays containing information about E2 extensions (status and description)")
+desc("getConstants()","Returns a table containing all registered E2 constants (constant name is used as the table key and constant value [number] as the table value)")
+desc("getUserFunctionInfo(n)","Returns a table containing useful information about all user-defined functions. This function can operate differently, the `mode` argument controls how the output table will be structured. Use _UDF_* constant as `mode` argument")
+desc("getBuiltinFuncInfo(s)","Returns a table containing information about the builtin (non-UDF) E2 functions. Either use \"*\" as a `funcName` to get infos for all, or specify a function name/signature (e.g. \"selfDestruct\")")
+desc("getTypeInfo()","Returns a table containing E2 types information (type ID is used as table key, and type name as the table value)")
 
 --[[
- _    __ ____   __  ___            __   ______                                 __   _  __     _  __ _  __        
+ _    __ ____   __  ___            __   ______                                 __   _  __     _  __ _  __
 | |  / // __ \ /  |/  /____   ____/ /  / ____/____   ____ ___   ____   ____ _ / /_ (_)/ /_   (_)/ /(_)/ /_ __  __
 | | / // /_/ // /|_/ // __ \ / __  /  / /    / __ \ / __ `__ \ / __ \ / __ `// __// // __ \ / // // // __// / / /
-| |/ // _, _// /  / // /_/ // /_/ /  / /___ / /_/ // / / / / // /_/ // /_/ // /_ / // /_/ // // // // /_ / /_/ / 
-|___//_/ |_|/_/  /_/ \____/ \__,_/   \____/ \____//_/ /_/ /_// .___/ \__,_/ \__//_//_.___//_//_//_/ \__/ \__, /  
-                                                            /_/                                         /____/   
+| |/ // _, _// /  / // /_/ // /_/ /  / /___ / /_/ // / / / / // /_/ // /_/ // /_ / // /_/ // // // // /_ / /_/ /
+|___//_/ |_|/_/  /_/ \____/ \__,_/   \____/ \____//_/ /_/ /_// .___/ \__,_/ \__//_//_.___//_//_//_/ \__/ \__, /
+                                                            /_/                                         /____/
+
  Gives access to SHARED VRMod functions in e2.
     Will at some point have access to the hooks as well.
 ]]
@@ -117,32 +133,39 @@ desc("vrDropPly()","Returns the last player to drop a prop VR")
 desc("vrDropEnt()","Returns the last prop to be dropped by a player in VR")
 
 --[[
-   ______                            __   _                   
+   ______                            __   _
   / ____/____   _____ ____   __  __ / /_ (_)____   ___   _____
  / /    / __ \ / ___// __ \ / / / // __// // __ \ / _ \ / ___/
-/ /___ / /_/ // /   / /_/ // /_/ // /_ / // / / //  __/(__  ) 
-\____/ \____//_/    \____/ \__,_/ \__//_//_/ /_/ \___//____/  
- Gives Access to lua's coroutines to e2, can do everything lua coroutines can do,
-    Can't halt lua's coroutines so it is safe.
+/ /___ / /_/ // /   / /_/ // /_/ // /_ / // / / //  __/(__  )
+\____/ \____//_/    \____/ \__,_/ \__//_//_/ /_/ \___//____/
+
+ Gives access to Lua's coroutines to E2, can do everything Lua coroutines can do,
+    Can't halt Lua's coroutines, so it is safe.
 ]]
 
-desc("coroutine(s)","Creates a coroutine object to be run with xco:resume()")
-desc("coroutineRunning()","Returns the current e2 coroutine running, else nothing")
+desc("coroutine(s)","Creates a coroutine object to be run with xco:resume(). The given UDF's return type must be void and must have no arguments")
+desc("coroutine(st)","Creates a coroutine object to be run with xco:resume(t). The given UDF's return type must be void/table and must have a single argument of type table. This overload allows to pass initial data to the UDF by using a table argument")
+desc("coroutineRunning()","Returns the current running coroutine for this E2, else nothing")
 desc("coroutineYield()","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
-desc("coroutineWait(n)","Makes a coroutine wait for n amount of seconds, in this time, it is yielded and cannot be resumed")
+desc("coroutineYield(t)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening. Use this overload if you need to pass data back to the caller (main thread)")
+desc("coroutineWait(n)","Makes a coroutine wait for the given amount of seconds, in this time, it is yielded and cannot be resumed")
 
 -- Metamethods
-desc("status(xco:)","Returns a string of the status of the coroutine, 'dead' for finished, 'suspended' for yielded, and 'running' for obvious reasons")
-desc("wait(xco:n)","Makes a coroutine wait for n amount of seconds, in this time, it is yielded and cannot be resumed")
+desc("resume(xco:)","Resumes the coroutine (if it is suspended), or starts the coroutine if it hasn't been started yet")
+desc("resume(xco:t)","Resumes the coroutine (if it is suspended), or starts the coroutine if it hasn't been started yet. Use this overload if you need to pass data to the coroutine thread using the table argument")
+desc("status(xco:)","Returns a string of the status of the coroutine, 'dead' for finished, 'suspended' for yielded/unstarted, and 'running' for obvious reasons")
+desc("wait(xco:n)","Makes a coroutine wait for the given amount of seconds, in this time, it is yielded and cannot be resumed")
 desc("yield(xco:)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
+desc("yield(xco:t)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening. Use this overload if you need to pass data back to the caller (main thread)")
 desc("reboot(xco:)","Returns a coroutine object that behaves as if the coroutine given was never started or was reset, 'rebooting' it")
 
 --[[
-    _________      ______            __   ______              
-   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________ 
+    _________      ______            __   ______
+   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________
   / __/  __/ /     / / / __ \/ __ \/ /  / /   / __ \/ ___/ _ \
  / /___ / __/     / / / /_/ / /_/ / /  / /___/ /_/ / /  /  __/
-/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/   
+/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/
+
     This is an expression2 core that adds functionality with the e2 controller tool.
         It adds runOn* events for when any player selecting the e2 with the e2 controller clicks or presses reload.
             You can use functions to forcefully set your own selected chip. (Keyword: Your own. This behaves like starfall's setHUDActive.)
@@ -171,11 +194,12 @@ desc("lastE2CUser()","Returns the last user to trigger an e2c event. By clicking
 desc("lastE2CRangerInfo()","Returns the ranger information of the last e2c event, so you can get the position of a left click event for example")
 
 --[[
- _       __     __    __  ___      __            _       __    
+ _       __     __    __  ___      __            _       __
 | |     / /__  / /_  /  |/  /___ _/ /____  _____(_)___ _/ /____
 | | /| / / _ \/ __ \/ /|_/ / __ `/ __/ _ \/ ___/ / __ `/ / ___/
-| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  ) 
-|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/  
+| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  )
+|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/
+
     Allow players to interact with materials fetched from the web
 ]]
 
