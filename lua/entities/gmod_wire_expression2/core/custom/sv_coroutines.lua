@@ -101,8 +101,9 @@ local getE2UDF = vex.getE2UDF
 __e2setcost(20)
 
 e2function coroutine coroutine(string funcName)
-    local e2func = getE2UDF(self,funcName,nil,"") -- "" is to enforce UDF has no arguments.
-    if not e2func then return end
+    local e2func = getE2UDF(self,funcName,"","") -- first "" is to enforce UDF's return type is void.
+                                                 -- second "" is to enforce UDF has no arguments.
+    if not e2func then e2err("Coroutine was called with undefined function [void "..funcName.."]") end
     local runtime = function()
         return true,e2func(table_copy(self))
     end
@@ -110,8 +111,9 @@ e2function coroutine coroutine(string funcName)
 end
 
 e2function coroutine coroutine(string funcName,table args)
-    local e2func = getE2UDF(self,funcName,nil,"t") -- "t" is to enforce UDF has only 1 argument (of type table).
-    if not e2func then return end
+    local e2func,_,returnType = getE2UDF(self,funcName,nil,"t") -- "t" is to enforce UDF has only 1 argument (of type table).
+    if not e2func then e2err("Coroutine was called with undefined function ["..funcName.."]") end
+    if not (returnType == "" or returnType == "t") then e2err("Coroutine's UDF ["..funcName.."] must return either void or table") end
     local runtime = function()
         return true,e2func(table_copy(self),buildBody{["t"]=args}) -- Pass the captured args table.
     end
