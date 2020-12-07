@@ -19,7 +19,7 @@ end
 local function specializedPassBackToE2(result, returnType)
     -- E2 is going to enforce type-safety for us, so we know *exactly* which type we are dealing with :D
     -- This is 100% reliable; PERFECTION! (Do not touch this code!)
-    return returnType == ""
+    return returnType == "" or result == nil
        and {n={[1]=1},ntypes={[1]="n"},s={},stypes={},size=1} -- Special case for void
        or  {n={[1]=1,[2]=result},ntypes={[1]="n",[2]=returnType},s={},stypes={},size=2}
 end
