@@ -139,7 +139,7 @@ desc("vrDropEnt()","Returns the last prop to be dropped by a player in VR")
 / /___ / /_/ // /   / /_/ // /_/ // /_ / // / / //  __/(__  )
 \____/ \____//_/    \____/ \__,_/ \__//_//_/ /_/ \___//____/
 
- Gives access to Lua's coroutines to e2, can do everything Lua coroutines can do,
+ Gives access to Lua's coroutines to E2, can do everything Lua coroutines can do,
     Can't halt Lua's coroutines, so it is safe.
 ]]
 

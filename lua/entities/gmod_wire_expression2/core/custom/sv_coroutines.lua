@@ -1,19 +1,17 @@
 --[[
-   ______                            __   _                   
+   ______                            __   _
   / ____/____   _____ ____   __  __ / /_ (_)____   ___   _____
  / /    / __ \ / ___// __ \ / / / // __// // __ \ / _ \ / ___/
-/ /___ / /_/ // /   / /_/ // /_/ // /_ / // / / //  __/(__  ) 
-\____/ \____//_/    \____/ \__,_/ \__//_//_/ /_/ \___//____/  
- Gives Access to lua's coroutines to e2, can do everything lua coroutines can do,
-    Can't halt lua's coroutines so it is safe.
+/ /___ / /_/ // /   / /_/ // /_/ // /_ / // / / //  __/(__  )
+\____/ \____//_/    \____/ \__,_/ \__//_//_/ /_/ \___//____/
+
+ Gives access to Lua's coroutines to E2, can do everything Lua coroutines can do,
+    Can't halt Lua's coroutines, so it is safe.
 ]]
 
 -- Function localization (local lookup is faster).
 local coroutine_running, coroutine_create, coroutine_resume, coroutine_yield, coroutine_status = coroutine.running, coroutine.create, coroutine.resume, coroutine.yield, coroutine.status
-local table_remove = table.remove
 local table_copy = table.Copy
-local table_insert = table.insert
-local table_add = table.Add
 local newE2Table, buildBody = vex.newE2Table, vex.buildBody
 
 local function e2err(msg)

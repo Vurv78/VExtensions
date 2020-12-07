@@ -1,5 +1,17 @@
+--[[
+    ____                         ___
+   / __ \ __  __ ____   ___     |__ \
+  / /_/ // / / // __ \ / _ \    __/ /
+ / _, _// /_/ // / / //  __/   / __/
+/_/ |_| \__,_//_/ /_/ \___/   /____/
+
+ Allows for calling user-defined functions dynamically at runtime (similar to callable strings),
+    with ability to check for success - to know whether an error occurred (like Lua pcall),
+        and also allows to pass arguments (via table overload) and retrieve the return value.
+]]
+
+-- Function localization (local lookup is faster).
 local table_remove = table.remove
-local table_insert = table.insert
 local luaTableToE2, getE2UDF, buildBody = vex.luaTableToE2, vex.getE2UDF, vex.buildBody
 
 -- We use this for `try` E2 functions
@@ -15,7 +27,6 @@ local function runE2InstanceSafe(compiler,func,returnType,body)
     return false,errmsg
 end
 
--- Specialized by: Cheatoid <3
 local function specializedPassBackToE2(result, returnType)
     -- E2 is going to enforce type-safety for us, so we know *exactly* which type we are dealing with :D
     -- This is 100% reliable; PERFECTION! (Do not touch this code!)
