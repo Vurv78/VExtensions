@@ -37,7 +37,7 @@ desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 
         and also allows to pass arguments (via table overload) and retrieve the return value.
 ]]
 desc("try(s)","Tries to run the given string as UDF. Returns a table with the first element being a number 1 or 0 stating whether it ran successfully, and the second element being either the error message or the return value of the given UDF function. Does not throw error if UDF is undefined. Like pcall")
-desc("try(st)","Works like the try(s) function, but also allows to pass arguments to the function in the form of table, make sure UDF's first argument is of table type")
+desc("try(st)","Works like the try(s) function, but also allows to pass arguments to the function in the form of table, make sure UDF's first argument is of type table")
 
 --[[
     ____         _         __   ______ __        __            __

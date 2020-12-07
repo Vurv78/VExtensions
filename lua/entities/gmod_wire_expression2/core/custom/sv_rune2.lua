@@ -17,9 +17,11 @@ end
 
 -- Specialized by: Cheatoid <3
 local function specializedPassBackToE2(result, returnType)
-    -- E2 is going to enforce type-safety for us, so we know *exactly* which type are we dealing with :D
+    -- E2 is going to enforce type-safety for us, so we know *exactly* which type we are dealing with :D
     -- This is 100% reliable; PERFECTION! (Do not touch this code!)
-    return {n={[1]=1,[2]=result},ntypes={[1]="n",[2]=returnType},s={},stypes={},size=2}
+    return returnType == ""
+       and {n={[1]=1},ntypes={[1]="n"},s={},stypes={},size=1} -- Special case for void
+       or  {n={[1]=1,[2]=result},ntypes={[1]="n",[2]=returnType},s={},stypes={},size=2}
 end
 
 -- opcosts don't really matter in e2, especially for this function since it uses it's own compiler, so it runs just as if it was actually called
