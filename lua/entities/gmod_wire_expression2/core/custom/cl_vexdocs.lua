@@ -143,8 +143,8 @@ desc("vrDropEnt()","Returns the last prop to be dropped by a player in VR")
     Can't halt Lua's coroutines, so it is safe.
 ]]
 
-desc("coroutine(s)","Creates a coroutine object to be run with xco:resume(). The given UDF must have no arguments")
-desc("coroutine(st)","Creates a coroutine object to be run with xco:resume(t). The given UDF must have a single argument of type table. This overload allows to pass initial data to the UDF by using a table argument")
+desc("coroutine(s)","Creates a coroutine object to be run with xco:resume(). The given UDF's return type must be void and must have no arguments")
+desc("coroutine(st)","Creates a coroutine object to be run with xco:resume(t). The given UDF's return type must be void/table and must have a single argument of type table. This overload allows to pass initial data to the UDF by using a table argument")
 desc("coroutineRunning()","Returns the current running coroutine for this E2, else nothing")
 desc("coroutineYield()","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
 desc("coroutineYield(t)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening. Use this overload if you need to pass data back to the caller (main thread)")
