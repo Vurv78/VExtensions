@@ -27,8 +27,7 @@ registerType("coroutine", "xco", nil,
     nil,
     function(ret)
         if not ret then return end
-        if type(ret)~="thread" then return end
-        error("Return value is neither nil nor a coroutine, but a "..type(ret).."!",0)
+        if type(ret)~="thread" then error("Return value is neither nil nor a coroutine, but a "..type(ret).."!",0) end
     end,
     function(v)
         return type(v)~="thread"
