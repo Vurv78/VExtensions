@@ -68,23 +68,21 @@ local WebMaterial = {
 }
 WebMaterial.__index = WebMaterial
 
+local function iswm(wm)
+    return wm and istable(wm) and wm.wm
+end
+
 registerType("webmaterial", "xwm", nil,
 	nil,
 	nil,
 	function(ret)
 		if not ret then return end
-        if type(ret)~="table" then return end
-        if not ret.wm then return end
-		error("Return value is neither nil nor a coroutine, but a "..type(ret).."!",0)
+        	if not iswm(ret) then error("Return value is neither nil nor a webmaterial, but a "..type(ret).."!",0) end
 	end,
 	function(v)
 		return type(v)~="table" and not v.wm
 	end
 )
-
-local function iswm(wm)
-    return wm and istable(wm) and wm.wm
-end
 
 e2function webmaterial operator=(webmaterial lhs, webmaterial rhs) -- Co = coroutine("bruh(e:)")
 	local scope = self.Scopes[ args[4] ]
