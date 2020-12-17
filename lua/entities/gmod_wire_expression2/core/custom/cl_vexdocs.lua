@@ -82,6 +82,7 @@ desc("getConstants()","Returns a table containing all registered E2 constants (c
 desc("getUserFunctionInfo(n)","Returns a table containing useful information about all user-defined functions. This function can operate differently, the `mode` argument controls how the output table will be structured. Use _UDF_* constant as `mode` argument")
 desc("getBuiltinFuncInfo(s)","Returns a table containing information about the builtin (non-UDF) E2 functions. Either use \"*\" as a `funcName` to get infos for all, or specify a function name/signature (e.g. \"selfDestruct\")")
 desc("getTypeInfo()","Returns a table containing E2 types information (type ID is used as table key, and type name as the table value)")
+desc("deleteUserFunction(s)","Attempts to delete a user-defined function from this E2's context. You must specify a full signature (i.e. \"myFunc(e:av)\").")
 
 --[[
  _    __ ____   __  ___            __   ______                                 __   _  __     _  __ _  __
