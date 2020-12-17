@@ -268,3 +268,17 @@ e2function table getTypeInfo()
     end
     return luaTableToE2(ret, 0) -- Convert into a compatible E2 table without array optimization.
 end
+
+--===========================================================================================================================
+
+e2cost(3)
+
+-- Attempts to delete a user-defined function from this E2's context. You must specify a full signature (i.e. "myFunc(e:av)").
+e2function number deleteUserFunction(string funcName)
+    local exists = self.funcs[funcName]
+    if exists then
+        self.funcs[funcName] = nil
+        return 1
+    end
+    return 0
+end
