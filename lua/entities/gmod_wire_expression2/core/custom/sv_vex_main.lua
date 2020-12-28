@@ -52,7 +52,7 @@ end
 __e2setcost(20)
 e2function void hideChatPly(entity ply, hide)
     if not ply:IsValid() then return end
-    if hide==0 then chatsHidden[ply] = false return end
+    if hide==0 then chatsHidden[ply] = nil return end
     if self.player ~= ply then
         if ply:GetInfoNum("canhidechatply_cl",0)==0 then return end
         ply:PrintMessage(HUD_PRINTCONSOLE, string_format("Your chat was hidden by %s's expression 2 chip. See canhidechatply_cl to disable this.",self.player:GetName())) -- Notify the user that their chat was hidden by X
@@ -66,7 +66,7 @@ local WireReceiver = hook.GetTable().PlayerSay.Exp2TextReceiving
 hook.GetTable().PlayerSay.Exp2TextReceiving = function(sender,...)
     local ret = WireReceiver(sender,...)
     if chatsHidden[sender] then
-        chatsHidden[sender] = false
+        chatsHidden[sender] = nil
         return ""
     end
     return ret
