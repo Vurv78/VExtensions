@@ -58,13 +58,17 @@ e2function void hideChatPly(entity ply, hide)
         ply:PrintMessage(HUD_PRINTCONSOLE, string.format("Your chat was hidden by %s's expression 2 chip. See canhidechatply_cl to disable this.",self.player:GetName())) -- Notify the user that their chat was hidden by X
         print(string.format("%s's chat was hidden by %s's expression 2 chip.",ply:GetName(),self.player:GetName())) -- Log to server console
     end
+    print("Set to true")
     chatsHidden[ply] = true -- Disregard the convar if you're the owner of the chip.
 end
 
-hook.Add("PlayerSay","vex_hidechatply",function(sender)
+local WireReceiver = hook.GetTable().PlayerSay.Exp2TextReceiving
+
+hook.GetTable().PlayerSay.Exp2TextReceiving = function(sender,...)
+    local ret = WireReceiver(sender,...)
     if chatsHidden[sender] then
         chatsHidden[sender] = false
-        -- Only hide chat once
         return ""
     end
-end)
+    return ret
+end

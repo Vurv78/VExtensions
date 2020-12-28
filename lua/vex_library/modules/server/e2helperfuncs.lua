@@ -60,7 +60,7 @@ local function validArray(tbl,max,typeOf)
     end
     return true
 end
-vex.isE2Array = validArray --better_validArray
+vex.isE2Array = validArray -- more like "can be E2 Array"
 
 -- Allows to very accurately determine whether the given argument has a valid E2 table structure (presence of table fields/keys).
 -- However, it does not validate inner contents (it is assumed to not be malformed inside).
