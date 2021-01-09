@@ -174,6 +174,41 @@ e2function void coroutineWait(n)
     customWait(self,n)
 end
 
+local CoroutineErrorPrefix = "Coroutine error: "
+local TrimStart
+do
+    -- TODO: Localization & Move into vex (helper) library.
+    -- We need this, just to avoid the "Coroutine error" prefix spam (when error occurs within nested coroutines).
+    local runTrim
+    function runTrim(str, toTrim, fullRun)
+        local needTrimming = string.StartWith(str, toTrim)
+        if needTrimming then
+            if fullRun then
+                str = runTrim(string.sub(str, #toTrim + 1), toTrim, true)
+            else
+                str = string.sub(str, #toTrim + 1)
+            end
+            needTrimming = string.StartWith(str, toTrim)
+        end
+        return str, needTrimming
+    end
+    -- Awful, we have to do this terribleness ourselves... cuz GLua doesn't implement it (yet).
+    function TrimStart(str, toTrim, maxTrims)
+        if maxTrims then
+            for i = 1, maxTrims do
+                local s, keepGoing = runTrim(str, toTrim)
+                if keepGoing then
+                    str = s
+                else
+                    break
+                end
+            end
+            return str
+        end
+        return (runTrim(str, toTrim, true))
+    end
+end
+
 e2function void coroutine:resume()
     if not this then return end
     local bench = SysTime()
@@ -184,8 +219,8 @@ e2function void coroutine:resume()
         local err = prfDataOrDone
         if err == "exit" then return end
         if err == "perf" then err = "tick quota exceeded" end
-        err = string.match(err,"entities/gmod_wire_expression2/core/core.lua:%d+:(.*)") or err -- ( in e2 code ) error("hello world")
-        e2err("COROUTINE ERROR: " .. err)
+        err = string.match(err,"entities/gmod_wire_expression2/core/core.lua:%d+: (.*)") or err -- ( in e2 code ) error("hello world")
+        return e2err(CoroutineErrorPrefix..TrimStart(err, CoroutineErrorPrefix))
     end
     prfDataOrDone.time = prfDataOrDone.time + (SysTime() - bench)
     loadPrfData(self,prfDataOrDone)
@@ -202,8 +237,8 @@ e2function table coroutine:resume(table data)
         local err = prfDataOrDone
         if err == "exit" then return newE2Table() end
         if err == "perf" then err = "tick quota exceeded" end
-        err = string.match(err,"entities/gmod_wire_expression2/core/core.lua:%d+:(.*)") or err -- ( in e2 code ) error("hello world")
-        e2err("COROUTINE ERROR: " .. err)
+        err = string.match(err,"entities/gmod_wire_expression2/core/core.lua:%d+: (.*)") or err -- ( in e2 code ) error("hello world")
+        return e2err(CoroutineErrorPrefix..TrimStart(err, CoroutineErrorPrefix))
     end
     prfDataOrDone.time = prfDataOrDone.time + (SysTime() - bench)
     loadPrfData(self,prfDataOrDone)
