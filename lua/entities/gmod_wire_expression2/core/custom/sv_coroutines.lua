@@ -80,17 +80,28 @@ local function loadPrfData(instance,data)
     end
 end
 
-local function createCoroutine(compiler,runtime,e2func)
-    local thread = coroutine_create(runtime)
-    -- Data that we keep so we know whether a coroutine was created by e2 or not.
-    compiler.coroutines[thread] = e2func
-    return thread
+local function runningCo(compiler)
+    -- Don't return if a glua coroutine is running
+    local thread = coroutine_running()
+    if thread and compiler.coroutines[thread] then return thread end
 end
 
-local function runningCo(compiler) -- Don't return if a glua coroutine is running
-    local thread = coroutine_running()
-    if not thread then return end
-    if compiler.coroutines[thread] then return thread end
+local function createCoroutine(compiler,runtime,e2func)
+    -- Make sure we're not in a coroutine creation infinite loop
+    local activeThread = runningCo(compiler)
+    local stackLevel
+    if activeThread then
+        local threadInfo = compiler.coroutines[activeThread]
+        stackLevel = threadInfo[2]
+        if stackLevel >= 100 then return e2err("Coroutine stack overflow") end
+        threadInfo[2] = stackLevel
+    else
+        stackLevel = 0
+    end
+    local thread = coroutine_create(runtime)
+    -- Data that we keep so we know whether a coroutine was created by e2 or not.
+    compiler.coroutines[thread] = {[1]=e2func,[2]=stackLevel+1}
+    return thread
 end
 
 local getE2UDF = vex.getE2UDF
@@ -217,8 +228,9 @@ __e2setcost(15)
 -- Returns the coroutine as if it was just created, 'reboot'ing it.
 e2function coroutine coroutine:reboot()
     if not this then return end
-    local e2func = self.coroutines[this]
-    if not e2func then return end
+    local threadInfo = self.coroutines[this]
+    if not threadInfo then return end
+    local e2func = threadInfo[1]
     local runtime = function()
         return true,e2func(table_copy(self))
     end
@@ -227,8 +239,9 @@ end
 
 e2function coroutine coroutine:reboot(table args)
     if not this then return end
-    local e2func = self.coroutines[this]
-    if not e2func then return end
+    local threadInfo = self.coroutines[this]
+    if not threadInfo then return end
+    local e2func = threadInfo[1]
     local runtime = function()
         return true,e2func(table_copy(self),buildBody{["t"]=args})
     end
