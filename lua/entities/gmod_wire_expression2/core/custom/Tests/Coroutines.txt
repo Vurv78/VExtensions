@@ -1,0 +1,50 @@
+@name Ultimate Coroutine Tester 9000
+# Testing Chip for sv_coroutines.lua in VExtensions
+
+#[
+    What this checks:
+        Returning args table
+        Passing args table
+        Stack overflow threshold
+        Anti-Repeated "Coroutine Error: " in Coroutine Errors
+    What this doesn't check:
+        Coroutines that last several ticks (Use https://github.com/Vurv78/VExtensions/discussions/29)
+        Coroutines affecting the main thread (https://github.com/Vurv78/VExtensions/issues/18)
+]#
+
+function void stack_overflow(){
+    Co = coroutine("stack_overflow")
+    Co:resume()
+}
+
+assert( try("stack_overflow")[2,string] == "Coroutine Error: Coroutine stack overflow", "stack_overflow test failed" )
+
+The_Table = table("br",2,3) # For some reason this can't be local
+function table return_table(){
+    return The_Table
+}
+
+# You can't equate the two tables themselves, because for now we copy the actual scopes instead of having
+# 'real' shared tables.
+assert(The_Table[1,string] == coroutine("return_table"):resume()[1,string], "return_table test failed")
+
+The_Number = 12040124 # Same as L12
+function table pass_args(T:table){
+    assert(T[1,number] == The_Number, "pass_args test failed")
+    return table(1,2,3)
+}
+
+coroutine("pass_args",table(The_Number,2,3)):resume()
+
+I = 0
+function void repeat_name(){
+    Co = coroutine("stack_overflow")
+    I++
+    if(I==39){ error("cool error") }
+    Co:resume()
+}
+
+assert( try("repeat_name")[2,string]=="Coroutine Error: Coroutine stack overflow", "repeat_name test failed" )
+
+
+print("All checks passed.")

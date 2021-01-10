@@ -4,6 +4,8 @@
 local printf = vex.printf
 local isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction = isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction
 local getmetatable, pcall, IsValid = getmetatable, pcall, IsValid
+local error = error
+local string, string_format = string, string.format
 
 -- Horrible hack
 if not vex.persists.runs_on then
@@ -21,6 +23,11 @@ vex.registerConstant = function(name, value)
     -- This exists because E2Lib doesn't return a passed value, which can be handy (see selfaware2).
     E2Lib.registerConstant(string.upper(name), value) -- Upper shouldn't be used a lot
     return value
+end
+
+-- Throws an error to the currently running e2 chip.
+vex.throw = function(...)
+    error( string_format(...), 0)
 end
 
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
