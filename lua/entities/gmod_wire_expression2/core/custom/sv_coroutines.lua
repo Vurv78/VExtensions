@@ -13,9 +13,10 @@
 -- Currently it only saves the e2's scope as it is going into the coroutine and syncs cpu data with the main thread as they're resumed.
 
 -- Function localization (local lookup is faster).
-local coroutine_running, coroutine_create, coroutine_resume, coroutine_yield, coroutine_status = coroutine.running, coroutine.create, coroutine.resume, coroutine.yield, coroutine.status
-local table_copy = table.Copy
-local string_match = string.match
+local coroutine = coroutine
+local coroutine_running, coroutine_create, coroutine_resume, coroutine_yield, coroutine_status, coroutine_wait = coroutine.running, coroutine.create, coroutine.resume, coroutine.yield, coroutine.status, coroutine.wait
+
+local table_copy,string_match = table.Copy,string.match
 local newE2Table, buildBody, throw, getE2UDF = vex.newE2Table, vex.buildBody, vex.throw, vex.getE2UDF
 
 vex.registerExtension("coroutines", false, "Allows E2s to use coroutines.")
@@ -36,7 +37,10 @@ registerType("coroutine", "xco", nil,
 
 -- Initialize coroutines
 registerCallback("construct", function(self)
-    self.coroutines = {}
+    self.coroutines = {
+        stack_level = 0,
+        running = nil
+    }
 end)
 
 
@@ -66,76 +70,35 @@ e2function number operator_is(coroutine co) -- if(coroutineRunning())
     return co and 1 or 0
 end
 
-local function popPrfData(self)
-    return {
-        prf = self.prf,
-        prfcount = self.prfcount,
-        prfbench = self.prf,
-        timebench = self.timebench,
-        time = self.time,
-    }
-end
-
-local function loadPrfData(self,data)
-    for K,V in pairs(data) do
-        self[K] = V
-    end
-end
-
--- Yields the coroutine, but also sends prf data for coroutines to update the parent e2 with.
-local function e2coroutine_yield(self,data)
-    local prfData, result = coroutine_yield(popPrfData(self), data)
-    loadPrfData(self, prfData)
-    return result or newE2Table()
-end
-
--- Makes the e2 coroutine wait for n amount of seconds. Custom to use the e2coroutine_yield function
-local function e2coroutine_wait(self,n)
-    local endtime = CurTime() + n
-    while endtime > CurTime() do
-        e2coroutine_yield(self)
-    end
-end
-
--- Errors with the prefix "Coroutine Error: ". Safe from coroutine creation recursion
-local function e2coroutine_error(err)
-    if err == "exit" then return end -- exit() or reset()
-    if err == "perf" then return throw("tick quota exceeded") end
-    err = string_match(err,"entities/gmod_wire_expression2/core/core.lua:%d+: (.*)") or err
-    err = (not err:StartWith("Coroutine Error: ")) and "Coroutine Error: "..err or err
-    return throw(err)
-end
-
--- Resumes a coroutine made with expression2. Loads prfdata that the coroutine gives since we don't run coroutines in safe mode.
+-- Resumes a coroutine made with expression2.
 local function e2coroutine_resume( self, thread, data )
-    local bench = SysTime()
-    local co_success,prfDataOrDone,result = coroutine_resume(thread,popPrfData(self),data)
-    -- Has to check 'true' explicitly. prfDataOrDone either returns a table or bool true.
-    if prfDataOrDone == true then return result end
+    self.coroutines.running = thread
+    local co_success,resultORError = coroutine_resume(thread,data)
+    self.coroutines.running = nil
     if co_success then
-        -- Coroutine yielded or has finished
-        prfDataOrDone.time = prfDataOrDone.time + (SysTime() - bench)
-        loadPrfData(self,prfDataOrDone)
-        self.entity:UpdateOverlay()
-        return result
+        -- Could be done, could've successfully yielded.
+        return resultORError
     else
-        -- Coroutine errored.
-        e2coroutine_error(prfDataOrDone)
+        -- Error in coroutine runtime. Prefixes with "Coroutine Error: "
+        local err = resultORError
+        if err == "exit" then return end -- exit() or reset()
+        if err == "perf" then return throw("tick quota exceeded") end
+        err = string_match(err,"entities/gmod_wire_expression2/core/core.lua:%d+: (.*)") or err
+        -- Anti-recursion StartsWith check to see if the prefix was already applied inside another coroutine scope's error.
+        err = (not err:StartWith("Coroutine Error: ")) and "Coroutine Error: "..err or err
+        return throw(err)
     end
 end
-
 -- Returns the currently running e2 coroutine. (Doesn't return if a coroutine outside of e2 is running)
 local function e2coroutine_running(self)
-    local thread = coroutine_running()
-    if thread and self.coroutines[thread] then return thread end
+    return self.coroutines.running
 end
 
 -- Returns a new coroutine that behaves just the same as when the given coroutine was created.
 local function e2coroutine_reboot(self,thread,args)
-    local thread_info = self.coroutines[thread]
-    if not thread_info then return end
-    local e2func = thread_info[1]
-    return createCoroutine(self,e2func,args)
+    local udf = self.coroutines[thread]
+    if not udf then return end
+    return createCoroutine(self,udf,args)
 end
 
 local function getCoroutineUDF( self, func_name, has_args )
@@ -152,20 +115,51 @@ local function assertRunning(self,co_yield)
     end
 end
 
-local function createCoroutine(self,e2func,argTable)
-    -- Anti-coroutine creation infinite loop. As seen in Starfall :v
-    local activeThread = e2coroutine_running(self)
-    local stackLevel = 1
-    if activeThread then
-        local threadInfo = self.coroutines[activeThread]
-        stackLevel = threadInfo[2]
-        if stackLevel >= 40 then return throw("Coroutine stack overflow") end
+local table_copy = table.Copy
+local function parentTable(t,parent)
+    local stockpile = table_copy(parent)
+    return setmetatable(t,{
+        __index = function(t,k)
+            local ret = stockpile[k]
+            return ret~=nil and ret or parent[k]
+        end,
+        __newindex = function(t,k,v)
+            stockpile[k] = v
+            parent[k] = v
+        end
+    })
+end
+
+local function createCoroutine(self,e2_udf,argTable)
+    -- Anti-coroutine creation infinite loop.
+    local active_thread = e2coroutine_running(self)
+    if active_thread then
+        self.coroutines.stack_level = self.coroutines.stack_level + 1
+        -- Anything higher than 15 starts to lag servers. 30+ Seems to already crash.
+        -- Maybe this new system is just a whole lot more intensive. Then again recurring 15 times is already useless.
+        if self.coroutines.stack_level >= 15 then return throw("Coroutine stack overflow") end
+    else
+        self.coroutines.stack_level = 0
     end
+
+    local instance = setmetatable(table_copy(self),{
+        __index = self,
+        __newindex = self,
+    })
+
+    rawset(instance,"GlobalScope",parentTable({},self.GlobalScope))
+    rawset(instance,"Scopes",parentTable({},self.Scopes))
+
+    rawset(instance,"coroutines",nil)
+    rawset(instance,"prf",nil)
+
+    --local instance = getCoroutineInstance(self)
     local thread = coroutine_create(function()
-        return true,e2func(table_copy(self), e2func and buildBody{["t"]=argTable} or nil )
+        local ret = e2_udf(instance, argTable and buildBody({["t"]=argTable}) or nil)
+        self.coroutines[coroutine_running()] = nil
+        return ret
     end)
-    -- Data that we keep so we know whether a coroutine was created by e2 or not.
-    self.coroutines[thread] = {e2func,stackLevel+1}
+    self.coroutines[thread] = e2_udf
     return thread
 end
 
@@ -186,35 +180,35 @@ __e2setcost(5)
 
 e2function table coroutineYield()
     assertRunning(self,true)
-    return e2coroutine_yield(self)
+    return coroutine_yield(self) or newE2Table()
 end
 
 e2function table coroutineYield(table data)
     assertRunning(self,true)
-    return e2coroutine_yield(self,data)
+    return coroutine_yield(self,data) or newE2Table()
 end
 
 e2function table coroutine:yield()
     if not this then return end
     assertRunning(self,true)
-    return e2coroutine_yield(self)
+    return coroutine_yield(self) or newE2Table()
 end
 
 e2function table coroutine:yield(table data)
     if not this then return newE2Table() end
     assertRunning(self,true)
-    return e2coroutine_yield(self,data)
+    return coroutine_yield(self,data) or newE2Table()
 end
 
 e2function void coroutine:wait(n)
     if not this then return end
     assertRunning(self)
-    e2coroutine_wait(self,n)
+    coroutine_wait(n)
 end
 
 e2function void coroutineWait(n)
     assertRunning(self)
-    e2coroutine_wait(self,n)
+    coroutine_wait(n)
 end
 
 e2function table coroutine:resume()

@@ -1,10 +1,10 @@
 --[[
-    __  ___        _      
-   /  |/  /____ _ (_)____ 
+    __  ___        _
+   /  |/  /____ _ (_)____
   / /|_/ // __ `// // __ \
  / /  / // /_/ // // / / /
-/_/  /_/ \__,_//_//_/ /_/ 
- Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.                    
+/_/  /_/ \__,_//_//_/ /_/
+ Random Misc. Functions that are cool like hiding other people's chat (probably doesn't work) and setting the ranger Filter.
 ]]
 
 local table_insert, util_TraceLine, string_format = table.insert, util.TraceLine, string.format -- Gonna be using this a lot
