@@ -150,6 +150,7 @@ desc("coroutineRunning()","Returns the current running coroutine for this E2, el
 desc("coroutineYield()","Makes the coroutine pause until it is resumed again. It will remember everything that is happening")
 desc("coroutineYield(t)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening. Use this overload if you need to pass data back to the caller (main thread)")
 desc("coroutineWait(n)","Makes a coroutine wait for the given amount of seconds, in this time, it is yielded and cannot be resumed")
+desc("nocoroutine()","Returns an 'invalid' coroutine value")
 
 -- Metamethods
 desc("resume(xco:)","Resumes the coroutine (if it is suspended), or starts the coroutine if it hasn't been started yet")
