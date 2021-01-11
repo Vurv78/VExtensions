@@ -12,9 +12,9 @@
 -- Shouldn't be hacky anymore. Behaves just like regular e2, and 'local' variables are useful as they are the only ones that persist in a thread now.
 
 -- Function localization (local lookup is faster).
-local coroutine, coroutine_running, coroutine_create, coroutine_resume, coroutine_yield, coroutine_status, coroutine_wait = coroutine, coroutine.running, coroutine.create, coroutine.resume, coroutine.yield, coroutine.status, coroutine.wait
-local string, string_match, string_replace = string, string.match, string.Replace -- String Library
-local table, table_copy = table, table.Copy -- Table Library
+local coroutine_running, coroutine_create, coroutine_resume, coroutine_yield, coroutine_status, coroutine_wait = coroutine.running, coroutine.create, coroutine.resume, coroutine.yield, coroutine.status, coroutine.wait
+local string_match, string_replace = string.match, string.Replace -- String Library
+local table_copy = table.Copy -- Table Library
 local newE2Table, buildBody, throw, getE2UDF = vex.newE2Table, vex.buildBody, vex.throw, vex.getE2UDF -- VExtensions Library
 
 vex.registerExtension("coroutines", false, "Allows E2s to use coroutines.")
