@@ -85,10 +85,7 @@ local function e2coroutine_resume( self, thread, data )
         return throw( string_replace(err, "%", "%%") ) -- People could error with an % in it and break patterns
     end
 end
--- Returns the currently running e2 coroutine. (Doesn't return if a coroutine outside of e2 is running)
-local function e2coroutine_running(self)
-    return self.coroutines.running
-end
+
 
 -- Returns a new coroutine that behaves just the same as when the given coroutine was created.
 local function e2coroutine_reboot(self,thread,args)
@@ -106,14 +103,14 @@ end
 
 local function assertRunning(self, yielding)
     -- Attempt to yield across C-call boundary. Keyword is either 'yield' or 'wait'
-    if not e2coroutine_running(self) then
+    if not self.coroutines.running then
         throw("Attempted to %s coroutine without an e2 coroutine running.", yielding and "yield a" or "wait")
     end
 end
 
 local function createCoroutine(self, e2_udf, arg_table)
     -- Anti-coroutine creation infinite loop.
-    local active_thread = e2coroutine_running(self)
+    local active_thread = self.coroutines.running
 
     local stack_level = 0
     local thread_data = self.coroutines[active_thread]
@@ -165,24 +162,24 @@ __e2setcost(5)
 
 e2function table coroutineYield()
     assertRunning(self, true)
-    return coroutine_yield(self) or newE2Table()
+    return coroutine_yield() or newE2Table()
 end
 
 e2function table coroutineYield(table data)
     assertRunning(self, true)
-    return coroutine_yield(self, data) or newE2Table()
+    return coroutine_yield(data) or newE2Table()
 end
 
 e2function table coroutine:yield()
     if not this then return newE2Table() end
     assertRunning(self, true)
-    return coroutine_yield(self) or newE2Table()
+    return coroutine_yield() or newE2Table()
 end
 
 e2function table coroutine:yield(table data)
     if not this then return newE2Table() end
     assertRunning(self, true)
-    return coroutine_yield(self, data) or newE2Table()
+    return coroutine_yield(data) or newE2Table()
 end
 
 e2function void coroutine:wait(seconds)
@@ -215,7 +212,7 @@ end
 
 -- Returns the currently active E2 coroutine/thread (or nil if this is running on the main thread).
 e2function coroutine coroutineRunning()
-    return e2coroutine_running(self)
+    return self.coroutines.running
 end
 
 __e2setcost(15)
