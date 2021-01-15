@@ -17,6 +17,9 @@ local string_match, string_replace = string.match, string.Replace -- String Libr
 local table_copy = table.Copy -- Table Library
 local newE2Table, buildBody, throw, getE2UDF = vex.newE2Table, vex.buildBody, vex.throw, vex.getE2UDF -- VExtensions Library
 
+local CO_MAX = vex.registerConstant("XCO_MAX",1000) -- Max coroutines to have at once. This is around 1 mb of coroutines in memory usage.
+local CO_OVERFLOW = vex.registerConstant("XCO_STACK_MAX", 50) -- How many recursions of coroutine creation can be done before an e2 chip is halted.
+
 vex.registerExtension("coroutines", false, "Allows E2s to use coroutines.")
 
 -- Coroutine Object handling
@@ -37,7 +40,7 @@ registerType("coroutine", "xco", nil,
 
 -- Initialize coroutines
 registerCallback("construct", function(self)
-    self.coroutines = {}
+    self.coroutines = { total = 0 }
 end)
 
 -- When the E2 is being cleaned up, delete all of the coroutines.
@@ -46,7 +49,6 @@ registerCallback("destruct", function(self)
 end)
 
 __e2setcost(2)
-
 e2function coroutine operator=(coroutine lhs, coroutine rhs) -- Co = coroutine("bruh(e:)")
     local scope = self.Scopes[ args[4] ]
     scope[lhs] = rhs
@@ -89,7 +91,7 @@ end
 
 -- Returns a new coroutine that behaves just the same as when the given coroutine was created.
 local function e2coroutine_reboot(self,thread,args)
-    local udf = self.coroutines[thread]
+    local udf = self.coroutines[thread].udf
     if not udf then return end
     return createCoroutine(self,udf,args)
 end
@@ -115,14 +117,14 @@ local function createCoroutine(self, e2_udf, arg_table)
     local stack_level = 0
     local thread_data = self.coroutines[active_thread]
     if active_thread then
-        thread_data[2] = thread_data[2] + 1
-        stack_level = thread_data[2]
+        thread_data.stack_level = thread_data.stack_level + 1
+        stack_level = thread_data.stack_level
         -- Ok, we are back if not at a better level of cpu time with coroutines.
         -- Still going to set it at 50 because e2 should be pretty slow in comparison to lua.
-        if stack_level >= 50 then return throw("Coroutine stack overflow") end
+        if stack_level >= CO_OVERFLOW then return throw("Coroutine stack overflow") end
     end
 
-    local instance = table_copy(self)
+    local instance = {}
     instance.GlobalScope = self.GlobalScope
     instance.Scopes = self.Scopes
     instance.coroutines = self.coroutines
@@ -133,27 +135,38 @@ local function createCoroutine(self, e2_udf, arg_table)
             return self[k] or 0 -- This is fucking stupid, prf sometimes returns nil?
             -- Breaks here: wire/lua/entities/gmod_wire_expression2/init.lua L175 ``if self.context.prfcount + self.context.prf - e2_softquota > e2_hardquota then ``
         end,
-        __newindex = self
+        __newindex = self,
+        __mode = "v" -- The holy grail. Prevents the instance from keeping the e2 scopes in lua's memory.
     })
 
+    self.coroutines.total = self.coroutines.total + 1
     local thread = coroutine_create(function()
         local ret = e2_udf(instance, arg_table and buildBody({["t"]=arg_table}) or nil)
         self.coroutines[coroutine_running()] = nil
+        instance = nil
+        self.coroutines.total = self.coroutines.total - 1
         return ret
     end)
-    self.coroutines[thread] = {e2_udf, stack_level}
+
+    self.coroutines[thread] = {
+        udf = e2_udf,
+        stack_level = stack_level,
+        instance = instance
+    }
+    self.prf = self.prf + (stack_level/CO_OVERFLOW)*500
     return thread
 end
 
-__e2setcost(20)
-
+__e2setcost(80)
 e2function coroutine coroutine(string func_name)
     -- Coroutines can only return a table of data in order to keep type-safety.
+    if self.coroutines.total > CO_MAX then throw("You've reached the max amount of coroutines for a single chip. [%d]", CO_MAX) end
     local e2func = getCoroutineUDF(self, func_name)
     return createCoroutine(self, e2func)
 end
 
 e2function coroutine coroutine(string func_name, table args)
+    if self.coroutines.total > CO_MAX then throw("You've reached the max amount of coroutines for a single chip. [%d]", CO_MAX) end
     local e2func = getCoroutineUDF(self, func_name, true)
     return createCoroutine(self, e2func, args)
 end
@@ -204,7 +217,6 @@ e2function table coroutine:resume(table data)
 end
 
 __e2setcost(3)
-
 e2function string coroutine:status()
     if not this then return "" end
     return coroutine_status(this)
@@ -215,7 +227,7 @@ e2function coroutine coroutineRunning()
     return self.coroutines.running
 end
 
-__e2setcost(15)
+__e2setcost(50)
 
 -- Returns the coroutine as if it was just created, 'reboot'ing it.
 e2function coroutine coroutine:reboot()
@@ -232,4 +244,9 @@ __e2setcost(1)
 
 e2function coroutine nocoroutine()
     return nil
+end
+
+__e2setcost(2)
+e2function number coroutinesLeft()
+    return CO_MAX - self.coroutines.total
 end
