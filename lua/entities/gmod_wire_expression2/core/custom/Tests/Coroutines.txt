@@ -19,7 +19,7 @@
         Coroutines that last several ticks (Use https://github.com/Vurv78/VExtensions/discussions/29 instead.)
 ]#
 
-COROUTINE_STACK_MAX = 51
+COROUTINE_STACK_MAX = 5
 
 I = 0
 function void stack_overflow(){
@@ -33,8 +33,7 @@ assert(try("stack_overflow")[1,number]==0,"stack_overflow test failed")
 
 The_Table = table("br",2,3) # For some reason this can't be local
 function table return_table(){
-    print("Return table test!")
-    print("ret",The_Table[1,string])
+    assert(The_Table[1,string]=="br","return_table test failed[a]")
     The_Table[2,number] = 420
     return The_Table
 }
@@ -42,8 +41,7 @@ function table return_table(){
 # You can't equate the two tables themselves, because for now we copy the actual scopes instead of having
 # 'real' shared tables.
 
-assert(The_Table[1,string] == coroutine("return_table"):resume()[1,string], "return_table test failed")
-print(The_Table[2,number])
+assert(The_Table[1,string] == coroutine("return_table"):resume()[1,string], "return_table test failed[b]")
 
 The_Number = 12040124 # Same as L12
 function table pass_args(T:table){
@@ -66,12 +64,11 @@ I = 0
 function void repeat_name(){
     Co = coroutine("repeat_name")
     I++
-    if(I==39){ error("cool error") }
+    if(I==5){ error("cool error") }
     Co:resume()
 }
 
-print(try("repeat_name")[2,string])
-assert( try("repeat_name")[2,string]=="Coroutine Error: Coroutine stack overflow", "repeat_name test failed" )
+assert( try("repeat_name")[2,string]=="Coroutine Error: cool error", "repeat_name test failed" )
 
 
 print("All checks passed.")
