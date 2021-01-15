@@ -24,22 +24,25 @@ vex.addNetString("webmaterial_apply")
 -- Todo: Turn this into a .txt file and just split at newlines.
 local URLMatches = {
     -- Discord Avatars
-    "^cdn.discordapp.com/avatars/.*$",
+    "^cdn%.discordapp%.com/avatars/.*$",
 
     -- Discord-Hosted Images
-    "^cdn.discordapp.com/attachments/.*$",
+    "^cdn%.discordapp%.com/attachments/.*$",
 
     -- Imgur as a whole
-    "^i.imgur.com/.*$",
+    "^i%.imgur%.com/.*$",
 
     -- Youtube Thumbnails
-    "^i.ytimg.com/vi/.*$",
+    "^i%.ytimg%.com/vi/.*$",
 
     -- Youtube ?Avatars?
-    "yt3.ggpht.com/a/.*$",
+    "^yt3.ggpht%.com/a/.*$",
 
     -- Spotify API Images for something like a music player :v)
-    "i.scdn.co/image/.*$"
+    "^i%.scdn%.co/image/.*$",
+	
+    -- Reddit
+    "^i%.redd%.it/.*$"
 }
 
 local function isGoodURL(url)
