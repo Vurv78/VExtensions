@@ -19,8 +19,9 @@ local CharMax = CreateConVar("vex_printglobal_charmax_sv","450",FCVAR_REPLICATED
 local ArgMax = CreateConVar("vex_printglobal_argmax_sv","100",FCVAR_REPLICATED,"The amount of arguments that can be sent with the e2function printGlobal(). Max 255, default 100",0,255)
 local BurstMax = CreateConVar("vex_printglobal_burst_sv","4",FCVAR_REPLICATED,"How many times printGlobal can be used in a second. Default 4 times per second, same as default print")
 
-local PrintGBurstCount = {}
-local PrintGCache = { recent = {NULL,{},""} }
+local PrintGBurstCount = {} -- Doesn't need to be cleaned up for now since we end up just resetting the table every time...
+local PrintGCache = WireLib.RegisterPlayerTable()
+PrintGCache.recent = { NULL, {}, "" }
 local PrintGAlert = {}
 local isE2Array = vex.isE2Array
 local format,table_concat,table_insert,table_remove = string.format,table.concat,table.insert,table.remove
