@@ -20,8 +20,7 @@ local ArgMax = CreateConVar("vex_printglobal_argmax_sv","100",FCVAR_REPLICATED,"
 local BurstMax = CreateConVar("vex_printglobal_burst_sv","4",FCVAR_REPLICATED,"How many times printGlobal can be used in a second. Default 4 times per second, same as default print")
 
 local PrintGBurstCount = {} -- Doesn't need to be cleaned up for now since we end up just resetting the table every time...
-local PrintGCache = WireLib.RegisterPlayerTable()
-PrintGCache.recent = { NULL, {}, "" }
+local PrintGCache = WireLib.RegisterPlayerTable{ recent = NULL, {}, "" }
 local PrintGAlert = {}
 local isE2Array = vex.isE2Array
 local format,table_concat,table_insert,table_remove = string.format,table.concat,table.insert,table.remove
