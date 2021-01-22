@@ -14,7 +14,6 @@
 -- Function localization (local lookup is faster).
 local coroutine_running, coroutine_create, coroutine_resume, coroutine_yield, coroutine_status, coroutine_wait = coroutine.running, coroutine.create, coroutine.resume, coroutine.yield, coroutine.status, coroutine.wait
 local string_match, string_replace = string.match, string.Replace -- String Library
-local table_copy = table.Copy -- Table Library
 local newE2Table, buildBody, throw, getE2UDF = vex.newE2Table, vex.buildBody, vex.throw, vex.getE2UDF -- VExtensions Library
 
 -- Max coroutines to have at once in a chip. This is around 1-5 megabytes of coroutines in memory usage.
@@ -171,7 +170,6 @@ e2function coroutine coroutine(string func_name, table args)
 end
 
 __e2setcost(5)
-
 e2function table coroutineYield()
     assertRunning(self, true)
     return coroutine_yield() or newE2Table()
