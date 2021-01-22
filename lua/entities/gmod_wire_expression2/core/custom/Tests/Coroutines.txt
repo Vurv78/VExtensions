@@ -4,29 +4,44 @@
 #[
     What this checks:
         Returning args table
+        
         Passing args table
+        
         Stack overflow threshold
+        
         Anti-Repeated "Coroutine Error: " in Coroutine Errors
-    What this doesn't check:
-        Coroutines that last several ticks (Use https://github.com/Vurv78/VExtensions/discussions/29)
+        
         Coroutines affecting the main thread (https://github.com/Vurv78/VExtensions/issues/18)
+        
+        Coroutines sharing memory / Tables with the main thread
+             
+    What this doesn't check:
+        Coroutines that last several ticks (Use https://github.com/Vurv78/VExtensions/discussions/29 instead.)
 ]#
 
+COROUTINE_STACK_MAX = 5
+
+I = 0
 function void stack_overflow(){
     Co = coroutine("stack_overflow")
+    I++
+    if(I>COROUTINE_STACK_MAX){ error(" stack_overflow test failed. "), return } # If the stack overflow threshold somehow fails to trigger, error it ourselves.
     Co:resume()
 }
 
-assert( try("stack_overflow")[2,string] == "Coroutine Error: Coroutine stack overflow", "stack_overflow test failed" )
+assert(try("stack_overflow")[1,number]==0,"stack_overflow test failed")
 
 The_Table = table("br",2,3) # For some reason this can't be local
 function table return_table(){
+    assert(The_Table[1,string]=="br","return_table test failed[a]")
+    The_Table[2,number] = 420
     return The_Table
 }
 
 # You can't equate the two tables themselves, because for now we copy the actual scopes instead of having
 # 'real' shared tables.
-assert(The_Table[1,string] == coroutine("return_table"):resume()[1,string], "return_table test failed")
+
+assert(The_Table[1,string] == coroutine("return_table"):resume()[1,string], "return_table test failed[b]")
 
 The_Number = 12040124 # Same as L12
 function table pass_args(T:table){
@@ -36,15 +51,24 @@ function table pass_args(T:table){
 
 coroutine("pass_args",table(The_Number,2,3)):resume()
 
+Shared = table(5,4,2)
+function table memory_shared(){
+    Shared[2,number] = 1000000000
+    return Shared    
+}
+
+assert( coroutine("memory_shared"):resume() == Shared, "memory_shared[a] test failed" )
+assert( Shared[2,number] == 1000000000, "memory_shared[b] test failed" )
+
 I = 0
 function void repeat_name(){
-    Co = coroutine("stack_overflow")
+    Co = coroutine("repeat_name")
     I++
-    if(I==39){ error("cool error") }
+    if(I==5){ error("cool error") }
     Co:resume()
 }
 
-assert( try("repeat_name")[2,string]=="Coroutine Error: Coroutine stack overflow", "repeat_name test failed" )
+assert( try("repeat_name")[2,string]=="Coroutine Error: cool error", "repeat_name test failed" )
 
 
 print("All checks passed.")
