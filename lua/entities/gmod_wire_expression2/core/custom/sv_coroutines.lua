@@ -17,8 +17,11 @@ local string_match, string_replace = string.match, string.Replace -- String Libr
 local table_copy = table.Copy -- Table Library
 local newE2Table, buildBody, throw, getE2UDF = vex.newE2Table, vex.buildBody, vex.throw, vex.getE2UDF -- VExtensions Library
 
-local CO_MAX = vex.registerConstant("XCO_MAX",1000) -- Max coroutines to have at once. This is around 1 mb of coroutines in memory usage.
-local CO_OVERFLOW = vex.registerConstant("XCO_STACK_MAX", 50) -- How many recursions of coroutine creation can be done before an e2 chip is halted.
+-- Max coroutines to have at once in a chip. This is around 1-5 megabytes of coroutines in memory usage.
+local CO_MAX = vex.registerConstant("XCO_MAX",500)
+
+-- How many recursions of coroutine creation can be done before an e2 chip is halted.
+local CO_OVERFLOW = vex.registerConstant("XCO_STACK_MAX", 50)
 
 vex.registerExtension("coroutines", false, "Allows E2s to use coroutines.")
 
@@ -124,19 +127,15 @@ local function createCoroutine(self, e2_udf, arg_table)
         if stack_level >= CO_OVERFLOW then return throw("Coroutine stack overflow") end
     end
 
-    local instance = {}
-    instance.GlobalScope = self.GlobalScope
-    instance.Scopes = self.Scopes
-    instance.coroutines = self.coroutines
-    instance.prf = nil
-
-    instance = setmetatable(instance, {
-        __index = function(_,k)
-            return self[k] or 0 -- This is fucking stupid, prf sometimes returns nil?
-            -- Breaks here: wire/lua/entities/gmod_wire_expression2/init.lua L175 ``if self.context.prfcount + self.context.prf - e2_softquota > e2_hardquota then ``
-        end,
+    -- Shared memory
+    local instance = setmetatable({
+        Scopes = self.Scopes,
+        Scope = self.Scope,
+        ScopeID = self.ScopeID
+    },{
+        __index = self,
         __newindex = self,
-        __mode = "v" -- The holy grail. Prevents the instance from keeping the e2 scopes in lua's memory.
+        __mode = "k" -- Don't use weak keys, it ends up destroying instance.Scope / instance.Scopes and breaking stuff.
     })
 
     self.coroutines.total = self.coroutines.total + 1
