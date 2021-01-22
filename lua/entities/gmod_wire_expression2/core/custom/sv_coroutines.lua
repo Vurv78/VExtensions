@@ -119,8 +119,7 @@ local function createCoroutine(self, e2_udf, arg_table)
     local stack_level = 0
     local thread_data = self.coroutines[active_thread]
     if active_thread then
-        thread_data.stack_level = thread_data.stack_level + 1
-        stack_level = thread_data.stack_level
+        stack_level = thread_data.stack_level + 1
         -- Ok, we are back if not at a better level of cpu time with coroutines.
         -- Still going to set it at 50 because e2 should be pretty slow in comparison to lua.
         if stack_level >= CO_OVERFLOW then return throw("Coroutine stack overflow") end
