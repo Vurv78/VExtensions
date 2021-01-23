@@ -34,21 +34,6 @@ vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 local Default_E2Tbl = vex.newE2Table()
 
 -- Screw this anyways.
---[[local function better_validArray(tbl)
-    if not istable(tbl) then return false end
-    for k,v in pairs(tbl) do
-        if not isnumber(k) then return false end -- E2 array cannot have non-number index.
-        if istable(v) then
-            if IsColor(v) then tbl[k] = {v.r,v.g,v.b,v.a} -- Color as Vector4/array
-            elseif v.HitPos then -- Ranger/Trace data
-                -- Do nothing.
-            else
-                return false -- Anything else is a no-no
-            end
-        end
-    end
-    return true
-end]]
 
 -- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
 -- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
@@ -183,6 +168,8 @@ vex.buildBody = function(args)
     return body
 end
 
+
+-- Lua Hooks --> E2 Hooks
 vex.listenE2Hook = function(context,id,dorun)
     if not runs_on[id] then runs_on[id] = {} end
     if not context or not IsValid(context.entity) then return end
