@@ -9,7 +9,6 @@
 ]]
 
 
--- TODO: Rework this
 vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other player's chats with color, with configurable char, argument and burst limits. vex_printglobal_enable_cl")
 
 vex.addNetString("printglobal")
@@ -44,9 +43,10 @@ end
 -- Then it will connect strings and discard trailing colors to get to a
 -- [color, string] pattern.
 local function fix_args( args )
-    local starts_col = validColor(args[1])
-    local ind,status,len = starts_col and 2 or 1,"",starts_col and 0 or 1
-    local fixed = { not starts_col and {15, 123, 255} or nil }
+    local ind,status,len = 1,"",0
+    -- If there's no color at the beginning, add the default one.
+    if not validColor(args[1]) then table.insert(args, 1, {15, 123, 255} ) end
+    local fixed = {}
     local current = args[ind]
     local strings,str_count = {},0 -- Each individual string put in a table.
     repeat
@@ -56,6 +56,7 @@ local function fix_args( args )
         ::redo::
         if validColor(current) then
             if status == "color" then
+                fixed[len] = current
                 goto skip
             end
             status = "color"
