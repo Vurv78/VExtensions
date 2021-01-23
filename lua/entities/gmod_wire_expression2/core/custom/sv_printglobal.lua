@@ -92,10 +92,8 @@ local function fix_target( target )
     return target
 end
 
--- This function assumes a lot:
--- The target is a table of valid players that have printGlobal enabled with the convar.
--- Sender is the entity player sender.
--- Args is a table (Not organized with fix_args yet.)
+-- Organizes random arguments given by E2 to a [color, string] pattern then sends the net message
+-- to the client to print the message.
 local function printGlobal(sender,target,args)
     if #args > ArgMax:GetInt() then throw( "Too many arguments in printGlobal call. [%d]", #args) end
 
@@ -178,28 +176,27 @@ e2function number printGlobalClk()
     return self.data.runByPrintGClk and 1 or 0
 end
 
--- TODO: Replace with vex e2helperfuncs runOn* system.
 e2function void runOnPrintGlobal(on)
-    PrintGAlert[self.entity] = on~=0 and true or nil
+    ChipsSubscribed[self.entity] = on~=0 and true or nil
 end
 
 __e2setcost(5)
 e2function array lastGPrintRaw() -- Pls give better name
-    return PrintGCache.recent.raw or {}
+    return EventData.recent.raw or {}
 end
 
 e2function array lastGPrintRaw(entity e) -- Pls give better name
-    return PrintGCache[e].raw or {}
+    return EventData[e].raw or {}
 end
 
 e2function entity lastGPrintSender() -- Pls give better name
-    return PrintGCache.recent.sender or NULL
+    return EventData.recent.sender or NULL
 end
 
 e2function string lastGPrintText() -- Pls give better name
-    return PrintGCache.recent.text or ""
+    return EventData.recent.text or ""
 end
 
 e2function string lastGPrintText(entity e) -- Pls give better name
-    return PrintGCache[e].text or ""
+    return EventData[e].text or ""
 end
