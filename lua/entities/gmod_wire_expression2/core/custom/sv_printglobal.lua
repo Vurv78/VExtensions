@@ -52,7 +52,7 @@ local function fix_args( args )
     repeat
         local current = args[ind]
         local next = args[ind]
-        if current==nil then goto destroy end
+        if current==nil then break end
         ::redo::
         if validColor(current) then
             if status == "color" then
@@ -77,7 +77,6 @@ local function fix_args( args )
         fixed[len] = current
         ::skip::
         ind = ind + 1 -- Ind is the index of the args table that is being scanned.
-        ::destroy::
     until current == nil
     -- If the last arg is a color, get rid of it.
     if validColor(fixed[len]) then fixed[len] = nil end
@@ -154,18 +153,18 @@ end
 
 __e2setcost(100)
 e2function void printGlobal(...)
-    if not PrintGBurst:use( self.player ) then throw("You have hit the printGlobal burst of 4 per second!") end
+    if not PrintGBurst:use( self.player ) then throw("You can only print 4 times per second!") end
     printGlobalSort( self.player, {...} )
 end
 
 __e2setcost(150)
 e2function void printGlobal(array args) -- Print to everyone with an array of arguments
-    if not PrintGBurst:use( self.player ) then throw("You have hit the printGlobal burst of 4 per second!") end
+    if not PrintGBurst:use( self.player ) then throw("You can only print 4 times per second!") end
     printGlobalSort( self.player, args )
 end
 
 e2function void printGlobal(array plys,array args)
-    if not PrintGBurst:use( self.player ) then throw("You have hit the printGlobal burst of 4 per second!") end
+    if not PrintGBurst:use( self.player ) then throw("You can only print 4 times per second!") end
     printGlobal( self.player, fix_target( plys ), args)
 end
 
