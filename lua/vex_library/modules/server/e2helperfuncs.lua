@@ -5,7 +5,7 @@ local printf = vex.printf
 local isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction = isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction
 local getmetatable, pcall, IsValid = getmetatable, pcall, IsValid
 local error = error
-local string, string_format = string, string.format
+local string_format, string_replace = string.format, string.Replace
 
 -- Horrible hack
 if not vex.persists.runs_on then
@@ -290,4 +290,18 @@ vex.getE2Func = function(funcName, returnTable, skipOperatorFunctions)
             end
         end
     end
+end
+
+local error_reps = {
+    ["perf"] = "tick quota exceeded",
+    ["exit"] = false, -- Isn't actually an error.
+}
+-- E2 Throws raw errors, like 'perf' and 'exit' which are later replaced by their user friendly versions.
+-- 'exit' is not actually supposed to error the chip, but is supposed to stop the execution.
+-- 'perf' is just the back end version of 'tick quota exceeded'.
+vex.properE2Error = function( err )
+    if error_reps[err] ~= nil then return error_reps[err] end
+    err = string_match( err, "^entities/gmod_wire_expression2/core/core.lua:%d+: (.*)$" ) or err
+    err = string_replace( err, "%", "%%" )
+    return err
 end
