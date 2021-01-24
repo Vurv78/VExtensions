@@ -1,6 +1,7 @@
 -- This module will run all of the tests in VExtensions/lua/tests.
 -- It will do this by using vex.runE2.
 
+local printf = vex.printf
 local Tokenizer,Parser,Optimizer,Compiler = E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
 
 -- Out of all the things for the E2Lib to not have, they are missing this. So... we have to copy the code.
@@ -69,7 +70,7 @@ local function newE2Instance()
     if not ok then
         -- If constructing fails in the process, cleanup
         error("Failed to construct virtual e2 instance.\n" .. why)
-        pcall(CallHook, ctx, "destruct")
+        pcall(wire_expression2_CallHook, "destruct", ctx)
     end
     return ctx
 end
@@ -91,6 +92,10 @@ local function runE2Virtual( code )
     if not status then return false, script end -- Compiler failed
 
     local success,why = pcall( script[1], ctx, script )
+
+    -- Cleanup the code so if you have runOnTick it won't exist permanently
+    pcall(wire_expression2_CallHook, "destruct", ctx)
+
     return success,(not success) and why or nil -- Need to flip logic for the second arg because of lua's 'ternary'
 end
 
@@ -99,9 +104,18 @@ vex.addConsoleCommand("vex_test",function(_, cmd, args)
     for _, file_name in pairs( file.Find( vex.path .. "tests/*.txt" , "GAME" ) ) do
         local success, err = runE2Virtual( file.Read(vex.path .. "tests/" .. file_name,"GAME") )
         if not success then
-            vex.printf("%s test failed. [%s]", file_name, err)
+            printf("%s test failed. [%s]", file_name, err)
             failed = true
         end
     end
     if failed then print("Some tests failed!") end
+end)
+
+vex.addConsoleCommand("vex_rune2",function(_, _, _, argstr)
+    local success, why = runE2Virtual( argstr )
+    if success then
+        print("Code ran successfully")
+    else
+        printf("Code errored with reason [%s]", why)
+    end
 end)
