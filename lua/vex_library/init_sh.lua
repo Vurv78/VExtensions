@@ -139,7 +139,7 @@ vex.addConsoleCommand("vex_version",function(ply)
     http.Fetch("https://api.github.com/repos/Vurv78/VExtensions/releases/latest",function(body)
         local json = util.JSONToTable(body)
         if ply ~= NULL then
-            ply:ChatPrint("Version: " .. vex.version .. "Latest Version: " .. json.tag_name)
+            ply:ChatPrint("Version: " .. vex.version .. "\nLatest Version: " .. json.tag_name)
         else
             printf("Version: %s \nLatest Version: %s", vex.version, json.tag_name)
         end
