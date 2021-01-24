@@ -27,6 +27,7 @@ local net_WriteUInt, net_WriteString = net.WriteUInt, net.WriteString
 
 local PrintGBurst = vex.burstManager(4) -- 4 uses per second
 local function canPrintToPly(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
     return ply:GetInfoNum("vex_printglobal_enable_cl",0)==1
 end
 

@@ -63,7 +63,8 @@ end
 
 -- Runs E2 Code given from a string.
 -- Safemode will make it behave as if it were pcalled.
-
+-- Will use the inputs / outputs / persists of the instance's chip.
+-- (These differences are why it's separate from vex_library/server/tests.lua )
 local function runE2String( self, code, safeMode )
     local chip = self.entity
     local throw = safeMode and string.format or throw

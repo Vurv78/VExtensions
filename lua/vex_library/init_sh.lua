@@ -113,28 +113,31 @@ end
 
 vex.help = function()
     -- Prints information about VExtensions.
-    print([[
-=============================================================
-
-This is the VExtensions addon's help command. Here you will find info about the addon.
-
-This is an addon that adds several extensions and functions to expression2 and starfallex... (more info here)
-
-=============================================================
-    ]])
+    print("Find info about VExtensions at our wiki here: https://github.com/Vurv78/VExtensions/wiki")
 end
+
+local vex_dir
+local _, addons = file.Find( "addons/*", "GAME" )
+for _, name in pairs(addons) do
+    if file.Exists("addons/" .. name .. "/lua/vex_library/init_sh.lua", "GAME") then
+        vex_dir = "addons/" .. name .. "/"
+        break
+    end
+end
+vex.path = vex_dir -- for use in file.Find's
 
 vex.printf = printf
 
-print("Loading VExtensions")
+print "<>==============< Loading VExtensions >==============<>"
 vex.loadModules("vex_library/modules/*_sh.lua",true,"SHARED")
 vex.loadModules("vex_library/modules/server/*.lua",SERVER,"SERVER")
 vex.loadModules("vex_library/modules/client/*.lua",CLIENT,"CLIENT")
+print "<>==============< Loading VExtensions >==============<>"
 
 vex.addConsoleCommandShared("vex_reload",function()
-    printf("Reloaded the %s vex library!", REALM)
     destroyVEx()
     include("vex_library/init_sh.lua")
+    printf("Reloaded %sside libraries!", REALM)
     buildVEx()
 end)
 
