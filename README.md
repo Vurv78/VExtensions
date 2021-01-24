@@ -10,6 +10,14 @@ A compilation of mini-addons for [Expression2](https://github.com/wiremod/wire) 
 Note that this will be unstable outside of releases.
 This is comparable to addons like [AntCore](https://github.com/tockno/E2-AntCore) or E2Power except, unlike E2Power, not filled with bugs and backdoors.
 
+<details><summary>Example Code</summary><p>
+
+```python
+print( runString( " error(\"test\") " ) ) #--> "test"
+```
+More: https://github.com/Vurv78/VExtensions/discussions/categories/show-and-tell
+</p></details>
+
 ## Additions
 
 ### [PrintGlobal - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_printglobal.lua)
