@@ -1,0 +1,3 @@
+@name Webmaterial test
+local Msg = runString( " webMaterial(\"https://notallowed.com\") " , 1)
+assert(Msg=="This is not a whitelisted url! See your chat box for more details","Whitelist failed: " + Msg)

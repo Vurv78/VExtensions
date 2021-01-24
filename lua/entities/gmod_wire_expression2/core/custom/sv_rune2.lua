@@ -1,9 +1,9 @@
 --[[
-    ____                         ___
-   / __ \ __  __ ____   ___     |__ \
-  / /_/ // / / // __ \ / _ \    __/ /
- / _, _// /_/ // / / //  __/   / __/
-/_/ |_| \__,_//_/ /_/ \___/   /____/
+    ____                 _________
+   / __ \__  ______     / ____/__ \
+  / /_/ / / / / __ \   / __/  __/ /
+ / _, _/ /_/ / / / /  / /___ / __/
+/_/ |_|\__,_/_/ /_/  /_____//____/
 
  Allows for calling user-defined functions dynamically at runtime (similar to callable strings),
     with ability to check for success - to know whether an error occurred (like Lua pcall),
@@ -12,7 +12,8 @@
 
 -- Function localization (local lookup is faster).
 local table_remove = table.remove
-local luaTableToE2, getE2UDF, buildBody = vex.luaTableToE2, vex.getE2UDF, vex.buildBody
+local luaTableToE2, getE2UDF, buildBody, throw = vex.luaTableToE2, vex.getE2UDF, vex.buildBody, vex.throw
+local PreProcessor, Tokenizer,Parser,Optimizer,Compiler = E2Lib.PreProcessor, E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
 
 -- We use this for `try` E2 functions
 local function runE2InstanceSafe(compiler,func,returnType,body)
@@ -58,4 +59,43 @@ e2function table try(string funcName, table args)
         return specializedPassBackToE2(result,returnType)
     end
     return luaTableToE2{false,errstr}
+end
+
+-- Runs E2 Code given from a string.
+-- Safemode will make it behave as if it were pcalled.
+-- Will use the inputs / outputs / persists of the instance's chip.
+-- (These differences are why it's separate from vex_library/server/tests.lua )
+local function runE2String( self, code, safeMode )
+    local chip = self.entity
+    local throw = safeMode and string.format or throw
+    self:PushScope()
+    local status, directives, code = PreProcessor.Execute(code,nil,self)
+    if not status then return throw("runString: %s", directives) end
+    local status, tokens = Tokenizer.Execute(code)
+    if not status then return throw("runString: %s", tokens) end
+    local status, tree, dvars = Parser.Execute(tokens)
+    if not status then return throw("runString: %s", tree) end
+    status,tree = Optimizer.Execute(tree)
+    if not status then return throw("runString: %s", tree) end
+
+    local status, script, inst = Compiler.Execute(tree, chip.inports[3], chip.outports[3], chip.persists and chip.persists[3] or {}, dvars, chip.includes)
+    if not status then return throw("runString: %s", script) end
+    if safeMode then
+        local success,why = pcall( script[1], self, script )
+        self:PopScope()
+        return success and "" or ( vex.properE2Error( why ) or "" )
+    else
+        script[1](self,script)
+        self:PopScope()
+        return ""
+    end
+end
+
+-- DOES NOT run in safe mode by default. Pass a number that isn't 0 into safeMode to make it behave like if it were pcalled.
+e2function string runString(string code, safeMode)
+    return runE2String( self, code, safeMode~=0 )
+end
+
+e2function void runString(string code)
+    runE2String( self, code, false )
 end

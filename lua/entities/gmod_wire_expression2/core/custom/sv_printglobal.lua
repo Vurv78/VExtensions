@@ -1,195 +1,190 @@
 --[[
     ____         _         __   ______ __        __            __
    / __ \ _____ (_)____   / /_ / ____// /____   / /_   ____ _ / /
-  / /_/ // ___// // __ \ / __// / __ / // __ \ / __ \ / __ `// / 
- / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /  
-/_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/   
+  / /_/ // ___// // __ \ / __// / __ / // __ \ / __ \ / __ `// /
+ / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /
+/_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/
  Allows for people to print to other's consoles, with warnings and options to disable.
     No RGBA support (for now?)
 ]]
 
 
--- TODO: Rework this
-
 vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and printGlobalClk functions, to print to other player's chats with color, with configurable char, argument and burst limits. vex_printglobal_enable_cl")
 
 vex.addNetString("printglobal")
 
-local CharMax = CreateConVar("vex_printglobal_charmax_sv","450",FCVAR_REPLICATED,"The amount of chars that can be sent with the e2function printGlobal(). Max 2000, default 450",0,2000)
+local CharMax = CreateConVar("vex_printglobal_charmax_sv","500",FCVAR_REPLICATED,"The amount of chars that can be sent with the e2function printGlobal(). Max 2000, default 500",0,2000)
 local ArgMax = CreateConVar("vex_printglobal_argmax_sv","100",FCVAR_REPLICATED,"The amount of arguments that can be sent with the e2function printGlobal(). Max 255, default 100",0,255)
-local BurstMax = CreateConVar("vex_printglobal_burst_sv","4",FCVAR_REPLICATED,"How many times printGlobal can be used in a second. Default 4 times per second, same as default print")
 
-local PrintGBurstCount = {} -- Doesn't need to be cleaned up for now since we end up just resetting the table every time...
-local PrintGCache = WireLib.RegisterPlayerTable{ recent = NULL, {}, "" }
-local PrintGAlert = {}
-local isE2Array = vex.isE2Array
-local format,table_concat,table_insert,table_remove = string.format,table.concat,table.insert,table.remove
+-- RunOn*
+local EventData = WireLib.RegisterPlayerTable{ recent = {NULL, {}, ""} }
+local ChipsSubscribed = {}
+
+local table_concat,table_insert,table_remove = table.concat,table.insert,table.remove
 local isvector,isstring,istable,isnumber = isvector,isstring,istable,isnumber
+local throw,isE2Array = vex.throw,vex.isE2Array
+local net_WriteUInt, net_WriteString = net.WriteUInt, net.WriteString
 
-
--- TODO: Make the cooldownManager compatible for bursts or make a burstManager or something :/
-timer.Create("VurvE2_PrintGlobal",1,0,function()
-    -- Doing this feels terrible
-    PrintGBurstCount = {}
-end)
-
+local PrintGBurst = vex.burstManager(4) -- 4 uses per second
 local function canPrintToPly(ply)
+    if not IsValid(ply) or not ply:IsPlayer() then return false end
     return ply:GetInfoNum("vex_printglobal_enable_cl",0)==1
 end
 
--- Returns whether a value would be fine to use as a vector.
-local function validVector(val)
+-- Returns whether a value would be fine to use as an rgb color.
+local function validColor(val)
     if isvector(val) then return true end
-    if not istable(val) then return false end
+    if not istable(val) then return end
     if #val>3 then return end
-    for I=1,3 do if not isnumber(val[I]) then return false end end
+    for I=1,3 do if not isnumber(val[I]) then return end end
     return true
 end
 
--- TODO: Make this more efficient
-local function printGlobalFormatting(T)
-    local Ind = 1
-    while true do
-        local Current = T[Ind]
-        local Next = T[Ind+1]
-        if not Current then break end
-        if validVector(Current) then
-            if validVector(Next) then
-                table_remove(T,Ind) -- Make sure we don't have trailing vectors
-                continue
+-- Will prepend a color to it if it's missing, etc.
+-- Then it will connect strings and discard trailing colors to get to a
+-- [color, string] pattern.
+local function fix_args( args )
+    local ind,status,len = 1,"",0
+    -- If there's no color at the beginning, add the default one.
+    if not validColor(args[1]) then table_insert(args, 1, {15, 123, 255} ) end
+    local fixed = {}
+    local current = args[ind]
+    local strings,str_count = {},0 -- Each individual string put in a table.
+    repeat
+        local current = args[ind]
+        local next = args[ind]
+        if current==nil then break end
+        ::redo::
+        if validColor(current) then
+            if status == "color" then
+                fixed[len] = current
+                goto skip
             end
-        elseif isstring(Current) then -- Stitch together trailing strings, so we always get a vector, then a string, repeat
-            if isstring(Next) then
-                T[Ind] = Current..Next
-                table_remove(T,Ind+1)
-                continue
+            status = "color"
+        elseif isstring(current) then
+            str_count = str_count + 1
+            strings[str_count] = current
+            if status == "string" then
+                fixed[len] = fixed[len] .. current
+                goto skip
             end
+            status = "string"
+        else
+            current = tostring(current)
+            goto redo
         end
-        Ind = Ind + 1
-    end
-    if not isstring(T[#T]) then T[#T] = nil end
-    if not validVector(T[1]) then table_insert(T,1,{100,100,255}) end
-    return T
+
+        len = len + 1 -- Len is the index of the fixed table that will be used next.
+        fixed[len] = current
+        ::skip::
+        ind = ind + 1 -- Ind is the index of the args table that is being scanned.
+    until current == nil
+    -- If the last arg is a color, get rid of it.
+    if validColor(fixed[len]) then fixed[len] = nil end
+    return fixed, strings
 end
 
-local function printGlobal(T,Sender,Plys)
-    local currentBurst = PrintGBurstCount[Sender] or 0
-    if currentBurst >= BurstMax:GetInt() then return end
+-- Just removes players that don't have printglobal enabled.
+local function fix_target( target )
+    if isentity(target) then return canPrintToPly(target) and target or nil end
+    for k,ply in pairs(target) do
+        if not canPrintToPly(ply) then target[k] = nil end
+    end
+    return target
+end
 
-    local argLimit = ArgMax:GetInt()
-    local argCount = #T
-    if argCount > argLimit then
-        Sender:PrintMessage(HUD_PRINTCONSOLE, format( "printGlobal() silently failed due to arg count [%d] exceeding max args [%d]",argCount,argLimit ) )
-        return
-    end
-    
-    -- Compile all of the string inputs.
-    local printStringTable = {}
-    for K,V in pairs(T) do
-        if isstring(V) then
-            table_insert(printStringTable,V)
-        elseif not validVector(V) then
-            T[K] = tostring(V)
-        end
-    end
-    
-    local charLimit = CharMax:GetInt()
-    local printString = table_concat(printStringTable)
-    if #printString > charLimit then
-        Sender:PrintMessage(HUD_PRINTCONSOLE, format("printGlobal() silently failed due to the given # of characters [%d] exceeding the maximum amount of characters [%d]",#printString,charLimit) )
-        return
-    end
+-- Organizes random arguments given by E2 to a [color, string] pattern then sends the net message
+-- to the client to print the message.
+local function printGlobal(self,target,args)
+    if #args > ArgMax:GetInt() then throw( "Too many arguments in printGlobal call. [%d]", #args) end
+    local sender = self.player
+    -- Makes sure args are in a [color, string] pattern.
 
-    local NewT = printGlobalFormatting(T)
-    local ArgCount = (#NewT)/2
-    if ArgCount <= 100 then
-        -- Make sure there aren't more args than max convar setting (somehow)
-        vex.net_Start("printglobal")
-            net.WriteEntity(Sender)
-            net.WriteInt(ArgCount,9)
-            for I = 1,ArgCount do
-                local Col = T[I*2-1] -- Do not worry, all text is stitched together and is only separated by colors
-                net.WriteColor(Color(Col[1],Col[2],Col[3]))
-                local Text = T[I*2] -- this means that it will 100% always be text,color,text
-                net.WriteString(Text)
-            end
-        if not Plys then Plys = player.GetHumans() end
-        for K,Ply in pairs(Plys) do -- Remove players from the send list who don't have globalchat enabled.
-            if not canPrintToPly(Ply) then Plys[K] = nil end
+    -- Makes sure that the target(s) have printGlobal enabled on their client.
+    target = fix_target( target )
+    if not target or (istable(target) and #target==0) then return end
+
+    local fixed_args,strings = fix_args( args )
+    local total_str = table_concat(strings)
+    -- Each newline in the printed str is +1k OPS to prevent abuse.
+    self.prf = self.prf + select( 2, string.gsub(total_str,"\n","") )*1000
+    local total_str_len = #total_str
+    if total_str_len > CharMax:GetInt() then throw("Too many characters in printGlobal call! [%d]", total_str_len) end
+    local nargs = #fixed_args
+    vex.net_Start("printglobal")
+        net.WriteEntity(sender)
+        net_WriteUInt(nargs,9)
+        for ind = 1,nargs, 2 do
+            local Col = fixed_args[ind] -- Do not worry, all text is stitched together and is only separated by colors
+            net_WriteUInt(Col[1],8)
+            net_WriteUInt(Col[2],8)
+            net_WriteUInt(Col[3],8)
+            net_WriteString( fixed_args[ind+1] )
         end
-        net.Send(Plys)
-        local alertData = {sender = Sender,raw = NewT, text = printString}
-        PrintGCache.recent = alertData
-        PrintGCache[Sender] = alertData
-        for Chip,_ in pairs(PrintGAlert) do
-            if IsValid(Chip) then
-                local context = Chip.context
-                if context.player ~= Sender then -- Don't send runOnGPrint to the initial sender.
-                    context.data.runByPrintGClk = alertData
-                    Chip:Execute()
-                    context.data.runByPrintGClk = nil
-                end
-            else
-                PrintGAlert[Chip] = nil
-            end
+    local bytes = net.BytesWritten()
+    self.prf = self.prf + (bytes * 20)
+    net.Send( target ) -- Make sure to not send the net message to people with printglobal disabled.
+    local event_data = {sender = sender,raw = NewT, text = printString}
+    EventData.recent = event_data
+    EventData[sender] = event_data
+    for Chip,_ in pairs(ChipsSubscribed) do
+        local context = Chip.context
+        if context.player ~= sender then -- Don't send runOnGPrint to the initial sender.
+            context.data.runByPrintGClk = event_data
+            Chip:Execute()
+            context.data.runByPrintGClk = nil
         end
-        PrintGBurstCount[Sender] = currentBurst + 1
     end
 end
 
--- General PrintGlobal (Only args, sends to all)
-local function printGlobalArrayFunc(args,sender,plys)
-    if #plys<1 or #args<1 then return end
-    local sanitized = {}
-    for K,Ply in pairs(plys) do
-        if Ply and Ply:IsValid() and Ply:IsPlayer() then table_insert(sanitized,Ply) end
+-- PrintGlobal, but it works for varargs by allowing the first argument to be either:
+-- A table of players
+-- A single player.
+local function printGlobalSort( self, args )
+    -- Checks whether the first argument given is either a Player or an e2 array (lua table) of Players.
+    if ( isentity(args[1]) and args[1]:IsPlayer() ) or isE2Array(args[1],150,"Player") then
+        local target = table_remove(args, 1)
+        if isE2Array(args[1]) then
+            -- Array of args after target.
+            printGlobal( self, target, table_remove(args,1) )
+        else
+            printGlobal( self, target, args )
+        end
+    else
+        printGlobal( self, player.GetHumans(), args )
     end
-    if #sanitized<1 then
-        local error = format("printGlobal() silently failed due to no valid players being given")
-        sender:PrintMessage(HUD_PRINTCONSOLE,error)
-        return
-    end
-    printGlobal(args,sender,sanitized)
 end
 
 __e2setcost(3)
 e2function number canPrintGlobal()
-    return ((PrintGBurstCount[self.player] or 0) >= BurstMax:GetInt()) and 0 or 1
+    return PrintGBurst:available( self.player ) and 1 or 0
 end
 
+-- Doesn't return 0 if you can't print due to burst reasons though.
 e2function number canPrintTo(entity ply)
     return canPrintToPly(ply) and 1 or 0
 end
 
 __e2setcost(100)
 e2function void printGlobal(...)
-    local args = {...}
-    if #args==0 then return end
-    local sender,first_arg = self.player,args[1]
-    if isentity(first_arg) and IsValid(first_arg) and first_arg:IsPlayer() then -- printGlobal(entity owner(),varargs) to specific entity
-        local ply = table_remove(args,1)
-        return printGlobalArrayFunc(args,sender,{ply})
-    elseif isE2Array(first_arg,150,"Player") then -- printGlobal(array plys, varargs) to array of players
-        local plys = table_remove(args,1)
-        return printGlobalArrayFunc(args,sender,plys)
-    end
-    printGlobal(args,sender,player.GetHumans()) -- printGlobal(varargs) to everyone
+    if not PrintGBurst:use( self.player ) then throw("You can only printGlobal 4 times per second!") end
+    printGlobalSort( self, {...} )
 end
 
 __e2setcost(150)
 e2function void printGlobal(array args) -- Print to everyone with an array of arguments
-    if #args<1 then return end
-    printGlobal(args,self.player,player.GetHumans())
+    if not PrintGBurst:use( self.player ) then throw("You can only printGlobal 4 times per second!") end
+    printGlobalSort( self, args )
 end
 
 e2function void printGlobal(array plys,array args)
-    printGlobalArrayFunc(args,self.player,plys)
+    if not PrintGBurst:use( self.player ) then throw("You can only printGlobal 4 times per second!") end
+    printGlobal( self, fix_target( plys ), args)
 end
 
--- RunOnGChat / Run on global prints -- Vurv
-
+-- RunOnGChat / Run on global prints
 registerCallback("destruct",function(self)
-    PrintGAlert[self.entity] = nil
+    ChipsSubscribed[self.entity] = nil
 end)
 
 __e2setcost(3)
@@ -197,28 +192,27 @@ e2function number printGlobalClk()
     return self.data.runByPrintGClk and 1 or 0
 end
 
--- TODO: Replace with vex e2helperfuncs runOn* system.
 e2function void runOnPrintGlobal(on)
-    PrintGAlert[self.entity] = on~=0 and true or nil
+    ChipsSubscribed[self.entity] = on~=0 and true or nil
 end
 
 __e2setcost(5)
 e2function array lastGPrintRaw() -- Pls give better name
-    return PrintGCache.recent.raw or {}
+    return EventData.recent.raw or {}
 end
 
 e2function array lastGPrintRaw(entity e) -- Pls give better name
-    return PrintGCache[e].raw or {}
+    return EventData[e].raw or {}
 end
 
 e2function entity lastGPrintSender() -- Pls give better name
-    return PrintGCache.recent.sender or NULL
+    return EventData.recent.sender or NULL
 end
 
 e2function string lastGPrintText() -- Pls give better name
-    return PrintGCache.recent.text or ""
+    return EventData.recent.text or ""
 end
 
 e2function string lastGPrintText(entity e) -- Pls give better name
-    return PrintGCache[e].text or ""
+    return EventData[e].text or ""
 end

@@ -1,10 +1,10 @@
 --[[
- _    ________        __    _ __                         
+ _    ________        __    _ __
 | |  / / ____/  __   / /   (_) /_  _________ ________  __
 | | / / __/ | |/_/  / /   / / __ \/ ___/ __ `/ ___/ / / /
-| |/ / /____>  <   / /___/ / /_/ / /  / /_/ / /  / /_/ / 
-|___/_____/_/|_|  /_____/_/_.___/_/   \__,_/_/   \__, /  
-                                                /____/   
+| |/ / /____>  <   / /___/ / /_/ / /  / /_/ / /  / /_/ /
+|___/_____/_/|_|  /_____/_/_.___/_/   \__,_/_/   \__, /
+                                                /____/
 ]]
 -- We will store our global functions here to help us with extension creation
 -- Some examples of things that could be made are functions to return the e2 type of a variable, etc.
@@ -13,7 +13,7 @@
 -- When we reload, we want to first destroy everything that can't be overwritten then run the files once again
 -- Additionally, we might add some custom vex functions in other places than this library, like in an e2 core, so we want to save those.
 
--- Persistent variables 
+-- Persistent variables
 local VEx_toconstruct = nil
 local VEx_todestruct = nil
 
@@ -87,7 +87,7 @@ vex.reloadModule = function(fileName)
     local shared_path = base_path .. fileName
     local realm_path = base_path .. string.lower(REALM) .. "/" .. fileName
     if file.Exists(shared_path,"LUA") then
-        print("Reloaded SHARED module .. " .. fileName)
+        printf("Reloaded SHARED module .. %s", fileName)
         include(shared_path)
     elseif file.Exists(realm_path,"LUA") then
         printf("Reloaded %s module .. %s",REALM,fileName)
@@ -113,28 +113,43 @@ end
 
 vex.help = function()
     -- Prints information about VExtensions.
-    print([[
-=============================================================
-
-This is the VExtensions addon's help command. Here you will find info about the addon.
-
-This is an addon that adds several extensions and functions to expression2 and starfal
-lex... (more info here)
-
-=============================================================
-    ]])
+    print("Find info about VExtensions at our wiki here: https://github.com/Vurv78/VExtensions/wiki")
 end
+
+local vex_dir
+local _, addons = file.Find( "addons/*", "GAME" )
+for _, name in pairs(addons) do
+    if file.Exists("addons/" .. name .. "/lua/vex_library/init_sh.lua", "GAME") then
+        vex_dir = "addons/" .. name .. "/"
+        break
+    end
+end
+vex.path = vex_dir -- for use in file.Find's
+vex.version = "v0.3.0"
 
 vex.printf = printf
 
+print "<>==============< Loading VExtensions >==============<>"
 vex.loadModules("vex_library/modules/*_sh.lua",true,"SHARED")
 vex.loadModules("vex_library/modules/server/*.lua",SERVER,"SERVER")
 vex.loadModules("vex_library/modules/client/*.lua",CLIENT,"CLIENT")
+print "<>==============< Loading VExtensions >==============<>"
+
+vex.addConsoleCommand("vex_version",function(ply)
+    http.Fetch("https://api.github.com/repos/Vurv78/VExtensions/releases/latest",function(body)
+        local json = util.JSONToTable(body)
+        if ply ~= NULL then
+            ply:ChatPrint("Version: " .. vex.version .. "\nLatest Version: " .. json.tag_name)
+        else
+            printf("Version: %s \nLatest Version: %s", vex.version, json.tag_name)
+        end
+    end)
+end)
 
 vex.addConsoleCommandShared("vex_reload",function()
-    printf("Reloaded the %s vex library!", REALM)
     destroyVEx()
     include("vex_library/init_sh.lua")
+    printf("Reloaded %sside libraries!", REALM)
     buildVEx()
 end)
 

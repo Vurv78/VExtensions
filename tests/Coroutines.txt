@@ -1,3 +1,5 @@
+###NORUN because runE2Virtual doesn't like getE2UDF for some reason.
+
 @name Ultimate Coroutine Tester 9000
 # Testing Chip for sv_coroutines.lua in VExtensions
 

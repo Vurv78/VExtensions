@@ -5,7 +5,7 @@ local printf = vex.printf
 local isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction = isbool, isnumber, isstring, isentity, isangle, isvector, istable, IsColor, isfunction
 local getmetatable, pcall, IsValid = getmetatable, pcall, IsValid
 local error = error
-local string, string_format = string, string.format
+local string_format, string_replace = string.format, string.Replace
 
 -- Horrible hack
 if not vex.persists.runs_on then
@@ -33,45 +33,9 @@ end
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 local Default_E2Tbl = vex.newE2Table()
 
--- Screw this anyways.
---[[local function better_validArray(tbl)
-    if not istable(tbl) then return false end
-    for k,v in pairs(tbl) do
-        if not isnumber(k) then return false end -- E2 array cannot have non-number index.
-        if istable(v) then
-            if IsColor(v) then tbl[k] = {v.r,v.g,v.b,v.a} -- Color as Vector4/array
-            elseif v.HitPos then -- Ranger/Trace data
-                -- Do nothing.
-            else
-                return false -- Anything else is a no-no
-            end
-        end
-    end
-    return true
-end]]
-
--- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
--- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
--- typeOf makes sure all elements in an array will be of lua type _.
-local function validArray(tbl,max,typeOf)
-    if not istable(tbl) then return false end
-    local i,max,type_check = 1,max or 5000, isstring(typeOf)
-    for K,V in pairs(tbl) do
-        -- Check if there's any tables in the table
-        if istable(V) then return false end
-        if type_check and type(V) ~= typeOf then return false end
-        -- IsSequential Check
-        if tbl[i] == nil then return false end
-        if i >= max then return false end
-        i = i + 1
-    end
-    return true
-end
-vex.isE2Array = validArray -- more like "can be E2 Array"
-
 -- Allows to very accurately determine whether the given argument has a valid E2 table structure (presence of table fields/keys).
 -- However, it does not validate inner contents (it is assumed to not be malformed inside).
-vex.isE2Table = function(tbl,accurateCheck)
+local function isE2Table(tbl,accurateCheck)
     if not istable(tbl) then return false end
     if accurateCheck then
         -- We perform very accurate checks. (Do not change this code!)
@@ -86,6 +50,26 @@ vex.isE2Table = function(tbl,accurateCheck)
     -- We perform less reliable (this is just a tiny bit faster than the accurate check, saving 1 table lookup):
     return tbl.s and tbl.size and tbl.stypes and tbl.n and tbl.ntypes and true or false
 end
+vex.isE2Table = isE2Table
+
+-- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
+-- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
+-- typeOf makes sure all elements in an array will be of lua type _.
+local function validArray(tbl,max,typeOf)
+    if not istable(tbl) then return false end
+    local i,max,type_check = 1,max or 5000, isstring(typeOf)
+    for K,V in pairs(tbl) do
+        -- Check if there's any e2 tables in the table
+        if isE2Table(V) then return false end
+        if type_check and type(V) ~= typeOf then return false end
+        -- IsSequential Check
+        if tbl[i] == nil then return false end
+        if i >= max then return false end
+        i = i + 1
+    end
+    return true
+end
+vex.isE2Array = validArray -- more like "can be E2 Array"
 
 -- For now, we'll wrap everything that needs to be sanitized by default i guess?
 local function getVarTypeAndSanitize(v,checkForArrays)
@@ -183,6 +167,8 @@ vex.buildBody = function(args)
     return body
 end
 
+
+-- Lua Hooks --> E2 Hooks
 vex.listenE2Hook = function(context,id,dorun)
     if not runs_on[id] then runs_on[id] = {} end
     if not context or not IsValid(context.entity) then return end
@@ -303,4 +289,18 @@ vex.getE2Func = function(funcName, returnTable, skipOperatorFunctions)
             end
         end
     end
+end
+
+local error_reps = {
+    ["perf"] = "tick quota exceeded",
+    ["exit"] = false, -- Isn't actually an error.
+}
+-- E2 Throws raw errors, like 'perf' and 'exit' which are later replaced by their user friendly versions.
+-- 'exit' is not actually supposed to error the chip, but is supposed to stop the execution.
+-- 'perf' is just the back end version of 'tick quota exceeded'.
+vex.properE2Error = function( err )
+    if error_reps[err] ~= nil then return error_reps[err] end
+    err = string_match( err, "^entities/gmod_wire_expression2/core/core.lua:%d+: (.*)$" ) or err
+    err = string_replace( err, "%", "%%" )
+    return err
 end

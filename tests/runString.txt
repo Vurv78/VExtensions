@@ -1,0 +1,6 @@
+@name runString test
+@persist N
+N = 100
+local Code = "#[what]# N = 50"
+runString(Code)
+assert(N==50, "Number didn't change.")

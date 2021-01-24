@@ -8,7 +8,7 @@ end
 vex.net_Receive = function(net_name,callback,dopersist)
     local nm = getNetName(net_name)
     net.Receive(nm,callback)
-    if not dopersist then 
+    if not dopersist then
         -- If we don't specify, we will assume that we use this function in a vex module (therefore it will already overwrite itself, so we just need to delete it.)
         vex.destructor(function()
             net.Receive(nm)
@@ -23,7 +23,6 @@ end
 if SERVER then
     vex.addNetString = function(net_name)
         -- Todo: Put these in a list and add a convar to list them, or something.
-        local nm = getNetName(net_name)
-        util.AddNetworkString(nm)
+        util.AddNetworkString( getNetName(net_name) )
     end
 end

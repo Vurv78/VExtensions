@@ -13,8 +13,7 @@
 -- VRMod Shared Functions ported to E2 by Vurv.
 -- Vurv#6428 (363590853140152321)
 
-if not vrmod then print("VRMod was not detected! Please install VRMod to use the vrmod e2 extension.") end
-if not vex then print("vexlib was not detected in vrmod??!!??! Please report this to here: https://github.com/Vurv78/VExtensions") end
+if not vrmod then return end
 
 -- Enabled by default, since this is super tame
 E2Lib.RegisterExtension("vrmod", true, "Allows E2s to use vrmod functions that let you see where people's hands and vr headsets are for interactive chips!")
