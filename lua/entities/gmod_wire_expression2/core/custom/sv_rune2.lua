@@ -13,7 +13,7 @@
 -- Function localization (local lookup is faster).
 local table_remove = table.remove
 local luaTableToE2, getE2UDF, buildBody, throw = vex.luaTableToE2, vex.getE2UDF, vex.buildBody, vex.throw
-local Tokenizer,Parser,Optimizer,Compiler = E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
+local PreProcessor, Tokenizer,Parser,Optimizer,Compiler = E2Lib.PreProcessor, E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
 
 -- We use this for `try` E2 functions
 local function runE2InstanceSafe(compiler,func,returnType,body)
@@ -69,6 +69,8 @@ local function runE2String( self, code, safeMode )
     local chip = self.entity
     local throw = safeMode and string.format or throw
 
+    local status, directives, code = PreProcessor.Execute(code,nil,self)
+    if not status then return throw("runString: %s", directives) end
 	local status, tokens = Tokenizer.Execute(code)
 	if not status then return throw("runString: %s", tokens) end
 	local status, tree, dvars = Parser.Execute(tokens)

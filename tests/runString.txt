@@ -1,0 +1,4 @@
+@name runString test
+local Code = "#[what]# entity():setColor( vec(255,0,0) )"
+runString(Code)
+assert(entity():getColor()==vec(255,0,0), "runString test failed")

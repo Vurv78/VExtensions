@@ -2,7 +2,7 @@
 -- It will do this by using vex.runE2.
 
 local printf = vex.printf
-local Tokenizer,Parser,Optimizer,Compiler = E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
+local PreProcessor,Tokenizer,Parser,Optimizer,Compiler = E2Lib.PreProcessor, E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
 
 -- Out of all the things for the E2Lib to not have, they are missing this. So... we have to copy the code.
 -- Nice.
@@ -80,7 +80,7 @@ end
 -- Will always run in safe mode
 local function runE2Virtual( code )
     local ctx = newE2Instance()
-    local status, directives, code = E2Lib.PreProcessor.Execute(code,nil,ctx)
+    local status, directives, code = PreProcessor.Execute(code,nil,ctx)
     if not status then return false, directives end -- Preprocessor failed.
     local status, tokens = Tokenizer.Execute(code)
     if not status then return false, tokens end -- Tokenizer failed.
