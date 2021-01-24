@@ -13,14 +13,14 @@ vex.registerExtension("printGlobal", true, "Allows E2s to use printGlobal and pr
 
 vex.addNetString("printglobal")
 
-local CharMax = CreateConVar("vex_printglobal_charmax_sv","450",FCVAR_REPLICATED,"The amount of chars that can be sent with the e2function printGlobal(). Max 2000, default 450",0,2000)
+local CharMax = CreateConVar("vex_printglobal_charmax_sv","500",FCVAR_REPLICATED,"The amount of chars that can be sent with the e2function printGlobal(). Max 2000, default 500",0,2000)
 local ArgMax = CreateConVar("vex_printglobal_argmax_sv","100",FCVAR_REPLICATED,"The amount of arguments that can be sent with the e2function printGlobal(). Max 255, default 100",0,255)
 
 -- RunOn*
 local EventData = WireLib.RegisterPlayerTable{ recent = {NULL, {}, ""} }
 local ChipsSubscribed = {}
 
-local format,table_concat,table_insert,table_remove = string.format,table.concat,table.insert,table.remove
+local table_concat,table_insert,table_remove = table.concat,table.insert,table.remove
 local isvector,isstring,istable,isnumber = isvector,isstring,istable,isnumber
 local throw,isE2Array = vex.throw,vex.isE2Array
 local net_WriteUInt, net_WriteString = net.WriteUInt, net.WriteString
@@ -45,7 +45,7 @@ end
 local function fix_args( args )
     local ind,status,len = 1,"",0
     -- If there's no color at the beginning, add the default one.
-    if not validColor(args[1]) then table.insert(args, 1, {15, 123, 255} ) end
+    if not validColor(args[1]) then table_insert(args, 1, {15, 123, 255} ) end
     local fixed = {}
     local current = args[ind]
     local strings,str_count = {},0 -- Each individual string put in a table.
@@ -85,7 +85,7 @@ end
 
 -- Just removes players that don't have printglobal enabled.
 local function fix_target( target )
-    if isentity(target) then return target end
+    if isentity(target) then return canPrintToPly(target) and target or nil end
     for k,ply in pairs(target) do
         if not canPrintToPly(ply) then target[k] = nil end
     end
@@ -94,17 +94,24 @@ end
 
 -- Organizes random arguments given by E2 to a [color, string] pattern then sends the net message
 -- to the client to print the message.
-local function printGlobal(sender,target,args)
+local function printGlobal(self,target,args)
     if #args > ArgMax:GetInt() then throw( "Too many arguments in printGlobal call. [%d]", #args) end
-
+    local sender = self.player
     -- Makes sure args are in a [color, string] pattern.
+
+    -- Makes sure that the target(s) have printGlobal enabled on their client.
+    target = fix_target( target )
+    if not target or (istable(target) and #target==0) then return end
+
     local fixed_args,strings = fix_args( args )
     local total_str = table_concat(strings)
+    -- Each newline in the printed str is +1k OPS to prevent abuse.
+    self.prf = self.prf + select( 2, string.gsub(total_str,"\n","") )*1000
     local total_str_len = #total_str
     if total_str_len > CharMax:GetInt() then throw("Too many characters in printGlobal call! [%d]", total_str_len) end
     local nargs = #fixed_args
     vex.net_Start("printglobal")
-        net.WriteEntity(Sender)
+        net.WriteEntity(sender)
         net_WriteUInt(nargs,9)
         for ind = 1,nargs, 2 do
             local Col = fixed_args[ind] -- Do not worry, all text is stitched together and is only separated by colors
@@ -113,7 +120,9 @@ local function printGlobal(sender,target,args)
             net_WriteUInt(Col[3],8)
             net_WriteString( fixed_args[ind+1] )
         end
-    net.Send( fix_target( target ) ) -- Make sure to not send the net message to people with printglobal disabled.
+    local bytes = net.BytesWritten()
+    self.prf = self.prf + (bytes * 20)
+    net.Send( target ) -- Make sure to not send the net message to people with printglobal disabled.
     local event_data = {sender = sender,raw = NewT, text = printString}
     EventData.recent = event_data
     EventData[sender] = event_data
@@ -130,18 +139,24 @@ end
 -- PrintGlobal, but it works for varargs by allowing the first argument to be either:
 -- A table of players
 -- A single player.
-local function printGlobalSort( ply, args )
+local function printGlobalSort( self, args )
     -- Checks whether the first argument given is either a Player or an e2 array (lua table) of Players.
     if ( isentity(args[1]) and args[1]:IsPlayer() ) or isE2Array(args[1],150,"Player") then
-        printGlobal( ply,  table_remove(args,1) , args )
+        local target = table_remove(args, 1)
+        if isE2Array(args[1]) then
+            -- Array of args after target.
+            printGlobal( self, target, table_remove(args,1) )
+        else
+            printGlobal( self, target, args )
+        end
     else
-        printGlobal( ply, player.GetHumans(), args )
+        printGlobal( self, player.GetHumans(), args )
     end
 end
 
 __e2setcost(3)
 e2function number canPrintGlobal()
-    return PrintGBurst:available( self.player )
+    return PrintGBurst:available( self.player ) and 1 or 0
 end
 
 -- Doesn't return 0 if you can't print due to burst reasons though.
@@ -151,19 +166,19 @@ end
 
 __e2setcost(100)
 e2function void printGlobal(...)
-    if not PrintGBurst:use( self.player ) then throw("You can only print 4 times per second!") end
-    printGlobalSort( self.player, {...} )
+    if not PrintGBurst:use( self.player ) then throw("You can only printGlobal 4 times per second!") end
+    printGlobalSort( self, {...} )
 end
 
 __e2setcost(150)
 e2function void printGlobal(array args) -- Print to everyone with an array of arguments
-    if not PrintGBurst:use( self.player ) then throw("You can only print 4 times per second!") end
-    printGlobalSort( self.player, args )
+    if not PrintGBurst:use( self.player ) then throw("You can only printGlobal 4 times per second!") end
+    printGlobalSort( self, args )
 end
 
 e2function void printGlobal(array plys,array args)
-    if not PrintGBurst:use( self.player ) then throw("You can only print 4 times per second!") end
-    printGlobal( self.player, fix_target( plys ), args)
+    if not PrintGBurst:use( self.player ) then throw("You can only printGlobal 4 times per second!") end
+    printGlobal( self, fix_target( plys ), args)
 end
 
 -- RunOnGChat / Run on global prints

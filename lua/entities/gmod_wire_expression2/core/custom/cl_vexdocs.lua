@@ -39,6 +39,9 @@ desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 
 desc("try(s)","Tries to run the given string as UDF. Returns a table with the first element being a number 1 or 0 stating whether it ran successfully, and the second element being either the error message or the return value of the given UDF function. Does not throw error if UDF is undefined. Like pcall")
 desc("try(st)","Works like the try(s) function, but also allows to pass arguments to the function in the form of table, make sure UDF's first argument is of type table")
 
+desc("runString(s)","Runs E2 code. Don't use this in any chat commands unless only you can use it or you make sure people don't run malicious things like concmd!")
+desc("runString(sn)","runString(s), but if n is not 0, the script runs in safe mode, and if the script errors, will return the error string, else \"\"")
+
 --[[
     ____         _         __   ______ __        __            __
    / __ \ _____ (_)____   / /_ / ____// /____   / /_   ____ _ / /

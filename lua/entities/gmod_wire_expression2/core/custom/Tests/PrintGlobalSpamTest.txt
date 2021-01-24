@@ -9,15 +9,14 @@ if(first()){
     runOnTick(1)  
 }elseif(tickClk()){
     if(Test==1){
-        while(perf()){
+        while( perf() & canPrintGlobal() ){
             printGlobal(owner(),"cool")
         }
-    }elseif(Test==2){
+    }elseif( Test==2 & canPrintGlobal() ){
         Args = array(vec(255,0,0),"test")
-        while(perf(5)){
+        while(perf(2)){
             Args=Args:add(Args)
         }
-        print(Args)
         printGlobal(owner(),Args)
     }
 }

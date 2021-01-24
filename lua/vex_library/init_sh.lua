@@ -1,10 +1,10 @@
 --[[
- _    ________        __    _ __                         
+ _    ________        __    _ __
 | |  / / ____/  __   / /   (_) /_  _________ ________  __
 | | / / __/ | |/_/  / /   / / __ \/ ___/ __ `/ ___/ / / /
-| |/ / /____>  <   / /___/ / /_/ / /  / /_/ / /  / /_/ / 
-|___/_____/_/|_|  /_____/_/_.___/_/   \__,_/_/   \__, /  
-                                                /____/   
+| |/ / /____>  <   / /___/ / /_/ / /  / /_/ / /  / /_/ /
+|___/_____/_/|_|  /_____/_/_.___/_/   \__,_/_/   \__, /
+                                                /____/
 ]]
 -- We will store our global functions here to help us with extension creation
 -- Some examples of things that could be made are functions to return the e2 type of a variable, etc.
@@ -13,7 +13,7 @@
 -- When we reload, we want to first destroy everything that can't be overwritten then run the files once again
 -- Additionally, we might add some custom vex functions in other places than this library, like in an e2 core, so we want to save those.
 
--- Persistent variables 
+-- Persistent variables
 local VEx_toconstruct = nil
 local VEx_todestruct = nil
 
@@ -87,7 +87,7 @@ vex.reloadModule = function(fileName)
     local shared_path = base_path .. fileName
     local realm_path = base_path .. string.lower(REALM) .. "/" .. fileName
     if file.Exists(shared_path,"LUA") then
-        print("Reloaded SHARED module .. " .. fileName)
+        printf("Reloaded SHARED module .. %s", fileName)
         include(shared_path)
     elseif file.Exists(realm_path,"LUA") then
         printf("Reloaded %s module .. %s",REALM,fileName)
@@ -118,8 +118,7 @@ vex.help = function()
 
 This is the VExtensions addon's help command. Here you will find info about the addon.
 
-This is an addon that adds several extensions and functions to expression2 and starfal
-lex... (more info here)
+This is an addon that adds several extensions and functions to expression2 and starfallex... (more info here)
 
 =============================================================
     ]])
@@ -127,6 +126,7 @@ end
 
 vex.printf = printf
 
+print("Loading VExtensions")
 vex.loadModules("vex_library/modules/*_sh.lua",true,"SHARED")
 vex.loadModules("vex_library/modules/server/*.lua",SERVER,"SERVER")
 vex.loadModules("vex_library/modules/client/*.lua",CLIENT,"CLIENT")

@@ -33,30 +33,9 @@ end
 vex.newE2Table = function() return {n={},ntypes={},s={},stypes={},size=0} end
 local Default_E2Tbl = vex.newE2Table()
 
--- Screw this anyways.
-
--- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
--- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
--- typeOf makes sure all elements in an array will be of lua type _.
-local function validArray(tbl,max,typeOf)
-    if not istable(tbl) then return false end
-    local i,max,type_check = 1,max or 5000, isstring(typeOf)
-    for K,V in pairs(tbl) do
-        -- Check if there's any tables in the table
-        if istable(V) then return false end
-        if type_check and type(V) ~= typeOf then return false end
-        -- IsSequential Check
-        if tbl[i] == nil then return false end
-        if i >= max then return false end
-        i = i + 1
-    end
-    return true
-end
-vex.isE2Array = validArray -- more like "can be E2 Array"
-
 -- Allows to very accurately determine whether the given argument has a valid E2 table structure (presence of table fields/keys).
 -- However, it does not validate inner contents (it is assumed to not be malformed inside).
-vex.isE2Table = function(tbl,accurateCheck)
+local function isE2Table(tbl,accurateCheck)
     if not istable(tbl) then return false end
     if accurateCheck then
         -- We perform very accurate checks. (Do not change this code!)
@@ -71,6 +50,26 @@ vex.isE2Table = function(tbl,accurateCheck)
     -- We perform less reliable (this is just a tiny bit faster than the accurate check, saving 1 table lookup):
     return tbl.s and tbl.size and tbl.stypes and tbl.n and tbl.ntypes and true or false
 end
+vex.isE2Table = isE2Table
+
+-- Returns whether a table is numerically indexed and if it doesn't contain any other tables inside of it.
+-- Taxing, this is why we will have the arrayOptimization / checkForArrays arg
+-- typeOf makes sure all elements in an array will be of lua type _.
+local function validArray(tbl,max,typeOf)
+    if not istable(tbl) then return false end
+    local i,max,type_check = 1,max or 5000, isstring(typeOf)
+    for K,V in pairs(tbl) do
+        -- Check if there's any e2 tables in the table
+        if isE2Table(V) then return false end
+        if type_check and type(V) ~= typeOf then return false end
+        -- IsSequential Check
+        if tbl[i] == nil then return false end
+        if i >= max then return false end
+        i = i + 1
+    end
+    return true
+end
+vex.isE2Array = validArray -- more like "can be E2 Array"
 
 -- For now, we'll wrap everything that needs to be sanitized by default i guess?
 local function getVarTypeAndSanitize(v,checkForArrays)
