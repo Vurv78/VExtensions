@@ -43,9 +43,12 @@ end
 -- Someone rename this pls
 -- E2 construction assumes the entity has a few properties
 -- (inports, outports), so we'll add them here.
-local function initEntity( ent )
+local function initEntity( ent, ctx )
     ent.outports = { {}, {}, {} }
     ent.inports = { {}, {}, {} }
+    ent.context = ctx
+    ent.GlobalScope = ctx.GlobalScope
+    ent._vars = ent.GlobalScope -- Dupevars
 end
 
 local function newE2Instance()
@@ -65,7 +68,7 @@ local function newE2Instance()
         includes = {}
     },ScopeManager)
     ctx:InitScope()
-    initEntity( ctx.entity )
+    initEntity( ctx.entity, ctx )
     local ok, why = pcall(wire_expression2_CallHook, "construct", ctx)
     if not ok then
         -- If constructing fails in the process, cleanup
@@ -80,6 +83,7 @@ end
 -- Will always run in safe mode
 local function runE2Virtual( code )
     local ctx = newE2Instance()
+    ctx:PushScope()
     local status, directives, code = PreProcessor.Execute(code,nil,ctx)
     if not status then return false, directives end -- Preprocessor failed.
     local status, tokens = Tokenizer.Execute(code)
@@ -92,6 +96,7 @@ local function runE2Virtual( code )
     if not status then return false, script end -- Compiler failed
 
     local success,why = pcall( script[1], ctx, script )
+    ctx:PopScope()
 
     -- Cleanup the code so if you have runOnTick it won't exist permanently
     pcall(wire_expression2_CallHook, "destruct", ctx)
@@ -100,15 +105,18 @@ local function runE2Virtual( code )
 end
 
 vex.addConsoleCommand("vex_test",function(_, cmd, args)
-    local failed = false
+    local failed = 0
     for _, file_name in pairs( file.Find( vex.path .. "tests/*.txt" , "GAME" ) ) do
-        local success, err = runE2Virtual( file.Read(vex.path .. "tests/" .. file_name,"GAME") )
-        if not success then
-            printf("%s test failed. [%s]", file_name, err)
-            failed = true
+        local code = file.Read(vex.path .. "tests/" .. file_name,"GAME")
+        if not code:StartWith("###NORUN") then
+            local success, err = runE2Virtual( code )
+            if not success then
+                printf("%s test failed. [%s]", file_name, err)
+                failed = failed + 1
+            end
         end
     end
-    if failed then print("Some tests failed!") end
+    printf("%d tests failed!", failed)
 end)
 
 vex.addConsoleCommand("vex_rune2",function(_, _, _, argstr)

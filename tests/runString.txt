@@ -1,4 +1,6 @@
 @name runString test
-local Code = "#[what]# entity():setColor( vec(255,0,0) )"
+@persist N
+N = 100
+local Code = "#[what]# N = 50"
 runString(Code)
-assert(entity():getColor()==vec(255,0,0), "runString test failed")
+assert(N==50, "Number didn't change.")

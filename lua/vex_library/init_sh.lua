@@ -125,6 +125,7 @@ for _, name in pairs(addons) do
     end
 end
 vex.path = vex_dir -- for use in file.Find's
+vex.version = "v0.3.0"
 
 vex.printf = printf
 
@@ -133,6 +134,17 @@ vex.loadModules("vex_library/modules/*_sh.lua",true,"SHARED")
 vex.loadModules("vex_library/modules/server/*.lua",SERVER,"SERVER")
 vex.loadModules("vex_library/modules/client/*.lua",CLIENT,"CLIENT")
 print "<>==============< Loading VExtensions >==============<>"
+
+vex.addConsoleCommand("vex_version",function(ply)
+    http.Fetch("https://api.github.com/repos/Vurv78/VExtensions/releases/latest",function(body)
+        local json = util.JSONToTable(body)
+        if ply ~= NULL then
+            ply:ChatPrint("Version: " .. vex.version .. "Latest Version: " .. json.tag_name)
+        else
+            printf("Version: %s \nLatest Version: %s", vex.version, json.tag_name)
+        end
+    end)
+end)
 
 vex.addConsoleCommandShared("vex_reload",function()
     destroyVEx()

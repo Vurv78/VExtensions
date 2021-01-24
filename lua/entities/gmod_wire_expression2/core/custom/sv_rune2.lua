@@ -68,22 +68,25 @@ end
 local function runE2String( self, code, safeMode )
     local chip = self.entity
     local throw = safeMode and string.format or throw
-
+    self:PushScope()
     local status, directives, code = PreProcessor.Execute(code,nil,self)
     if not status then return throw("runString: %s", directives) end
-	local status, tokens = Tokenizer.Execute(code)
-	if not status then return throw("runString: %s", tokens) end
-	local status, tree, dvars = Parser.Execute(tokens)
-	if not status then return throw("runString: %s", tree) end
-	status,tree = Optimizer.Execute(tree)
-	if not status then return throw("runString: %s", tree) end
-	local status, script, inst = Compiler.Execute(tree, chip.inports[3], chip.outports[3], chip.persists[3], dvars, chip.includes)
-	if not status then return throw("runString: %s", script) end
+    local status, tokens = Tokenizer.Execute(code)
+    if not status then return throw("runString: %s", tokens) end
+    local status, tree, dvars = Parser.Execute(tokens)
+    if not status then return throw("runString: %s", tree) end
+    status,tree = Optimizer.Execute(tree)
+    if not status then return throw("runString: %s", tree) end
+
+    local status, script, inst = Compiler.Execute(tree, chip.inports[3], chip.outports[3], chip.persists and chip.persists[3] or {}, dvars, chip.includes)
+    if not status then return throw("runString: %s", script) end
     if safeMode then
         local success,why = pcall( script[1], self, script )
+        self:PopScope()
         return success and "" or ( vex.properE2Error( why ) or "" )
     else
         script[1](self,script)
+        self:PopScope()
         return ""
     end
 end
