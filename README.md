@@ -4,6 +4,7 @@
 ![Contributors](https://img.shields.io/github/contributors/Vurv78/VExtensions?style=flat-square)
 ![Activity](https://img.shields.io/github/commit-activity/m/Vurv78/VExtensions?color=yellow&style=flat-square)
 [![Featured Server](https://img.shields.io/badge/Featured%20Server-E2%20Beyond%20Infinity-lightgrey?style=flat-square)](steam://connect/69.140.244.127:27015)
+[![Wiki](https://img.shields.io/badge/Wiki-here-purple.svg?style=flat-square)](https://github.com/Vurv78/VExtensions/wiki)
 
 A compilation of mini-addons for [Expression2](https://github.com/wiremod/wire) and [StarfallEx](https://github.com/thegrb93/StarfallEx) development as well as a library to assist developers make more of them.
 
@@ -72,6 +73,3 @@ StarfallEx:
 ```
 player:setEyeAngles(angle ang)
 ```
-
-## More Info
-More info can be found at the WIP Wiki here: https://github.com/Vurv78/VExtensions/wiki
