@@ -14,7 +14,7 @@ This is comparable to addons like [AntCore](https://github.com/tockno/E2-AntCore
 <details><summary>Example Code</summary><p>
 
 ```python
-print( runString( " error(\"test\") " ) ) #--> "test"
+print( runString("error(\"test\")", 1) ) #--> "test"
 ```
 More: https://github.com/Vurv78/VExtensions/discussions/categories/show-and-tell
 </p></details>
