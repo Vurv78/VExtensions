@@ -151,7 +151,9 @@ vex.net_Receive("webmaterial_create",function()
     -- On webmaterial creation.
     local url = net.ReadString()
     local ply = net.ReadEntity()
+    -- We read the UInt instead of directly doing net.ReadEntity, because net.ReadEntity might return NULL, which wouldn't let us keep track of which chip's items to cleanup..
     local chipid = net.ReadUInt(16)
+
     -- By default, web materials will be 512x512, todo: make a resizing method
     getURLMaterialEx(url,512,512,function(mat,url,w,h,webmaterial)
         webMaterialSetOwner(url,ply)

@@ -1,0 +1,14 @@
+@name Chat Colorer
+@persist Owner:entity
+
+# This chip hides your chat and prints instead,
+# Turning your name blue and text gray.
+
+if(first()){
+    runOnChat(1)
+    Owner = owner()
+}elseif(chatClk(Owner)){
+    hideChat(1)
+    local Text = lastSaid()
+    printGlobal(vec(50,50,200), Owner:name(), vec(255), ": ", vec(220), Text)
+}

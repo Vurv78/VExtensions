@@ -1,14 +1,17 @@
 --[[
- _       __     __    __  ___      __            _       __    
+ _       __     __    __  ___      __            _       __
 | |     / /__  / /_  /  |/  /___ _/ /____  _____(_)___ _/ /____
 | | /| / / _ \/ __ \/ /|_/ / __ `/ __/ _ \/ ___/ / __ `/ / ___/
-| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  ) 
-|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/  
+| |/ |/ /  __/ /_/ / /  / / /_/ / /_/  __/ /  / / /_/ / (__  )
+|__/|__/\___/_.___/_/  /_/\__,_/\__/\___/_/  /_/\__,_/_/____/
     Allow players to interact with materials fetched from the web
 ]]
 
 local URLWhitelist = CreateConVar("vex_webmaterials_whitelist_sv","1",FCVAR_REPLICATED,"Whether webmaterials should be restricted by the whitelist or not.")
 local MaxMaterials = CreateConVar("vex_webmaterials_max_sv","5",FCVAR_REPLICATED,"How many webmaterials each player is allowed to have at once before needing to clear them.")
+
+-- VEx library imports
+local throw = vex.throw
 
 vex.registerExtension("webMaterials", true, "Allows E2s to use webmaterials in egp, with functions like egpImageBox, to see whitelisted links.")
 vex.addNetString("webmaterial_destroy")
@@ -40,7 +43,7 @@ local URLMatches = {
 
     -- Spotify API Images for something like a music player :v)
     "^i%.scdn%.co/image/.*$",
-	
+
     -- Reddit
     "^i%.redd%.it/.*$"
 }
@@ -71,42 +74,45 @@ local WebMaterial = {
 }
 WebMaterial.__index = WebMaterial
 
-local function iswm(wm)
+local function is_webmaterial(wm)
     return wm and istable(wm) and wm.wm
 end
 
 registerType("webmaterial", "xwm", nil,
-	nil,
-	nil,
-	function(ret)
-		if not ret then return end
-        	if not iswm(ret) then error("Return value is neither nil nor a webmaterial, but a "..type(ret).."!",0) end
-	end,
-	function(v)
-		return type(v)~="table" and not v.wm
-	end
+    nil,
+    nil,
+    function(ret)
+        if not ret then return end
+        if not is_webmaterial(ret) then throw("Return value is neither nil nor a webmaterial, but a %s!",type(ret)) end
+    end,
+    function(v)
+        return type(v)~="table" and not v.wm
+    end
 )
 
-e2function webmaterial operator=(webmaterial lhs, webmaterial rhs) -- Co = coroutine("bruh(e:)")
-	local scope = self.Scopes[ args[4] ]
-	scope[lhs] = rhs
-	scope.vclk[lhs] = true
-	return rhs
+e2function webmaterial operator=(webmaterial lhs, webmaterial rhs) -- Mat = webMaterial(s)
+    local scope = self.Scopes[ args[4] ]
+    scope[lhs] = rhs
+    scope.vclk[lhs] = true
+    return rhs
 end
 
-e2function number operator==(webmaterial lhs, webmaterial rhs) -- if(coroutineRunning()==Co)
+e2function number operator==(webmaterial lhs, webmaterial rhs) -- if(Material==Material2)
     return lhs == rhs
 end
 
-e2function number operator_is(webmaterial wm) -- if(coroutineRunning())
-    return iswm and 1 or 0
+e2function number operator_is(webmaterial wm) -- if(Material)
+    return is_webmaterial(wm) and 1 or 0
 end
 
 -- todo: Replace this with a proper system with the objectManager.
 local webmaterials_cache = {}
 local function webMaterial(url,owner)
-    local creator = webmaterials_cache[url] or owner
-    return setmetatable({url = url, creator = creator, cached = webmaterials_cache[url]~=nil},WebMaterial)
+    return setmetatable({
+        url = url,
+        creator = webmaterials_cache[url] or owner,
+        cached = webmaterials_cache[url]~=nil
+    },WebMaterial)
 end
 
 -- Restrict the amount of times you can call net-related functions to avoid client-crashers / net spam.
@@ -201,31 +207,32 @@ e2function number webMaterialCount()
 end
 
 e2function string webmaterial:url()
-    if not this then return "" end
+    if not is_webmaterial(this) then return "" end
     return this.url or ""
 end
 
 -- Bloat function. Might be deleted.
 -- Returns whether this is a cached webmaterial or not. Idk why you'd need this. Why not I guess.
 e2function number webmaterial:cached()
+    if not is_webmaterial(this) then return 0 end
     return this.cached and 1 or 0
 end
 
 -- Bloat function. Might be deleted.
 -- Would return the original person to create the webmaterial if you make another one that ends up caching it. Idk why you'd need this. Why not I guess.
 e2function entity webmaterial:creator()
+    if not is_webmaterial(this) then return NULL end
     return this.creator or NULL
 end
 
 e2function number webmaterial:destroyed()
-    if not this then return 0 end
-    if this.destroyed then return 1 end
-    return 0
+    if not is_webmaterial(this) then return 0 end
+    return this.destroyed and 1 or 0
 end
 
 __e2setcost(30)
 e2function number webmaterial:destroy()
-    if not this then return 0 end
+    if not is_webmaterial(this) then return 0 end
     local ply = self.player
     if not material_manager:grab(ply,this.url) then return 0 end -- Material doesn't exist??
     material_manager:release(ply,this.url)
@@ -256,23 +263,21 @@ __e2setcost(100)
 e2function webmaterial webMaterial(string url)
     local ply = self.player
     if not webmat_net:use(ply) then return end
-    if #url > 2000 then
-        error("This url is too long!",0)
-    end
+    if #url > 2000 then throw("This url is too long! [%s]", url:sub(1,20) ) end
     if not isGoodURL(url) then
         ply:ChatPrint("For the full list of whitelisted domains for urls, check here: [https://github.com/Vurv78/VExtensions/blob/33501e91c7b09c4f4ed0ace16b62c702251bb132/lua/entities/gmod_wire_expression2/core/custom/sv_imagebox.lua#L21]")
-        error("This is not a whitelisted url! See your chat box for more details",0)
+        throw("This is not a whitelisted url! See your chat box for more details")
     end
     local wm = webMaterial(url,ply)
     if not material_manager:set(ply,url,wm) then
         printf("%s (%s) just hit the max # of webmaterials (%d)!",ply:GetName(),ply:SteamID(),material_manager.maxply)
-        error("You have reached the max amount of webmaterials!",0)
+        throw("You have reached the max amount of webmaterials!")
     end
     self.data.webmaterials[wm] = true -- Keep in chip's storage to destroy on chip deletion
     vex.net_Start("webmaterial_create")
         net.WriteString(url)
         net.WriteEntity(ply)
-        net.WriteUInt(self.entity:EntIndex(),16)
+        net.WriteEntity(self.entity)
     net.Send(getNetPlayerList())
     return wm
 end
@@ -281,7 +286,7 @@ __e2setcost(150)
 -- If you are wondering, gifs do not work
 -- Creates a webmaterial for you automatically.
 e2function webmaterial wirelink:egpImageBox( number index, vector2 pos, vector2 size , string url )
-    if (!EGP:IsAllowed( self, this )) then return end
+    if not EGP:IsAllowed( self, this ) then return end
     local ply = self.player
     if not webmat_net:use(ply) then return end
     if #url > 2000 then
@@ -305,25 +310,30 @@ end
 
 __e2setcost(80)
 e2function webmaterial wirelink:egpImageBox(number index, vector2 pos, vector2 size, webmaterial wm)
-    if (!EGP:IsAllowed( self, this )) then return end
+    if not EGP:IsAllowed( self, this ) then return end
     local bool, obj = EGP:CreateObject( this, EGP.Objects.Names["ImageBox"], { index = index, w = size[1], h = size[2], x = pos[1], y = pos[2], url = wm.url, ply = wm.owner}, self.player )
     if bool then EGP:DoAction( this, self, "SendObject", obj ) Update(self,this) end
     return wm
 end
 
-local function isOwner(self,ent)
+-- Returns a fake trace structure that just returns a trace that hit the entity given.
+-- Used for canTool.
+local getEntTrace = WireLib.dummytrace
+
+-- Returns whether an instance (self)'s player can tool prop ent.
+local function canTool(self, ent)
     if not self then return false end
+    if not IsValid(ent) then return false end
     if not IsValid(ent:GetOwner()) then return true end
-    return ent:GetOwner() == self.player
+    return gamemode.Call("CanTool", self.player, WireLib.dummytrace(ent), "material")
 end
 
 e2function number entity:setMaterial(webmaterial wm)
-    if not iswm(wm) then return 0 end
-    if not IsValid(this) then return 0 end
-    if not isOwner(self, this) then return 0 end
+    if not is_webmaterial(wm) then return 0 end
+    if not canTool(self, this) then return 0 end
     local ply = self.player
     if not webmat_net_spam:use(ply) then return 0 end
-    webmat_net_apply:queue(ply,function()
+    webmat_net_apply:queue(ply,function() -- We shouldn't use queue at all. todo
         vex.net_Start("webmaterial_apply")
             net.WriteString(wm.url)
             net.WriteEntity(this)

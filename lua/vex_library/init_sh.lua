@@ -20,7 +20,7 @@ local VEx_todestruct = nil
 local REALM = SERVER and "SERVER" or "CLIENT"
 local RLM = SERVER and "sv" or "cl"
 
-local format = string.format
+local print, format = print, string.format
 local function printf(...)
     print(format(...))
 end
@@ -124,8 +124,8 @@ for _, name in pairs(addons) do
         break
     end
 end
-vex.path = vex_dir -- for use in file.Find's
-vex.version = "v0.3.0"
+vex.path = vex_dir -- for use in file.Find calls
+vex.version = "v0.3.1"
 
 vex.printf = printf
 

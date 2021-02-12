@@ -1,0 +1,9 @@
+@name Webmaterials Prop Example
+@persist P:entity M:webmaterial
+if(first()){
+    P = propSpawn("models/hunter/blocks/cube075x075x075.mdl",entity():pos(),ang(),0)
+    M = webMaterial("https://i.imgur.com/lfBBhiE.png")
+    interval(100)
+}else{
+    P:setMaterial( M )
+}

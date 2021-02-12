@@ -304,3 +304,9 @@ vex.properE2Error = function( err )
     err = string_replace( err, "%", "%%" )
     return err
 end
+
+vex.validPlayer = function( ply )
+    if not ply then return end
+    if type(ply)~="Player" then return end
+    return IsValid(ply)
+end

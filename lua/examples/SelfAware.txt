@@ -1,0 +1,19 @@
+@name SelfAware Extended Example
+# Say a function name in chat, and the chip will print the OPS cost of the function.
+
+if(first()){
+    runOnChat(1)    
+}elseif(chatClk()){
+    local YELLOW = vec(255,255,50)
+    local WHITE = vec(255)
+    local RED = vec(200,70,70)
+
+    local FuncName = lastSaid():explode(" ")[1,string]
+    local FuncData = getBuiltinFuncInfo(FuncName)
+    if(FuncData){
+        local OPSCost = FuncData[3,number]
+        printGlobal(RED, "Function", WHITE, ": ", YELLOW, FuncName, RED, "\nCosts", WHITE, ": ", YELLOW, OPSCost, " ops")
+    }else{
+        printGlobal(RED, "No function data found for: ", YELLOW, FuncName)
+    }
+}

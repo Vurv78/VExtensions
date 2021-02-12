@@ -32,10 +32,12 @@ desc("hideChatPly(en)","Hides the chat of the player given [e] with n as 1 or 0 
  / _, _/ /_/ / / / / /___ / __/
 /_/ |_|\__,_/_/ /_/_____//____/
 
- Allows for calling user-defined functions dynamically at runtime (similar to callable strings),
-    with ability to check for success - to know whether an error occurred (like Lua pcall),
-        and also allows to pass arguments (via table overload) and retrieve the return value.
+ General functions that allow you to run E2 code, through udfs or a string buffer of code.
 ]]
+
+-- Allows for calling user-defined functions dynamically at runtime (similar to callable strings),
+-- with ability to check for success - to know whether an error occurred (like Lua pcall),
+-- and also allows to pass arguments (via table overload) and retrieve the return value.
 desc("try(s)","Tries to run the given string as UDF. Returns a table with the first element being a number 1 or 0 stating whether it ran successfully, and the second element being either the error message or the return value of the given UDF function. Does not throw error if UDF is undefined. Like pcall")
 desc("try(st)","Works like the try(s) function, but also allows to pass arguments to the function in the form of table, make sure UDF's first argument is of type table")
 
@@ -49,24 +51,34 @@ desc("runString(sn)","runString(s), but if n is not 0, the script runs in safe m
  / ____// /   / // / / // /_ / /_/ // // /_/ // /_/ // /_/ // /
 /_/    /_/   /_//_/ /_/ \__/ \____//_/ \____//_.___/ \__,_//_/
 
- Allows for people to print to other's consoles, with warnings and options to disable.
+ Allows for people to print to other's chats in color, in a safe and efficient way.
+    Can be disabled with vex_printglobal_enabled
 ]]
 desc("canPrintGlobal()","Returns 1 or 0 for whether you can call printGlobal()")
 desc("canPrintTo(e)","Returns 1 or 0 for whether you can printGlobal to player e")
 
-desc("printGlobal(...)","Prints to everyone's chat, similarly to how chat.addText does, with colors and text that can be organized in any way. First argument can be an array of players, or a single player to send to this player.")
+desc(
+    "printGlobal(...)",
+    [[Allows you to print to people's chats using a list of strings and colors, also takes any other types and converts them into strings.
+Example to send a message to yourself: printGlobal(owner(), vec(255,0,0), "Red text", vec(0,255,0), "Green text!", "Heres another string!", 2149214)
+First argument can be an array of players, a single player to send the message to or any string/color.]]
+)
 -- ^^^Does not actually exist as a function, but printGlobal(...) does implement it.^^^
-desc("printGlobal(r)","Prints to everyone's chat using an array of arguments instead of ..., behaves similarly to chat.addText")
-desc("printGlobal(rr)","Prints to an array of people's chats using an array of arguments instead of ..., behaves similarly to chat.addText")
+desc("printGlobal(r)","Like printGlobal(...) but takes an array of arguments instead")
+desc("printGlobal(rr)","Like printGlobal(...), but the first array is a list of players, the second is the arguments you'd normally pass to printGlobal(...)")
 
 -- PrintGlobalClks
+
+-- With the addition of security to make sure if you didn't receive the message you won't be able to track them,
+-- The problem comes with using the lastG* functions outside of the clk calls. That's a really small usecase though so i don't really care at this point.
+
 desc("runOnPrintGlobal(n)","Sets the e2 to run on people using the printGlobal function with e2, n being 1 to run and 0 to not run")
 desc("printGlobalClk()","Returns 1 or 0 for whether the e2 chip was triggered by someone using printGlobal on e2")
-desc("lastGPrintRaw()","Returns an array of the last printGlobalClk information retrieved")
-desc("lastGPrintRaw(e)","Returns an array of the last printGlobalClk information retrieved on player e")
-desc("lastGPrintSender()","Returns the last player to use printGlobal with e2")
-desc("lastGPrintText()","Returns the last text to be sent with printGlobal with e2")
-desc("lastGPrintText(e)","Returns the last text to be sent by player e with printGlobal with e2")
+desc("lastGPrintRaw()","Returns an array of the arguments (string, color, etc) used in the last printGlobal call. You will not receive this if it wasn't sent to your chat")
+desc("lastGPrintRaw(e)","Returns an array of the arguments (string, color, etc) used in the last printGlobal call by player e. You will not receive this if it wasn't sent to your chat")
+desc("lastGPrintSender()","Returns the last player to send a printGlobal message")
+desc("lastGPrintText()","Returns the last combined text to be sent with printGlobal. Combines strings from the arguments used. You will not receive this if it wasn't sent to your chat")
+desc("lastGPrintText(e)","Returns the last combined text to be sent with printGlobal by player e. Combines strings from the arguments used. You will not receive this if it wasn't sent to your chat")
 
 --[[
    _____        __ ____   ___                                  ___
@@ -75,10 +87,11 @@ desc("lastGPrintText(e)","Returns the last text to be sent by player e with prin
  ___/ //  __// // __/  / ___ || |/ |/ // /_/ // /   /  __/   / __/
 /____/ \___//_//_/    /_/  |_||__/|__/ \__,_//_/    \___/   /____/
 
- Adds functions similarly to regular-e2's self-aware core.
+ Adds functions that deal with self-awareness to being an E2 chip,
+    Similarly to the default selfaware core in wiremod.
 ]]
 
-desc("defined(s)","Returns 0 if the function is not defined or couldn't be found, 1 if the function is an E2 builtin function, 2 if the function is a user-defined function")
+desc("defined(s)","Takes a string e2function or userfunction name, Returns 0 if the function is not defined or couldn't be found, 1 if the function is an E2 builtin function, 2 if the function is a user-defined function")
 desc("getFunctionPath(s)","Returns the path where the e2function was defined (not a user defined function), useful for finding whether something was added with an addon")
 desc("getExtensionsInfo()","Returns a table of arrays containing information about E2 extensions (status and description)")
 desc("getConstants()","Returns a table containing all registered E2 constants (constant name is used as the table key and constant value [number] as the table value)")
@@ -154,6 +167,7 @@ desc("coroutineYield()","Makes the coroutine pause until it is resumed again. It
 desc("coroutineYield(t)","Makes the coroutine pause until it is resumed again. It will remember everything that is happening. Use this overload if you need to pass data back to the caller (main thread)")
 desc("coroutineWait(n)","Makes a coroutine wait for the given amount of seconds, in this time, it is yielded and cannot be resumed")
 desc("nocoroutine()","Returns an 'invalid' coroutine value")
+desc("coroutinesLeft()","Returns the how many coroutines you have left to use in the chip, see _XCO_MAX for the maximum amount of coroutines per chip")
 
 -- Metamethods
 desc("resume(xco:)","Resumes the coroutine (if it is suspended), or starts the coroutine if it hasn't been started yet")

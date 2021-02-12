@@ -4,40 +4,27 @@
 local printf = vex.printf
 local PreProcessor,Tokenizer,Parser,Optimizer,Compiler = E2Lib.PreProcessor, E2Lib.Tokenizer, E2Lib.Parser, E2Lib.Optimizer, E2Lib.Compiler
 
--- Out of all the things for the E2Lib to not have, they are missing this. So... we have to copy the code.
--- Nice.
-local ScopeManager = {}
-ScopeManager.__index = ScopeManager
+-- Wiremod is missing this in the E2Lib or Wirelib, so we will reproduce it here.
+local E2Instance = {}
+E2Instance.__index = E2Instance
 
-function ScopeManager:InitScope()
-    self.Scopes = {}
-    self.ScopeID = 0
-    self.Scopes[0] = self.GlobalScope or { vclk = {} } -- for creating new enviroments
-    self.Scope = self.Scopes[0]
-    self.GlobalScope = self.Scope
+function E2Instance:InitScope()
+    local top_scope = self.GlobalScope or { vclk = {} }
+    self.Scopes = { [0] = top_scope }
+    self.ScopeID,self.Scope,self.GlobalScope = 0, top_scope, top_scope
 end
 
-function ScopeManager:PushScope()
-    self.Scope = { vclk = {} }
-    self.ScopeID = self.ScopeID + 1
-    self.Scopes[self.ScopeID] = self.Scope
+function E2Instance:PushScope()
+    local push_scope,scope_id = { vclk = {} },self.ScopeID+1
+    self.Scope,self.ScopeID = push_scope,scope_id
+    self.Scopes[scope_id] = push_scope
 end
 
-function ScopeManager:PopScope()
+function E2Instance:PopScope()
     self.ScopeID = self.ScopeID - 1
     self.Scope = self.Scopes[self.ScopeID]
     self.Scopes[self.ScopeID] = self.Scope
     return table.remove(self.Scopes, self.ScopeID + 1)
-end
-
-function ScopeManager:SaveScopes()
-    return { self.Scopes, self.ScopeID, self.Scope }
-end
-
-function ScopeManager:LoadScopes(Scopes)
-    self.Scopes = Scopes[1]
-    self.ScopeID = Scopes[2]
-    self.Scope = Scopes[3]
 end
 
 -- Someone rename this pls
@@ -48,7 +35,7 @@ local function initEntity( ent, ctx )
     ent.inports = { {}, {}, {} }
     ent.context = ctx
     ent.GlobalScope = ctx.GlobalScope
-    ent._vars = ent.GlobalScope -- Dupevars
+    ent._vars = ent.GlobalScope -- "Dupevars". No clue.
 end
 
 local function newE2Instance()
@@ -66,7 +53,7 @@ local function newE2Instance()
         time = 0,
         timebench = 0,
         includes = {}
-    },ScopeManager)
+    },E2Scope)
     ctx:InitScope()
     initEntity( ctx.entity, ctx )
     local ok, why = pcall(wire_expression2_CallHook, "construct", ctx)
@@ -101,8 +88,10 @@ local function runE2Virtual( code )
     -- Cleanup the code so if you have runOnTick it won't exist permanently
     pcall(wire_expression2_CallHook, "destruct", ctx)
 
-    return success,(not success) and why or nil -- Need to flip logic for the second arg because of lua's 'ternary'
+    return success,(not success) and why or nil -- Need to flip logic for the second arg because of lua's fake ternary
 end
+
+vex.runE2Virtual = runE2Virtual
 
 vex.addConsoleCommand("vex_test",function(_, cmd, args)
     local failed = 0
