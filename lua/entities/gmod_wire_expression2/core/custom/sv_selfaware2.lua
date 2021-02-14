@@ -230,12 +230,11 @@ e2function table getBuiltinFuncInfo(string funcName)
         -- Loop over all builtin functions and populate the table.
         local ret, size = {}, 0 -- We need to count entries manually. (Used for bumping up OPS.)
         for sig, tbl in pairs(wire_expression2_funcs) do
-            if string_sub(sig, 1, 3) == "op:" then
-                -- If this is a special operator node which represents an operation (such as addition/subtraction/etc),
-                continue -- We skip it.
+            if string_sub(sig, 1, 3) ~= "op:" then
+                -- Make sure we aren't passing any metamethods / operators (adding, subtracting)
+                ret[sig] = createBuiltinFuncInfoTable(tbl)
+                size = size + 1
             end
-            ret[sig] = createBuiltinFuncInfoTable(tbl)
-            size = size + 1
         end
         -- Dynamically bump up OPS based on the size of the output table. (Keep this after the loop.)
         self.prf = self.prf + size * OpCost
