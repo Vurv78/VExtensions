@@ -1,9 +1,9 @@
 --[[
-    _________      ______            __   ______              
-   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________ 
+    _________      ______            __   ______
+   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________
   / __/  __/ /     / / / __ \/ __ \/ /  / /   / __ \/ ___/ _ \
  / /___ / __/     / / / /_/ / /_/ / /  / /___/ /_/ / /  /  __/
-/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/ 
+/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/
     This is a tool that will be able to be used on an e2 chip, and that chip will be able
         to run based on actions you make with the tool.
 ]]
@@ -24,7 +24,7 @@ chip.context.data:: = {
 __e2setcost(10)
 
 e2function void setE2CSelected(number enable)
-    vex.setE2ControllerChip(self.player,self.entity or nil)    
+    vex.setE2ControllerChip(self.player,enable~=0 and self.entity or nil)
     --self.player:ChatPrint("Note that this function is currently pretty bad.. for some reason it executes e2's 'first' twice..")
 end
 
