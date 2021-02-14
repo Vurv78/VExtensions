@@ -73,7 +73,7 @@ vex.createE2Hook("VRMod_Start","vrmod_enter",function(chip,before,ent)
 end)
 
 e2function void runOnVREnter(bool)
-    vex.listenE2Hook(self,"VRMod_Start",bool == 1)
+    vex.listenE2Hook(self,"VRMod_Start",bool ~= 0)
 end
 
 e2function number vrEnterClk()
@@ -91,7 +91,7 @@ vex.createE2Hook("VRMod_Exit","vrmod_exit",function(chip,before,ent)
 end)
 
 e2function void runOnVRExit(bool)
-    vex.listenE2Hook(self,"VRMod_Start",bool == 1)
+    vex.listenE2Hook(self,"VRMod_Start",bool ~= 0)
 end
 
 e2function number vrExitClk()
@@ -110,7 +110,7 @@ vex.createE2Hook("VRMod_Pickup","vrmod_pickup",function(chip,before,ply,ent)
 end)
 
 e2function void runOnVRPickup(bool)
-    vex.listenE2Hook(self,"VRMod_Pickup",bool == 1)
+    vex.listenE2Hook(self,"VRMod_Pickup",bool ~= 0)
 end
 
 e2function number vrPickupClk()
@@ -133,7 +133,7 @@ vex.createE2Hook("VRMod_Drop","vrmod_drop",function(chip,before,ply,ent)
 end)
 
 e2function void runOnVRDrop(bool)
-    vex.listenE2Hook(self,"VRMod_Drop",bool == 1)
+    vex.listenE2Hook(self,"VRMod_Drop",bool ~= 0)
 end
 
 e2function number vrDropClk()
