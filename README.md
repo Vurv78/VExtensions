@@ -16,7 +16,7 @@ See and share some more examples here: https://github.com/Vurv78/VExtensions/dis
 
 ## Modules
 
-### [PrintGlobal - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_printglobal.lua)
+### [PrintGlobal - Expression2](https://github.com/Vurv78/VExtensions/wiki/PrintGlobal)
 Allows you to print to other players chats with Expression 2, behaves like chat.AddText  
 This is similar to the ChatPrint E2 extension, except it is more lenient, supports trailing strings and colors, and is much safer for the server with net size restriction.
 <details><summary>PrintGlobal Example Code</summary>
@@ -39,7 +39,7 @@ if(first()){
 ```
 </details><br>
 
-### [CoroutineCore - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_coroutines.lua)
+### [CoroutineCore - Expression2](https://github.com/Vurv78/VExtensions/wiki/CoroutineCore)
 Allows you to make use of lua's coroutines in expression2, by turning udfs into coroutines, you can use functions like ``coroutineWait(number seconds)`` and ``coroutineYield()``, and retrieve results from ``coroutine:resume()``.
 <details><summary>Coroutine Example Code</summary>
 
@@ -65,7 +65,7 @@ if(first()){
 </details><br>
 
 
-### [WebMaterials - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_webmaterials.lua)
+### [WebMaterials - Expression2](https://github.com/Vurv78/VExtensions/wiki/WebMaterials)
 Allows you to interact with images pulled off of the web that can be applied as a material to props and egp image boxes.  
 Whitelisted by default, see the whitelist @ https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_webmaterials.lua#L25
 
@@ -92,7 +92,7 @@ if(first()){
 ```
 </details><br>
 
-### [Tool Core - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_e2controller.lua)
+### [Tool Core - Expression2](https://github.com/Vurv78/VExtensions/wiki/Tool-Core)
 Allows you to make use of a custom tool in the wiremod tab, the 'E2 Controller'
 By right clicking a chip with the tool, you can take control of it and handle things inside of it with runOn* events when the tool clicks, that receive ranger data of the click.. etc
 <details><summary>Tool Core Example Code</summary>
@@ -139,7 +139,7 @@ if(first()){
 ```
 </details><br>
 
-### [VRMod Functions - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_vrmod.lua)
+### [VRMod Functions - Expression2](https://github.com/Vurv78/VExtensions/wiki/VRMod)
 
 Allows you to use VRMod's SHARED functions and hooks if vrmod is installed on your server  
 StarfallEx already has these builtin now, so they have been removed from VExtensions. See https://github.com/thegrb93/StarfallEx/commit/111d81e8c97f01d3b290909c333b675f901bfa77
@@ -147,7 +147,7 @@ StarfallEx already has these builtin now, so they have been removed from VExtens
 This includes functions to get the vr player's headset position, hand position, whether they just dropped a prop and more
 
 
-### [Selfaware Extended - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_selfaware2.lua)
+### [Selfaware Extended - Expression2](https://github.com/Vurv78/VExtensions/wiki/SelfAware-Extended)
 
 Adds more functions that are more 'selfaware' just like e2's general selfaware.lua core  
 Examples are ``defined(string funcname)`` and ``getFunctionPath(string funcname)`` to use the useful #ifdef
@@ -177,7 +177,7 @@ if(first()){
 ```
 </details><br>
 
-### [RunE2 - Expression2](https://github.com/Vurv78/VExtensions/blob/master/lua/entities/gmod_wire_expression2/core/custom/sv_rune2.lua)
+### [RunE2 - Expression2](https://github.com/Vurv78/VExtensions/wiki/RunE2)
 
 Adds functions that allow you to run E2 code, either through udfs and pcall with ``try(s)`` and ``try(st)``, or  
 with runString(s) to run actual code inside of a chip.
@@ -189,15 +189,5 @@ print( runString("error(\"test\")", 1) ) #--> "test"
 ```
 </details><br>
 
-### Other General Functions:
-
-E2:
-```
-rangerSetFilter(array filter), sets the filter of your e2 rangers.
-hideChatPly(entity ply,number yes), hides the chat of a player selected (by default enabled, but warns you when it is hidden and you can disable it with canhidechatply_cl
-```
-
-StarfallEx:
-```
-player:setEyeAngles(angle ang)
-```
+### Other General Functions can be found here:
+https://github.com/Vurv78/VExtensions/wiki
