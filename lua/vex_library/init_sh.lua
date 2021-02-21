@@ -125,7 +125,7 @@ for _, name in pairs(addons) do
     end
 end
 vex.path = vex_dir -- for use in file.Find calls
-vex.version = "v0.3.1"
+vex.version = "v0.3.2"
 
 vex.printf = printf
 
