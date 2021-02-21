@@ -39,7 +39,7 @@ return function(instance)
     end)
 
     --- Sets the angle of the player's view (may rotate body too if angular difference is large)
-    --- [VExtensions]
+    -- [VExtensions]
     -- @shared
     -- @param Angle angle to set player's eye angles to.
     function player_methods:setEyeAngles(ang)

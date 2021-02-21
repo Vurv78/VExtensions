@@ -86,6 +86,7 @@ return function(instance)
     --- Returns whether you can printLocal.
     -- This only returns the burst limit and not whether the user has printLocal enabled.
     -- If you want to check if they have it enabled, see hasPermission and the vextensions.printLocal permission.
+    -- [VExtensions]
     -- @return bool Whether you can call printLocal.
     function builtins_library.canPrintLocal()
         return PRINT_BURST:available( LocalPlayer() )
