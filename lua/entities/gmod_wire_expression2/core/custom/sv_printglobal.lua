@@ -143,8 +143,6 @@ local function printGlobal(self,target,args)
 
     -- Makes sure that the target(s) have printGlobal enabled on their client.
     local target, lookup = fix_target( target )
-    print(target, lookup)
-    PrintTable(target)
     if not target or (istable(target) and #target==0) then return end -- No targets found.
 
     -- Makes sure args are in a [color, string] pattern.
