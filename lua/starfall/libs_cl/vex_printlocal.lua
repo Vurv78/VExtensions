@@ -37,8 +37,8 @@ return function(instance)
     --- If the LocalPlayer has vextensions.printLocal enabled, prints to their chat.
     -- This uses chat.AddText.
     -- [VExtensions]
-    -- @param ... Varargs of any type, use colors before variables to change the color of those variables as strings.
-    -- @return bool Whether player trusts player "ply".
+    -- @param ... args Varargs of any type, use colors before variables to change the color of those variables as strings.
+    -- @return boolean Whether player trusts player "ply".
     function builtins_library.printLocal(...)
         checkpermission(instance, nil, "vextensions.printLocal")
 
@@ -87,7 +87,8 @@ return function(instance)
     --- Returns whether you can printLocal.
     -- This only returns the burst limit and not whether the user has printLocal enabled.
     -- If you want to check if they have it enabled, see hasPermission and the vextensions.printLocal permission.
-    -- @return bool Whether you can call printLocal.
+    -- [VExtensions]
+    -- @return boolean Whether you can call printLocal.
     function builtins_library.canPrintLocal()
         return PRINT_BURST:available( LocalPlayer() )
     end

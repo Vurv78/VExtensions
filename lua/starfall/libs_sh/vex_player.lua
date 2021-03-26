@@ -4,9 +4,16 @@
 local checkluatype = SF.CheckLuaType
 local registerPrivilege = SF.Permissions.registerPrivilege or SF.Permissions.registerprivilege -- wtf Starfall
 
--- Register clientside permissions.
--- 1 = Only you, 2 = Friends Only, 3 = Anyone, 4 = No one 
-registerPrivilege("entities.setEyeAngles", "Set your EyeAngles", "Allows the user to set your eye angles", { client = { default = 1 } })
+-- Register clientside permissions. TODO: Make this a part of the vex library.
+-- 1 = Only you, 2 = Friends Only, 3 = Anyone, 4 = No one
+local SF_PERMS = {
+    OWNER = 1,
+    FRIEND = 2,
+    ANYONE = 3,
+    NO_ONE = 4
+}
+
+registerPrivilege("vextensions.setEyeAngles", "Set your EyeAngles", "Allows the user to set your eye angles", { client = { default = SF_PERMS.OWNER } })
 
 local HAS_PROP_PROTECTION = FindMetaTable("Player").CPPIGetFriends ~= nil
 local function does_ply_trust(ply, who)
@@ -41,7 +48,7 @@ return function(instance)
     --- Sets the angle of the player's view (may rotate body too if angular difference is large)
     -- [VExtensions]
     -- @shared
-    -- @param Angle angle to set player's eye angles to.
+    -- @param Angle ang Angle to set player's eye angles to.
     function player_methods:setEyeAngles(ang)
         local ply = getply(self)
         if CLIENT then
@@ -56,8 +63,8 @@ return function(instance)
     -- Behaves like prior wiremod before Sparky nerfed it so you couldn't get the friends of people you weren't friends with.
     -- [VExtensions]
     -- @shared
-    -- @param Player ply to check if player trusts.
-    -- @return bool Whether player trusts player "ply".
+    -- @param Player ply Player to check if 'self' trusts.
+    -- @return boolean Whether player trusts player "ply".
     function player_methods:trusts(ply)
         return does_ply_trust( getply(self), getply(ply) )
     end
