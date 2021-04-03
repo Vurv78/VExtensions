@@ -61,13 +61,11 @@ return function(instance)
 
         local args, out = {...}, {}
         local n_args, n_chars = #args, 0
-        if not isSFColor(args[1]) then
-            -- Have a default orange color.
-            table.insert(args, 1, Color(247, 179, 62))
-        end
+
         if n_args > MAX_ARGS:GetInt() then SF.Throw("Too many arguments in printLocal.") end
         local max_chars = MAX_CHARS:GetInt()
 
+        -- Skip the first argument since we've already verified that it's either an SF Color or a color we inserted.
         for k = 1, n_args do
             local v = args[k]
             if isstring(v) then
@@ -105,7 +103,9 @@ return function(instance)
                 string.format("%s(%s) is printing to your chat using printLocal. Disable this in your SF permissions screen or with sf_permission_cl.\n", instance.player:GetName(), instance.player:SteamID())
             )
         end
-        chat.AddText(unpack(out))
+
+        -- Default color is orange
+        chat.AddText( Color(247, 179, 62), unpack(out) )
     end
     --- Returns the max amount of characters and arguments you can use in a printLocal call.
     -- Internally looks at the convars vex_printlocal_argmax and vex_printlocal_charmax.
