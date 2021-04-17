@@ -2,9 +2,9 @@
 [![Release Shield](https://img.shields.io/github/v/release/Vurv78/VExtensions?style=flat-square)](https://github.com/Vurv78/VExtensions/releases/latest)
 [![Size Shield](https://img.shields.io/github/repo-size/Vurv78/VExtensions?color=red&style=flat-square)](https://github.com/Vurv78/VExtensions/tree/master/lua)
 [![Contributors](https://img.shields.io/github/contributors/Vurv78/VExtensions?style=flat-square)](https://github.com/Vurv78/VExtensions/contributors)
-[![Activity](https://img.shields.io/github/commit-activity/m/Vurv78/VExtensions?color=yellow&style=flat-square)](https://github.com/Vurv78/VExtensions/pulse)
-[![Featured Server](https://img.shields.io/badge/Featured%20Server-E2%20Beyond%20Infinity-lightgrey?style=flat-square)](steam://connect/69.140.244.127:27015)
+[![Featured Server](https://img.shields.io/badge/Featured%20Server-E2%20Beyond%20Infinity-yellow?style=flat-square)](steam://connect/69.140.244.127:27015)
 [![Wiki](https://img.shields.io/badge/Wiki-here-purple.svg?style=flat-square)](https://github.com/Vurv78/VExtensions/wiki)
+[![github/Vurv78](https://discordapp.com/api/guilds/824727565948157963/widget.png)](https://discord.gg/epJFC6cNsw)
 
 A compilation of mini-addons for [Expression2](https://github.com/wiremod/wire) and [StarfallEx](https://github.com/thegrb93/StarfallEx) development as well as a library to assist developers make more of them.
 
