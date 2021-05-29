@@ -1,2 +1,6 @@
 ﻿/.idea
 /.vs
+/ts/
+/node_modules/
+/vendor/declarations.d.ts
+package-lock.json

@@ -1,0 +1,16 @@
+{
+    "version": "0.3.2",
+    "description": "VExtensions",
+    "license": "GPL-3.0",
+    "dependencies": {
+        "typescript": "4.2.3"
+    },
+    "private": true,
+    "scripts": {
+        "build": "tstl",
+        "dev": "tstl --watch"
+    },
+    "devDependencies": {
+        "typescript-to-lua": "^0.39.3"
+    }
+}

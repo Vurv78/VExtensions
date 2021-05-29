@@ -1,13 +1,13 @@
 --[[
-    _________      ______            __   ______              
-   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________ 
+    _________      ______            __   ______
+   / ____/__ \    /_  __/___  ____  / /  / ____/___  ________
   / __/  __/ /     / / / __ \/ __ \/ /  / /   / __ \/ ___/ _ \
  / /___ / __/     / / / /_/ / /_/ / /  / /___/ /_/ / /  /  __/
-/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/ 
+/_____//____/    /_/  \____/\____/_/   \____/\____/_/   \___/
     This is a tool that will be able to be used on an e2 chip, and that chip will be able
         to run based on actions you make with the tool.
 ]]
- 
+
 TOOL.Category		= "VExtensions"
 TOOL.Name			= "E2 Controller"
 TOOL.Command		= nil
@@ -109,7 +109,7 @@ function TOOL:Reload(trace)
         end
     end
 end
- 
+
 -- If you are looking at an e2 chip, will change e2 chip owner to this.
 function TOOL:RightClick(trace)
     local ply = self:GetOwner()
