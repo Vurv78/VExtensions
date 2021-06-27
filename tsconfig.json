@@ -1,16 +1,20 @@
 {
-    "compilerOptions": {
-      "target": "esnext",
-      "lib": ["esnext"],
-      "moduleResolution": "node",
-      "types": [],
-      "strict": true,
+	"compilerOptions": {
+		"target": "esnext",
+		"lib": ["esnext"],
+		"moduleResolution": "node",
+		"strict": true,
 
-      "rootDir": "src",
-      "outDir": "lua",
-      "typeRoots": ["./vendor"]
-    },
-    "tstl": {
-      "luaTarget": "JIT"
-    }
-  }
+		"rootDir": "src",
+		"outDir": "lua",
+
+		// Use Gmod Externs
+		"types": ["gmod-types"],
+
+		// Ignore duplicate identifiers
+		"skipLibCheck": true
+	},
+	"tstl": {
+		"luaTarget": "JIT"
+	}
+}

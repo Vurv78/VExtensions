@@ -11,6 +11,7 @@
         "dev": "tstl --watch"
     },
     "devDependencies": {
+        "gmod-types": "^0.1.0",
         "typescript-to-lua": "^0.39.3"
     }
 }
