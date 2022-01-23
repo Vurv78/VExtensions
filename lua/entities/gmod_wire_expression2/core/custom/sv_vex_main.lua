@@ -9,25 +9,30 @@
 
 local table_insert, util_TraceLine, string_format = table.insert, util.TraceLine, string.format -- Gonna be using this a lot
 
--- Takes out everything that isn't a valid entity in a table
-local function cleanupTable(filter)
-    local out = {}
-    for _,to_filter in pairs(filter) do
-        if isentity(to_filter) then
-            table_insert(out,to_filter)
-        end
-    end
-    return out
-end
-
 -- Lib functions
 
-__e2setcost(10)
-e2function ranger rangerOffsetManual(vector pos,vector endpos, array filt)
+__e2setcost(4)
+e2function ranger rangerOffsetManual(vector pos,vector endpos)
     return util_TraceLine {
         start = Vector(pos[1],pos[2],pos[3]),
+        endpos = Vector(endpos[1],endpos[2],endpos[3])
+    }
+end
+
+__e2setcost(6)
+e2function ranger rangerOffsetManual(vector pos, vector endpos, array filt)
+    return util_TraceLine {
+        start = Vector(pos[1], pos[2], pos[3]),
         endpos = Vector(endpos[1],endpos[2],endpos[3]),
-        filter = cleanupTable(filt)
+        filter = filt
+    }
+end
+
+__e2setcost(2)
+e2function ranger rangerOffsetBlazing(vector pos, vector endpos)
+    return util_TraceLine {
+        start = pos,
+        endpos = endpos
     }
 end
 
