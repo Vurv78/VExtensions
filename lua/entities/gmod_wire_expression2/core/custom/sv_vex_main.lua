@@ -28,11 +28,58 @@ e2function ranger rangerOffsetManual(vector pos, vector endpos, array filt)
     }
 end
 
+__e2setcost(6)
+e2function ranger rangerOffsetManual(vector pos, vector endpos, array filt, number mask)
+    return util_TraceLine {
+        start = Vector(pos[1], pos[2], pos[3]),
+        endpos = Vector(endpos[1],endpos[2],endpos[3]),
+        filter = filt,
+        mask = mask
+    }
+end
+
+__e2setcost(4)
+e2function ranger rangerOffsetManual(vector pos, vector endpos, number mask)
+    return util_TraceLine {
+        start = Vector(pos[1], pos[2], pos[3]),
+        endpos = Vector(endpos[1],endpos[2],endpos[3]),
+        mask = mask
+    }
+end
+
 __e2setcost(2)
 e2function ranger rangerOffsetBlazing(vector pos, vector endpos)
     return util_TraceLine {
         start = pos,
         endpos = endpos
+    }
+end
+
+__e2setcost(3)
+e2function ranger rangerOffsetBlazing(vector pos, vector endpos, array filter)
+    return util_TraceLine {
+        start = pos,
+        endpos = endpos,
+        filter = filter
+    }
+end
+
+__e2setcost(2)
+e2function ranger rangerOffsetBlazing(vector pos, vector endpos, number mask)
+    return util_TraceLine {
+        start = pos,
+        endpos = endpos,
+        mask = mask
+    }
+end
+
+__e2setcost(3)
+e2function ranger rangerOffsetBlazing(vector pos, vector endpos, array filter, number mask)
+    return util_TraceLine {
+        start = pos,
+        endpos = endpos,
+        filter = filter,
+        mask = mask
     }
 end
 
