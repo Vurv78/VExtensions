@@ -37,8 +37,8 @@ end
 
 -- Returns whether a value would be fine to use as an rgb color.
 local function valid_color(val)
-    if not istable(val) then return end
     if isvector(val) then return true end
+    if not istable(val) then return end
     if #val>3 then return end
     for I=1,3 do
         -- If it isn't a Glua vector struct, check if it can qualify as a vector by seeing if the first 3 arguments are numbers.
